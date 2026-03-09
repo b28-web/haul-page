@@ -26,6 +26,7 @@ import {hooks as colocatedHooks} from "phoenix-colocated/haul"
 import StripePayment from "./hooks/stripe_payment"
 import AddressAutocomplete from "./hooks/address_autocomplete"
 import ChatScroll from "./hooks/chat_scroll"
+import {PreviewReload} from "./hooks/preview_reload"
 import topbar from "../vendor/topbar"
 
 const ExternalRedirect = {
@@ -40,7 +41,7 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, StripePayment, AddressAutocomplete, ChatScroll, ExternalRedirect},
+  hooks: {...colocatedHooks, StripePayment, AddressAutocomplete, ChatScroll, PreviewReload, ExternalRedirect},
 })
 
 // Show progress bar on live navigation and form submits

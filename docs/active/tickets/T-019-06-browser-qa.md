@@ -5,7 +5,7 @@ title: browser-qa
 type: task
 status: open
 priority: high
-phase: ready
+phase: implement
 depends_on: [T-019-02, T-019-05]
 ---
 

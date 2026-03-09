@@ -5,7 +5,7 @@ title: preview-and-edit
 type: task
 status: open
 priority: medium
-phase: ready
+phase: implement
 depends_on: [T-020-02]
 ---
 

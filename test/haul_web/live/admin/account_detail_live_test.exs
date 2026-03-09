@@ -99,11 +99,11 @@ defmodule HaulWeb.Admin.AccountDetailLiveTest do
       assert html =~ "Provisioned"
     end
 
-    test "shows impersonate button (disabled)", %{conn: conn, company: company} = ctx do
+    test "shows impersonate button", %{conn: conn, company: company} = ctx do
       {:ok, _lv, html} = live(admin_conn(conn, ctx), ~p"/admin/accounts/#{company.slug}")
 
       assert html =~ "Impersonate"
-      assert html =~ "disabled"
+      assert html =~ "/admin/impersonate/#{company.slug}"
     end
 
     test "invalid slug redirects to accounts list", %{conn: conn} = ctx do

@@ -36,7 +36,7 @@ defmodule HaulWeb.AuthHooks do
   end
 
   defp load_user_from_session(%{"user_token" => token, "tenant" => tenant} = _session) do
-    case Jwt.verify(token, User, [tenant: tenant]) do
+    case Jwt.verify(token, User, tenant: tenant) do
       {:ok, %{"sub" => subject}, _} ->
         case AshAuthentication.subject_to_user(subject, User, tenant: tenant) do
           {:ok, user} ->

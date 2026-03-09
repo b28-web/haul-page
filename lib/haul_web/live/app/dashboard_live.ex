@@ -24,8 +24,11 @@ defmodule HaulWeb.App.DashboardLive do
           Welcome, {@current_user.name || @current_user.email}.
         </p>
         <p :if={@site_url} class="text-muted-foreground">
-          Your site is live at
-          <a href={@site_url} target="_blank" class="underline hover:text-foreground">
+          Your site is live at <a
+            href={@site_url}
+            target="_blank"
+            class="underline hover:text-foreground"
+          >
             {@site_url}
           </a>.
         </p>

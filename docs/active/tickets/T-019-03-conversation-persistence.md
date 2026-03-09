@@ -5,7 +5,7 @@ title: conversation-persistence
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-019-01]
 ---
 

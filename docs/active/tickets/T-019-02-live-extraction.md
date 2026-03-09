@@ -5,7 +5,7 @@ title: live-extraction
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-019-01, T-018-03]
 ---
 

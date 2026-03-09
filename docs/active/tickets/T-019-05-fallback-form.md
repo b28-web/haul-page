@@ -5,7 +5,7 @@ title: fallback-form
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-019-01, T-015-01]
 ---
 

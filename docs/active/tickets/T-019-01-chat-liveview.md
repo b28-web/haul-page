@@ -5,7 +5,7 @@ title: chat-liveview
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-018-03]
 ---
 

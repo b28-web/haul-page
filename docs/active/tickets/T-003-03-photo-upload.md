@@ -5,7 +5,7 @@ title: photo-upload
 type: task
 status: open
 priority: medium
-phase: ready
+phase: research
 depends_on: [T-003-02]
 ---
 

@@ -5,7 +5,7 @@ title: booking-liveview
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-003-01]
 ---
 

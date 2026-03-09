@@ -1,7 +1,7 @@
 defmodule Haul.Storage.Local do
   @moduledoc false
 
-  @upload_dir "priv/uploads"
+  @upload_dir "priv/static/uploads"
 
   def put_object(key, binary, _content_type) do
     path = file_path(key)

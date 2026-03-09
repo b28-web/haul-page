@@ -83,6 +83,9 @@ defmodule Haul.MixProject do
       # QR code generation
       {:eqrcode, "~> 0.1.10"},
 
+      # Markdown rendering
+      {:mdex, "~> 0.2"},
+
       # S3-compatible storage (Fly Tigris)
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},

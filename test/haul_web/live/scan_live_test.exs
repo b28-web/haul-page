@@ -1,11 +1,38 @@
 defmodule HaulWeb.ScanLiveTest do
-  use HaulWeb.ConnCase
+  use HaulWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
+  alias Haul.Accounts.Changes.ProvisionTenant
+  alias Haul.Accounts.Company
+  alias Haul.Content.Seeder
+
   setup do
     operator = Application.get_env(:haul, :operator)
-    %{operator: operator}
+
+    operator_slug = operator[:slug] || "default"
+
+    {:ok, company} =
+      Company
+      |> Ash.Changeset.for_create(:create_company, %{name: "Junk & Handy", slug: operator_slug})
+      |> Ash.create()
+
+    tenant = ProvisionTenant.tenant_schema(company.slug)
+    Seeder.seed!(tenant)
+
+    on_exit(fn ->
+      {:ok, result} =
+        Ecto.Adapters.SQL.query(Haul.Repo, """
+        SELECT schema_name FROM information_schema.schemata
+        WHERE schema_name LIKE 'tenant_%'
+        """)
+
+      for [schema] <- result.rows do
+        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
+      end
+    end)
+
+    %{operator: operator, tenant: tenant}
   end
 
   test "GET /scan renders the scan page", %{conn: conn} do
@@ -13,11 +40,9 @@ defmodule HaulWeb.ScanLiveTest do
     assert html =~ "Scan to Schedule"
   end
 
-  test "displays operator business name", %{conn: conn, operator: operator} do
+  test "displays operator business name", %{conn: conn} do
     {:ok, _view, html} = live(conn, "/scan")
-
-    assert html =~
-             Phoenix.HTML.html_escape(operator[:business_name]) |> Phoenix.HTML.safe_to_string()
+    assert html =~ "Junk &amp; Handy"
   end
 
   test "displays phone number as tel: link", %{conn: conn, operator: operator} do
@@ -40,18 +65,22 @@ defmodule HaulWeb.ScanLiveTest do
     assert html =~ "After"
   end
 
-  test "renders endorsement section with customer names from loader", %{conn: conn} do
+  test "renders endorsement section with customer names from content", %{
+    conn: conn,
+    tenant: tenant
+  } do
     {:ok, _view, html} = live(conn, "/scan")
     assert html =~ "What Customers Say"
 
-    for endorsement <- Haul.Content.Loader.endorsements() do
+    endorsements = Ash.read!(Haul.Content.Endorsement, tenant: tenant)
+
+    for endorsement <- endorsements do
       assert html =~ endorsement.customer_name
     end
   end
 
   test "renders star ratings for endorsements", %{conn: conn} do
     {:ok, _view, html} = live(conn, "/scan")
-    # Star icons should be present (hero-star-solid for filled stars)
     assert html =~ "hero-star-solid"
   end
 
@@ -60,10 +89,12 @@ defmodule HaulWeb.ScanLiveTest do
     assert html =~ "Ready to Book?"
   end
 
-  test "renders gallery captions from loader", %{conn: conn} do
+  test "renders gallery captions from content", %{conn: conn, tenant: tenant} do
     {:ok, _view, html} = live(conn, "/scan")
 
-    for item <- Haul.Content.Loader.gallery_items() do
+    items = Ash.read!(Haul.Content.GalleryItem, tenant: tenant)
+
+    for item <- items do
       if item.caption, do: assert(html =~ item.caption)
     end
   end

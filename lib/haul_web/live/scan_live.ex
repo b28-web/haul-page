@@ -1,19 +1,25 @@
 defmodule HaulWeb.ScanLive do
   use HaulWeb, :live_view
 
+  alias HaulWeb.ContentHelpers
+
   @impl true
   def mount(_params, _session, socket) do
-    operator = Application.get_env(:haul, :operator, [])
+    tenant = ContentHelpers.resolve_tenant()
+    site_config = ContentHelpers.load_site_config(tenant)
 
     {:ok,
      socket
      |> assign(:page_title, "Scan to Schedule")
-     |> assign(:business_name, operator[:business_name])
-     |> assign(:phone, operator[:phone])
-     |> assign(:service_area, operator[:service_area])
-     |> assign(:gallery_items, Haul.Content.Loader.gallery_items())
-     |> assign(:endorsements, Haul.Content.Loader.endorsements())}
+     |> assign(:business_name, get_field(site_config, :business_name))
+     |> assign(:phone, get_field(site_config, :phone))
+     |> assign(:service_area, get_field(site_config, :service_area))
+     |> assign(:gallery_items, ContentHelpers.load_gallery_items(tenant))
+     |> assign(:endorsements, ContentHelpers.load_endorsements(tenant))}
   end
+
+  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
+  defp get_field(map, field) when is_map(map), do: map[field]
 
   @impl true
   def render(assigns) do
@@ -34,7 +40,7 @@ defmodule HaulWeb.ScanLive do
             Call for a free estimate
           </p>
           <a
-            href={"tel:#{String.replace(@phone, ~r/[^\d+]/, "")}"}
+            href={"tel:#{String.replace(@phone || "", ~r/[^\d+]/, "")}"}
             class="text-5xl md:text-7xl font-bold tracking-wider font-display uppercase hover:text-muted-foreground transition-colors"
           >
             {@phone}
@@ -50,7 +56,7 @@ defmodule HaulWeb.ScanLive do
       </section>
 
       <%!-- Before/After Gallery --%>
-      <section class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
+      <section :if={@gallery_items != []} class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
         <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
           Our Work
         </h2>
@@ -64,7 +70,7 @@ defmodule HaulWeb.ScanLive do
                 </p>
                 <div class="aspect-[4/3] bg-card flex items-center justify-center">
                   <img
-                    src={item.before_photo_url}
+                    src={item.before_image_url}
                     alt={"Before: #{item.caption}"}
                     class="w-full h-full object-cover"
                     loading="lazy"
@@ -81,7 +87,7 @@ defmodule HaulWeb.ScanLive do
                 </p>
                 <div class="aspect-[4/3] bg-card flex items-center justify-center">
                   <img
-                    src={item.after_photo_url}
+                    src={item.after_image_url}
                     alt={"After: #{item.caption}"}
                     class="w-full h-full object-cover"
                     loading="lazy"
@@ -99,14 +105,14 @@ defmodule HaulWeb.ScanLive do
       </section>
 
       <%!-- Customer Endorsements --%>
-      <section class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
+      <section :if={@endorsements != []} class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
         <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
           What Customers Say
         </h2>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div :for={endorsement <- @endorsements} class="border border-border p-6">
-            <div class="flex gap-0.5 mb-3">
+            <div :if={endorsement.star_rating} class="flex gap-0.5 mb-3">
               <.icon
                 :for={_i <- 1..endorsement.star_rating}
                 name="hero-star-solid"
@@ -140,7 +146,7 @@ defmodule HaulWeb.ScanLive do
 
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
-            href={"tel:#{String.replace(@phone, ~r/[^\d+]/, "")}"}
+            href={"tel:#{String.replace(@phone || "", ~r/[^\d+]/, "")}"}
             class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
           >
             <.icon name="hero-phone" class="size-5" />

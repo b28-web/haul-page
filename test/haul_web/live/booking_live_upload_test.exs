@@ -46,7 +46,7 @@ defmodule HaulWeb.BookingLiveUploadTest do
       assert html =~ "phx-hook=\"Phoenix.LiveFileUpload\""
     end
 
-    test "accepts image files", %{conn: conn} do
+    test "accepts image files and shows preview", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/book")
 
       photo =
@@ -58,7 +58,10 @@ defmodule HaulWeb.BookingLiveUploadTest do
           }
         ])
 
-      assert render_upload(photo, "test_photo.jpg") =~ "test_photo.jpg"
+      html = render_upload(photo, "test_photo.jpg")
+      # Preview image and cancel button should be present
+      assert html =~ "phx-click=\"cancel-upload\""
+      assert html =~ "Phoenix.LiveImgPreview"
     end
   end
 

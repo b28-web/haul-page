@@ -1,20 +1,27 @@
 defmodule HaulWeb.PageController do
   use HaulWeb, :controller
 
+  alias HaulWeb.ContentHelpers
+
   def home(conn, _params) do
-    operator = Application.get_env(:haul, :operator, [])
+    tenant = ContentHelpers.resolve_tenant()
+    site_config = ContentHelpers.load_site_config(tenant)
+    services = ContentHelpers.load_services(tenant)
 
     conn
     |> put_layout(false)
-    |> assign(:page_title, operator[:business_name] || "Home")
-    |> assign(:business_name, operator[:business_name])
-    |> assign(:phone, operator[:phone])
-    |> assign(:email, operator[:email])
-    |> assign(:tagline, operator[:tagline])
-    |> assign(:service_area, operator[:service_area])
-    |> assign(:coupon_text, operator[:coupon_text])
-    |> assign(:services, operator[:services] || [])
+    |> assign(:page_title, get_field(site_config, :business_name) || "Home")
+    |> assign(:business_name, get_field(site_config, :business_name))
+    |> assign(:phone, get_field(site_config, :phone))
+    |> assign(:email, get_field(site_config, :email))
+    |> assign(:tagline, get_field(site_config, :tagline))
+    |> assign(:service_area, get_field(site_config, :service_area))
+    |> assign(:coupon_text, get_field(site_config, :coupon_text) || "10% OFF")
+    |> assign(:services, services)
     |> assign(:url, HaulWeb.Endpoint.url())
     |> render(:home)
   end
+
+  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
+  defp get_field(map, field) when is_map(map), do: map[field]
 end

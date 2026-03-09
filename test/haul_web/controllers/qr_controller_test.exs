@@ -52,13 +52,17 @@ defmodule HaulWeb.QRControllerTest do
     test "includes Content-Disposition header for SVG", %{conn: conn} do
       conn = get(conn, ~p"/scan/qr")
 
-      assert get_resp_header(conn, "content-disposition") == [~s(attachment; filename="qr-scan.svg")]
+      assert get_resp_header(conn, "content-disposition") == [
+               ~s(attachment; filename="qr-scan.svg")
+             ]
     end
 
     test "includes Content-Disposition header for PNG", %{conn: conn} do
       conn = get(conn, ~p"/scan/qr?format=png")
 
-      assert get_resp_header(conn, "content-disposition") == [~s(attachment; filename="qr-scan.png")]
+      assert get_resp_header(conn, "content-disposition") == [
+               ~s(attachment; filename="qr-scan.png")
+             ]
     end
 
     test "includes Cache-Control header", %{conn: conn} do

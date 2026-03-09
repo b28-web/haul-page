@@ -1,36 +1,59 @@
 defmodule HaulWeb.PageControllerTest do
-  use HaulWeb.ConnCase
+  use HaulWeb.ConnCase, async: false
+
+  alias Haul.Accounts.Changes.ProvisionTenant
+  alias Haul.Accounts.Company
+  alias Haul.Content.Seeder
 
   setup do
     operator = Application.get_env(:haul, :operator)
-    %{operator: operator}
+    operator_slug = operator[:slug] || "default"
+
+    {:ok, company} =
+      Company
+      |> Ash.Changeset.for_create(:create_company, %{name: "Junk & Handy", slug: operator_slug})
+      |> Ash.create()
+
+    tenant = ProvisionTenant.tenant_schema(company.slug)
+    Seeder.seed!(tenant)
+
+    on_exit(fn ->
+      {:ok, result} =
+        Ecto.Adapters.SQL.query(Haul.Repo, """
+        SELECT schema_name FROM information_schema.schemata
+        WHERE schema_name LIKE 'tenant_%'
+        """)
+
+      for [schema] <- result.rows do
+        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
+      end
+    end)
+
+    %{operator: operator, tenant: tenant}
   end
 
-  test "GET / returns 200 with landing page", %{conn: conn, operator: operator} do
+  test "GET / returns 200 with landing page content from Ash", %{conn: conn} do
     conn = get(conn, ~p"/")
     body = html_response(conn, 200)
 
-    # Business identity from operator config (& is HTML-escaped)
-    assert body =~
-             Phoenix.HTML.html_escape(operator[:business_name]) |> Phoenix.HTML.safe_to_string()
-
-    assert body =~ operator[:phone]
-    assert body =~ operator[:email]
+    # Business identity from SiteConfig (seeded from site_config.yml)
+    assert body =~ "Junk &amp; Handy"
+    assert body =~ "(555) 123-4567"
+    assert body =~ "hello@junkandhandy.com"
   end
 
-  test "phone number is a tel: link", %{conn: conn, operator: operator} do
+  test "phone number is a tel: link", %{conn: conn} do
     conn = get(conn, ~p"/")
     body = html_response(conn, 200)
 
-    digits = String.replace(operator[:phone], ~r/[^\d+]/, "")
-    assert body =~ "tel:#{digits}"
+    assert body =~ "tel:5551234567"
   end
 
-  test "email is a mailto: link", %{conn: conn, operator: operator} do
+  test "email is a mailto: link", %{conn: conn} do
     conn = get(conn, ~p"/")
     body = html_response(conn, 200)
 
-    assert body =~ "mailto:#{operator[:email]}"
+    assert body =~ "mailto:hello@junkandhandy.com"
   end
 
   test "page contains all section headings", %{conn: conn} do
@@ -43,13 +66,17 @@ defmodule HaulWeb.PageControllerTest do
     assert body =~ "Ready to Get Started?"
   end
 
-  test "page contains all services from config", %{conn: conn, operator: operator} do
+  test "page contains services from seeded content", %{conn: conn, tenant: tenant} do
     conn = get(conn, ~p"/")
     body = html_response(conn, 200)
 
-    for service <- operator[:services] do
-      assert body =~ service.title
-      assert body =~ service.description
+    services = Ash.read!(Haul.Content.Service, tenant: tenant)
+
+    for service <- services do
+      assert body =~ Phoenix.HTML.html_escape(service.title) |> Phoenix.HTML.safe_to_string()
+
+      assert body =~
+               Phoenix.HTML.html_escape(service.description) |> Phoenix.HTML.safe_to_string()
     end
   end
 
@@ -57,7 +84,6 @@ defmodule HaulWeb.PageControllerTest do
     conn = get(conn, ~p"/")
     body = html_response(conn, 200)
 
-    # App layout has a navbar with Phoenix version — should not be present
     refute body =~ "navbar"
     refute body =~ "phoenixframework.org"
   end
@@ -66,8 +92,14 @@ defmodule HaulWeb.PageControllerTest do
     conn = get(conn, ~p"/")
     body = html_response(conn, 200)
 
-    # Button starts hidden, JS shows it
     assert body =~ "window.print()"
     assert body =~ "print-button"
+  end
+
+  test "coupon text comes from SiteConfig", %{conn: conn} do
+    conn = get(conn, ~p"/")
+    body = html_response(conn, 200)
+
+    assert body =~ "10% OFF"
   end
 end

@@ -5,7 +5,7 @@ title: content-driven-pages
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-006-03, T-002-01]
 ---
 

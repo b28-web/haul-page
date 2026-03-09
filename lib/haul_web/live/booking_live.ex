@@ -1,23 +1,23 @@
 defmodule HaulWeb.BookingLive do
   use HaulWeb, :live_view
 
-  alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Operations.Job
   alias Haul.Storage
+  alias HaulWeb.ContentHelpers
 
   @max_photos 5
   @max_file_size 10_000_000
 
   @impl true
   def mount(_params, _session, socket) do
-    operator = Application.get_env(:haul, :operator, [])
-    tenant = ProvisionTenant.tenant_schema(operator[:slug] || "default")
+    tenant = ContentHelpers.resolve_tenant()
+    site_config = ContentHelpers.load_site_config(tenant)
 
     {:ok,
      socket
      |> assign(:page_title, "Book a Pickup")
-     |> assign(:phone, operator[:phone])
-     |> assign(:business_name, operator[:business_name])
+     |> assign(:phone, get_field(site_config, :phone))
+     |> assign(:business_name, get_field(site_config, :business_name))
      |> assign(:tenant, tenant)
      |> assign(:submitted, false)
      |> allow_upload(:photos,
@@ -98,6 +98,9 @@ defmodule HaulWeb.BookingLive do
     end)
     |> Enum.reject(&is_nil/1)
   end
+
+  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
+  defp get_field(map, field) when is_map(map), do: map[field]
 
   defp friendly_error(:too_large), do: "File is too large (max 10MB)"
   defp friendly_error(:too_many_files), do: "Too many files (max #{@max_photos})"
@@ -203,7 +206,7 @@ defmodule HaulWeb.BookingLive do
             />
 
             <div>
-              <span class="label mb-1">Photos of your junk (optional, up to {@max_photos})</span>
+              <span class="label mb-1">Photos of your junk (optional, up to 5)</span>
               <p class="text-sm text-muted-foreground mb-2">
                 Snap a few photos so we can give you a better estimate.
               </p>
@@ -281,8 +284,7 @@ defmodule HaulWeb.BookingLive do
                 type="submit"
                 class="w-full inline-flex items-center justify-center gap-2 bg-foreground text-background px-8 py-4 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
               >
-                <.icon name="hero-calendar-days" class="size-5" />
-                Submit Booking Request
+                <.icon name="hero-calendar-days" class="size-5" /> Submit Booking Request
               </button>
             </div>
           </.form>

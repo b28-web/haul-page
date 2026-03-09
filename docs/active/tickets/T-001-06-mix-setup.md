@@ -5,7 +5,7 @@ title: mix-setup
 type: task
 status: open
 priority: medium
-phase: research
+phase: done
 depends_on: [T-001-05]
 ---
 

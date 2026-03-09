@@ -22,6 +22,14 @@ end
 
 config :haul, HaulWeb.Endpoint, http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Base domain for tenant subdomain extraction (e.g., "haulpage.com")
+# When set, also configures check_origin to allow wildcard subdomain WebSocket connections.
+if base_domain = System.get_env("BASE_DOMAIN") do
+  config :haul, :base_domain, base_domain
+
+  config :haul, HaulWeb.Endpoint, check_origin: ["//*.#{base_domain}", "//#{base_domain}"]
+end
+
 # Operator config — override defaults from config.exs with env vars.
 # Only fields with env vars set are overridden; the rest keep their defaults.
 operator_overrides =
@@ -62,6 +70,11 @@ end
 if places_key = System.get_env("GOOGLE_PLACES_API_KEY") do
   config :haul, :places_adapter, Haul.Places.Google
   config :haul, :google_places_api_key, places_key
+end
+
+# Sentry error tracking — enable when DSN is set (any environment)
+if sentry_dsn = System.get_env("SENTRY_DSN") do
+  config :sentry, dsn: sentry_dsn
 end
 
 if config_env() == :prod do

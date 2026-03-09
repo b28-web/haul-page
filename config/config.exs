@@ -12,6 +12,9 @@ config :haul,
   generators: [timestamp_type: :utc_datetime],
   ash_domains: [Haul.Accounts, Haul.Operations, Haul.Content]
 
+# Base domain for subdomain extraction (e.g., "haulpage.com" in production)
+config :haul, :base_domain, "localhost"
+
 # Operator identity — displayed on the landing page and used in templates.
 # Override individual fields via env vars in runtime.exs.
 config :haul, :operator,
@@ -128,6 +131,12 @@ config :haul, :storage, backend: :local
 
 # Token signing secret for AshAuthentication (override in runtime.exs for prod)
 config :haul, :token_signing_secret, "dev-only-signing-secret-replace-in-prod"
+
+# Sentry error tracking — DSN set via env var in runtime.exs; no-op without DSN
+config :sentry,
+  environment_name: config_env(),
+  enable_source_code_context: true,
+  root_source_code_paths: [File.cwd!()]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

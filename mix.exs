@@ -97,6 +97,9 @@ defmodule Haul.MixProject do
       # Stripe payments
       {:stripity_stripe, "~> 3.2"},
 
+      # Error tracking (Sentry)
+      {:sentry, "~> 12.0"},
+
       # Quality
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},

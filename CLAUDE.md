@@ -49,9 +49,36 @@ Run `just llm` for a concise repo briefing — stack, architecture, key files, c
 
 ## Workflow
 
+### Lisa — DAG-driven agent scheduler
+
+Lisa is a Rust CLI + Zellij WASM plugin that manages Claude Code agent sessions. It reads the ticket DAG from `docs/active/tickets/`, computes dependency waves, and spawns/tracks Claude Code sessions in Zellij terminal panes — one agent per ticket, max 2 concurrent.
+
+**Commands:**
+- `lisa status` — print the ticket DAG: waves, dependencies, what's ready/blocked/done
+- `lisa validate` — check for cycles, missing deps, or structural errors
+- `lisa loop` (or `just work`) — launch the Zellij session with agent panes. Lisa assigns ready tickets to agents, monitors phase transitions, and serializes git commits across agents.
+
+**How it works:**
+1. Lisa reads ticket frontmatter (`id`, `status`, `phase`, `depends_on`) and builds a DAG
+2. `lisa loop` generates a Zellij layout with 2× max_threads panes + a dashboard plugin
+3. When a pane is idle, Lisa picks the next ready ticket and runs `claude --dangerously-skip-permissions` with the ticket prompt
+4. Each agent follows the RDSPI workflow (Research → Design → Structure → Plan → Implement → Review)
+5. Agents inherit project config: CLAUDE.md, `.mcp.json` (Playwright MCP), and all repo context
+
+**Config:** `.lisa.toml` at project root — ticket/story/work dirs, max threads (2), scheduling options.
+
 The RDSPI workflow definition is in `docs/knowledge/rdspi-workflow.md` and is injected into agent context by lisa automatically.
 
-Use `lisa status` to see the ticket DAG. Use `lisa validate` to check for cycles or missing deps. Max 2 concurrent tickets.
+### Planning and status commands
+
+| Command | Purpose |
+|---|---|
+| `just status` | Raw DAG dump (`lisa status`) |
+| `just overview` | Spawns a Claude agent to survey the repo and update OVERVIEW.md |
+| `just status-agent` | Deep survey + interactive planning session — create tickets/stories/epics |
+| `just work` | Launch `lisa loop` — agents implement the tickets |
+
+The core loop: `just status-agent` (plan) → `just work` (execute) → `just overview` (review).
 
 ## Code Conventions
 

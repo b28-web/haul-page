@@ -352,3 +352,50 @@ Three jobs, two gate the third:
 - **No migration generation check yet.** The HaulOS spec mentions `mix ash_postgres.generate_migrations` check in CI. This is valuable but adds complexity before there are any resources. Add it when the first Ash resource lands.
 - **No staging environment.** Single operator, single deploy. If a staging environment is needed, it's a second Fly app (`haul-page-staging`) with its own Neon branch — Neon's branching makes this free.
 - **No E2E browser tests.** Wallaby/Playwright could test the booking flow end-to-end. Worth adding at Phase 1 when the booking form exists. Not before.
+
+---
+
+## External services — buy, don't build
+
+These capabilities are hard to build correctly, carry regulatory or deliverability risk, or require domain expertise that isn't core to the product. Use SaaS for all of them.
+
+### Must-have (required before or at launch)
+
+| Capability | Service | Why SaaS |
+|---|---|---|
+| **SMS notifications** | Twilio | Job submission alerts, state-change notifications to operator. Carrier regulations, deliverability, number provisioning — not worth touching. |
+| **Transactional email** | Postmark or Resend | Magic-link auth (AshAuthentication), booking confirmations, operator alerts. Deliverability and spam reputation are someone else's problem. |
+| **Payment processing** | Stripe | Operator SaaS subscription fees and (later) customer job payments. PCI compliance, fraud detection, chargebacks — non-negotiable outsource. Stripe Elements embeds in LiveView via JS hooks. |
+| **Object storage** | Fly Tigris (S3-compatible) | Already chosen. Job photos, gallery images. Co-located with app on Fly. |
+
+### High-value (add early, saves significant effort)
+
+| Capability | Service | Why SaaS |
+|---|---|---|
+| **Address autocomplete** | Google Places API or Mapbox | Booking form address field. Reduces bad input, improves mobile UX. Google Places is standard for US addresses; Mapbox is cheaper at scale. |
+| **Error monitoring** | Sentry or Honeybadger | Centralized exception tracking across per-operator deploys. Honeybadger has first-class Elixir/Plug integration. |
+| **Uptime monitoring** | BetterStack or Fly health checks | Each operator deploy needs a heartbeat. BetterStack provides status pages; Fly's built-in checks cover basic liveness. |
+
+### Worth it at scale
+
+| Capability | Service | Why SaaS |
+|---|---|---|
+| **Analytics** | Plausible or Fathom | Privacy-respecting, lightweight. Operators want booking conversion rates. Self-hosting Plausible is possible but adds ops burden. |
+| **Image processing / CDN** | Imgproxy or Cloudflare Images | Gallery before/after photos and job uploads need resizing and optimization. Don't write a thumbnail pipeline. |
+
+### Use a library, not a service
+
+| Capability | Library | Notes |
+|---|---|---|
+| **QR code generation** | `eqrcode` (Elixir) | `/scan` page QR codes. Pure computation, no external dependency needed. |
+| **Markdown rendering** | MDEx | Content system already specifies this. Compile-time HTML caching. |
+
+### What NOT to build
+
+Even if it seems simple at first:
+
+- **Email delivery infrastructure** — SMTP reputation takes months to establish. One misconfiguration and all operator emails land in spam.
+- **SMS gateway** — Carrier filtering, 10DLC registration, opt-out compliance. Twilio handles all of it.
+- **Payment/billing system** — PCI-DSS compliance alone costs more than the entire product. Stripe's fee is the cost of not thinking about it.
+- **Address validation** — USPS data licensing, international formats, geocoding accuracy. Google/Mapbox have billion-dollar datasets.
+- **Error aggregation** — Grouping, deduplication, alerting, source maps. Mature products exist for $0–26/mo.

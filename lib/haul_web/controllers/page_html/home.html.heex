@@ -1,0 +1,139 @@
+<main class="min-h-screen bg-background text-foreground">
+  <%!-- Hero Section --%>
+  <section class="px-4 py-16 md:py-24 text-center max-w-4xl mx-auto">
+    <p class="text-xs font-semibold tracking-[0.4em] uppercase text-muted-foreground mb-6">
+      Licensed &amp; Insured · Serving {@service_area}
+    </p>
+
+    <h1 class="text-6xl md:text-8xl lg:text-9xl font-bold leading-[0.82] mb-2">
+      Junk Hauling
+    </h1>
+
+    <p class="text-3xl md:text-4xl lg:text-5xl font-normal text-muted-foreground tracking-wide mb-8">
+      &amp; Handyman Services
+    </p>
+
+    <p class="text-lg md:text-xl max-w-lg mx-auto leading-relaxed text-muted-foreground mb-10">
+      {@tagline}
+    </p>
+
+    <div class="mb-6">
+      <p class="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+        Call for a free estimate
+      </p>
+      <a
+        href={"tel:#{String.replace(@phone, ~r/[^\d+]/, "")}"}
+        class="text-5xl md:text-7xl font-bold tracking-wider font-display uppercase hover:text-muted-foreground transition-colors"
+      >
+        {@phone}
+      </a>
+    </div>
+
+    <div class="flex items-center justify-center gap-6 text-sm text-muted-foreground">
+      <a href={"mailto:#{@email}"} class="flex items-center gap-1.5 hover:text-foreground transition-colors">
+        <.icon name="hero-envelope" class="size-4" />
+        {@email}
+      </a>
+      <span class="flex items-center gap-1.5">
+        <.icon name="hero-map-pin" class="size-4" />
+        {@service_area}
+      </span>
+    </div>
+  </section>
+
+  <%!-- Services Grid --%>
+  <section class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
+      What We Do
+    </h2>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+      <div :for={service <- @services} class="text-center">
+        <.icon name={service.icon} class="size-7 mx-auto mb-3 stroke-1" />
+        <h3 class="text-base md:text-lg font-bold mb-1 normal-case">{service.title}</h3>
+        <p class="text-xs md:text-sm text-muted-foreground">{service.description}</p>
+      </div>
+    </div>
+  </section>
+
+  <%!-- Why Hire Us --%>
+  <section class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
+      Why Hire Us
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-2 max-w-2xl mx-auto">
+      <p class="text-base md:text-lg">— Same-day &amp; next-day availability</p>
+      <p class="text-base md:text-lg">— Upfront pricing — no hidden fees</p>
+      <p class="text-base md:text-lg">— Licensed, insured &amp; background-checked</p>
+      <p class="text-base md:text-lg">— We clean up before we leave</p>
+      <p class="text-base md:text-lg">— Locally owned &amp; operated</p>
+      <p class="text-base md:text-lg">— Free estimates, always</p>
+    </div>
+  </section>
+
+  <%!-- Footer CTA --%>
+  <footer class="px-4 py-16 md:py-24 text-center max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold mb-4">
+      Ready to Get Started?
+    </h2>
+
+    <p class="text-lg text-muted-foreground mb-8">
+      Call now for a free, no-obligation estimate.
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 print:hidden">
+      <a
+        href={"tel:#{String.replace(@phone, ~r/[^\d+]/, "")}"}
+        class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
+      >
+        <.icon name="hero-phone" class="size-5" />
+        {@phone}
+      </a>
+
+      <button
+        onclick="window.print()"
+        class="hidden inline-flex items-center gap-2 border border-foreground text-foreground px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-foreground hover:text-background transition-colors cursor-pointer"
+        id="print-button"
+      >
+        Print as Poster
+      </button>
+    </div>
+
+    <p class="text-sm text-muted-foreground print:hidden">
+      {@business_name} · {@service_area}
+    </p>
+
+    <%!-- Print-only: show URL and phone for printed poster --%>
+    <p class="hidden print:block text-sm mt-4">
+      {@url} · {@phone}
+    </p>
+
+    <%!-- Tear-off strip — visible only in print --%>
+    <div class="hidden print:block mt-8 border-t-2 border-dashed border-black pt-2">
+      <p class="text-xs text-center mb-2" style="font-family: 'Source Sans 3', sans-serif;">
+        ✂ Cut along the dotted line
+      </p>
+      <div class="flex">
+        <%= for _i <- 1..8 do %>
+          <div class="flex-1 border-r border-dashed border-black last:border-r-0 py-2 flex flex-col items-center justify-center" style="writing-mode: vertical-rl; text-orientation: mixed;">
+            <span class="text-[8px] font-bold uppercase" style="font-family: 'Oswald', sans-serif;">
+              {@business_name}
+            </span>
+            <span class="text-[15px] font-bold uppercase my-1" style="font-family: 'Oswald', sans-serif;">
+              {@coupon_text}
+            </span>
+            <span class="text-[8px]" style="font-family: 'Source Sans 3', sans-serif;">
+              {@phone}
+            </span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<%!-- Progressive enhancement: show print button only when JS is available --%>
+<script>
+  document.getElementById("print-button").style.display = "inline-flex";
+</script>

@@ -41,5 +41,9 @@ Thumbs.db
 # Work artifacts are committed; session logs are not
 *.jsonl
 
+# Dev server
+.dev.pid
+.dev.log
+
 # Dialyzer
 /priv/plts/

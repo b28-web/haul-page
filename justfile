@@ -5,9 +5,21 @@
 
 import '.just/system.just'
 
-# Start local development
+# Start local development (singleton — safe to call from multiple agents)
 dev:
     @just _dev
+
+# Check if dev server is running (pid, port, health, memory)
+dev-status:
+    @just _dev-status
+
+# Show recent dev server logs (default: last 50 lines)
+dev-log *args='50':
+    @just _dev-log {{ args }}
+
+# Stop the dev server
+dev-down:
+    @just _dev-down
 
 # Deploy to production
 deploy:
@@ -20,6 +32,14 @@ llm:
 # Show project status (tickets, DAG, progress)
 status:
     lisa status
+
+# Quick OVERVIEW.md refresh — read-only survey, update, exit
+overview:
+    @just _overview
+
+# Full status briefing + interactive planning session
+status-agent:
+    @just _status-agent
 
 # Run the implementation agent swarm
 work:

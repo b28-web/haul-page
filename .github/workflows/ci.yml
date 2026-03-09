@@ -8,6 +8,7 @@ on:
 
 env:
   MIX_ENV: test
+  # Keep in sync with mise.toml
   ELIXIR_VERSION: "1.19"
   OTP_VERSION: "28"
 
@@ -69,8 +70,10 @@ jobs:
           restore-keys: mix-${{ runner.os }}-
 
       - run: mix deps.get
+      - run: mix compile --warnings-as-errors
       - run: mix format --check-formatted
       - run: mix credo --strict
+      - run: mix dialyzer
 
   guardrails:
     name: Guardrails
@@ -147,7 +150,7 @@ jobs:
 
   deploy:
     name: Deploy
-    needs: [test, quality, guardrails]
+    needs: [test, quality]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 

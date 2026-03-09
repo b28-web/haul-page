@@ -5,7 +5,7 @@ title: landing-page-markup
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-002-03]
 ---
 

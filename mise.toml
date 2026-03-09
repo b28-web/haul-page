@@ -1,0 +1,7 @@
+# Version pins — keep in sync with:
+#   .github/workflows/ci.yml (ELIXIR_VERSION, OTP_VERSION)
+#   Dockerfile ARGs (when created)
+
+[tools]
+erlang = "28"
+elixir = "1.19"

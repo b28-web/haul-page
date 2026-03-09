@@ -43,6 +43,8 @@ fi
 for f in $STAGED; do
   case "$f" in
     *.ex|*.exs|*.yml|*.yaml|*.json|*.toml|*.js|*.ts)
+      # Skip dev/test configs — they use standard Phoenix defaults, not real secrets
+      case "$f" in config/dev.exs|config/test.exs) continue ;; esac
       if git diff --cached "$f" | grep -qiE '\+.*(password|secret_key|api_key|token)\s*[:=]\s*"[A-Za-z0-9+/]{8,}"'; then
         fail "possible hardcoded secret in $f"
       fi

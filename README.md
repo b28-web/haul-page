@@ -35,6 +35,26 @@ Elixir, Phoenix, Ash Framework, LiveView, Tailwind CSS, Neon Postgres, Fly.io.
 
 See [docs/knowledge/specification.md](docs/knowledge/specification.md) for the full spec.
 
+## Browser testing (agent QA)
+
+Claude Code instances on this project get [Playwright MCP](https://github.com/microsoft/playwright-mcp) automatically via `.mcp.json`. This lets LLM agents test the running app in a real browser without human QA.
+
+**How it works:**
+
+1. Agent starts the Phoenix dev server (`mix phx.server` or `just dev`)
+2. Agent uses Playwright MCP tools to navigate to `localhost:4000`, interact with pages, and verify behavior
+3. Playwright operates on accessibility snapshots (structured data), not screenshots — works headless in CI and on dev machines
+
+**Available to agents automatically** — no setup needed. The `.mcp.json` at project root configures Playwright MCP at project scope.
+
+**For interactive dev sessions**, use `claude --chrome` to connect Claude Code to a visible Chrome window (requires the [Claude in Chrome extension](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn)).
+
+### First-time setup
+
+```
+npx playwright install --with-deps chromium   # one-time browser binary install
+```
+
 ## License
 
 See [LICENSE](LICENSE).

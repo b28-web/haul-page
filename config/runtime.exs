@@ -58,6 +58,12 @@ if System.get_env("STORAGE_BUCKET") do
     host: tigris_endpoint
 end
 
+# Google Places — autocomplete proxy (optional, only if env var is set)
+if places_key = System.get_env("GOOGLE_PLACES_API_KEY") do
+  config :haul, :places_adapter, Haul.Places.Google
+  config :haul, :google_places_api_key, places_key
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

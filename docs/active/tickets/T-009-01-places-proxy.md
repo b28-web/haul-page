@@ -5,7 +5,7 @@ title: places-proxy
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-001-06]
 ---
 

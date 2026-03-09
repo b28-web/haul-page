@@ -31,6 +31,9 @@ config :haul, :sms_adapter, Haul.SMS.Sandbox
 
 # Payments — use sandbox adapter in test (no Stripe calls)
 config :haul, :payments_adapter, Haul.Payments.Sandbox
+
+# Places — use sandbox adapter in test (no Google API calls)
+config :haul, :places_adapter, Haul.Places.Sandbox
 config :stripity_stripe, api_key: "sk_test_fake"
 
 # Oban — manual testing mode (jobs don't run automatically)

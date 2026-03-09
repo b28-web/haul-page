@@ -4,27 +4,19 @@
 
 ## Current state
 
-**Phase:** 22 of 23 stories complete. S-021 (capstone QA), S-023 (superadmin, 2/4), S-024 (test performance) done. S-022 (proxy routing, 2/3 done, T-022-03 implementing).
+**Phase:** 24 of 24 stories complete. All stories done.
 
-**What works:** 798 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain + proxy path), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA, superadmin panel (auth + accounts list), proxy tenant routing, test timing telemetry.
+**What works:** 845 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain + proxy path), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA, superadmin panel (auth + accounts list + account detail + impersonation), proxy tenant routing + browser QA, test timing telemetry.
 
-**What's next:**
-- **T-022-03** (proxy browser QA) — implementing
-- **T-023-03** (impersonation) — planning
-- **T-023-04** (superadmin browser QA) — blocked on T-023-03
+**What's next:** All stories complete. No remaining tickets.
 
 ## Active tickets
 
-| Ticket | Title | Phase | Agent notes |
-|--------|-------|-------|-------------|
-| T-022-03 | proxy-browser-qa | implement | Proxy routing browser QA |
-| T-023-03 | impersonation | plan | Superadmin tenant impersonation |
+None — all tickets complete.
 
 ## Ready to start (unblocked)
 
-| Ticket | Title | Blocked by |
-|--------|-------|------------|
-| T-023-04 | superadmin-browser-qa | T-023-03 |
+None.
 
 ## Recently completed
 
@@ -51,8 +43,8 @@
 | T-019-01..06 | Conversational Onboarding (S-019) | Chat LiveView, live extraction, conversation persistence, agent prompt, fallback form, browser QA |
 | T-020-01..05 | Content Generation (S-020) | Content generation, auto-provision, preview/edit, cost tracking, browser QA |
 | T-021-01 | QA Walkthrough Report (S-021) | Capstone QA walkthrough complete |
-| T-022-01..02 | Proxy Routing (S-022) | Path-based tenant resolution, proxy link helpers |
-| T-023-01..02 | Superadmin Panel (S-023) | Admin auth + bootstrap, accounts list + detail |
+| T-022-01..03 | Proxy Routing (S-022) | Path-based tenant resolution, proxy link helpers, browser QA |
+| T-023-01..04 | Superadmin Panel (S-023) | Admin auth, accounts list + detail, impersonation, browser QA |
 | T-024-01..04 | Test Performance (S-024) | Timing telemetry, analysis, slow test fixes, agent targeting |
 
 ## Blockers & risks
@@ -82,20 +74,19 @@
 ## Cross-ticket notes
 
 - **Ash resources now live** — Accounts (Company with domain, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
-- **Test count: 798** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, and isolation.
+- **Test count: 845** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, and isolation.
 - **All 15 browser QA tickets done** — T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03, T-012-05, T-013-06, T-014-03, T-015-04, T-016-04, T-017-03, T-019-06, T-020-05.
 - **Playwright screenshots gitignored** — walkthrough-*.png and work artifact PNGs excluded from git.
 - **Content seeding works** — `mix haul.seed` populates from priv/content/ directory. Multi-tenant: `mix haul.seed --operator customer-1`.
-- **All work committed** — clean working tree as of 2026-03-09.
 - **mise shims in justfile** — agent shells now find elixir/mix via `export PATH` in system.just.
 
 ---
 
 ## Quick reference
 
-**DAG:** 91 tickets. 90 done, 1 implementing (T-022-03). Max 2 concurrent.
+**DAG:** 94 tickets. 94 done. All complete.
 
-**Critical path:** T-022-03* (proxy QA) → T-023-03 (impersonation) → T-023-04 (superadmin QA)
+**Critical path:** None — all tickets done.
 
 **Chains:**
 ```
@@ -122,23 +113,22 @@ Phase 3:  T-015-01✓ → 02✓, T-015-03✓ → T-015-04✓  (COMPLETE)
 Phase 1:  T-018-01✓ → T-018-02✓ → T-018-03✓ → T-018-04✓  (COMPLETE)
 Phase 2:  T-019-01✓ → T-019-02✓ + T-019-03✓
           T-019-04✓, T-019-05✓ (fallback form)
-          T-019-02✓ + T-019-05✓ → T-019-06✓ (🎭 browser-qa)
+          T-019-02✓ + T-019-05✓ → T-019-06✓ (browser-qa)
 Phase 3:  T-020-01✓ (content gen) → T-020-02✓ (auto-provision) → T-020-03✓ (preview/edit)
-          T-020-03✓ → T-020-05✓ (🎭 browser-qa) + T-020-04✓ (cost tracking)
+          T-020-03✓ → T-020-05✓ (browser-qa) + T-020-04✓ (cost tracking)
 
 --- Capstone ---
-All 🎭 browser-qa tickets → T-021-01✓ (walkthrough report + dev briefing)
+All browser-qa tickets → T-021-01✓ (walkthrough report + dev briefing)
 
 --- Proxy Routing (S-022) ---
-S-022: T-022-01✓ → T-022-02✓ → T-022-03* (🎭 proxy browser-qa)
+S-022: T-022-01✓ → T-022-02✓ → T-022-03✓  (COMPLETE)
 
 --- Superadmin (S-023) ---
-S-023: T-023-01✓ → T-023-02✓ → T-023-03 → T-023-04 (🎭 superadmin browser-qa)
+S-023: T-023-01✓ → T-023-02✓ → T-023-03✓ → T-023-04✓  (COMPLETE)
 
 --- Test Performance (S-024) ---
 S-024: T-024-01✓ → T-024-02✓ → T-024-03✓ → T-024-04✓  (COMPLETE)
 ```
-*implementing
 
 **Stories:**
 - S-001 Foundation — COMPLETE (6/6)
@@ -162,20 +152,21 @@ S-024: T-024-01✓ → T-024-02✓ → T-024-03✓ → T-024-04✓  (COMPLETE)
 - S-019 Conversational Onboarding — COMPLETE (6/6)
 - S-020 Content Generation — COMPLETE (5/5)
 - S-021 QA Walkthrough Report — COMPLETE (1/1)
-- S-022 Proxy Routing — 2/3 (T-022-03 implementing)
-- S-023 Superadmin Panel — 2/4 (T-023-01..02 done, T-023-03 planning)
+- S-022 Proxy Routing — COMPLETE (3/3)
+- S-023 Superadmin Panel — COMPLETE (4/4)
 - S-024 Test Performance — COMPLETE (4/4)
 
 **Epics (ongoing health):**
 - E-001 Dev environment — GOOD (all contributing stories complete)
 - E-002 Deploy pipeline — GOOD (all contributing stories complete)
-- E-003 Public surface — GOOD (nearly complete, final QA pending)
+- E-003 Public surface — GOOD (all contributing stories complete)
 - E-004 Domain model — GOOD (all contributing stories complete)
-- E-005 Content system — GOOD (S-020 complete)
+- E-005 Content system — GOOD (all contributing stories complete)
 - E-006 First customer — GOOD (capstone QA complete)
 - E-007 Demo instance — GOOD (all contributing stories complete)
-- E-008 Data security — GOOD (tenant isolation tested and passing)
+- E-008 Data security — GOOD (S-023 impersonation audit logging complete)
 - E-009 Service integrations — GOOD (all contributing stories complete)
-- E-010 SaaS platform — GOOD (S-019 ✓, S-020 ✓, S-021 ✓)
-- E-011 AI onboarding — GOOD (S-018 ✓, S-019 ✓, S-020 ✓, S-021 ✓)
-- E-013 Developer agent experience — IN PROGRESS (S-023 2/4, S-024 ✓)
+- E-010 SaaS platform — GOOD (all contributing stories complete)
+- E-011 AI onboarding — GOOD (all contributing stories complete)
+- E-012 Dev tenant preview — GOOD (S-022 complete)
+- E-013 Developer agent experience — GOOD (S-023 complete, S-024 complete)

@@ -5,7 +5,7 @@ title: photo-upload
 type: task
 status: open
 priority: medium
-phase: implement
+phase: done
 depends_on: [T-003-02]
 ---
 

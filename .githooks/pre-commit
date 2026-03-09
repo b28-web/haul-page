@@ -23,6 +23,8 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACM)
 ELIXIR_FILES=$(echo "$STAGED" | grep '\.exs\?$' || true)
 if [ -n "$ELIXIR_FILES" ]; then
   for f in $ELIXIR_FILES; do
+    # Test support utilities (formatters, helpers) legitimately use IO
+    case "$f" in test/support/*) continue ;; esac
     if git diff --cached "$f" | grep -q '+.*\(IO\.inspect\|IO\.puts\|dbg(\)'; then
       fail "debug statement in $f (IO.inspect/IO.puts/dbg)"
     fi

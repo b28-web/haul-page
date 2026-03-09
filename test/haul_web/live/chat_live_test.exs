@@ -47,7 +47,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> render_submit()
 
       # Wait for streaming response to complete
-      Process.sleep(500)
+      Process.sleep(150)
       html = render(view)
 
       # User message appears
@@ -87,7 +87,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> render_submit()
 
       # Wait for streaming to complete
-      Process.sleep(300)
+      Process.sleep(150)
       html = render(view)
 
       # Input should be cleared
@@ -100,8 +100,10 @@ defmodule HaulWeb.ChatLiveTest do
       ChatSandbox.set_response("OK")
       {:ok, view, _html} = live(conn, "/start")
 
-      # Send 50 messages, waiting for each stream to complete
-      for i <- 1..50 do
+      max = Application.get_env(:haul, :max_chat_messages, 50)
+
+      # Send max messages, waiting for each stream to complete
+      for i <- 1..max do
         view
         |> form("form", %{text: "Message #{i}"})
         |> render_submit()
@@ -110,7 +112,7 @@ defmodule HaulWeb.ChatLiveTest do
         Process.sleep(50)
       end
 
-      # 51st message should be rejected
+      # Next message should be rejected
       html =
         view
         |> form("form", %{text: "One more"})
@@ -142,7 +144,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> render_submit()
 
       # Wait for streaming to complete
-      Process.sleep(300)
+      Process.sleep(150)
       html = render(view)
 
       # The text input should not be disabled after streaming completes
@@ -162,7 +164,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> render_submit()
 
       # Wait for streaming + extraction debounce (800ms) + extraction task
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Sandbox default returns "Junk & Handy" as business name
@@ -181,7 +183,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> render_submit()
 
       # Wait for extraction to complete
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Sandbox default profile has all 7 fields filled
@@ -196,7 +198,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> form("form", %{text: "We offer junk removal and cleanouts"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Sandbox default includes these services
@@ -213,7 +215,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> form("form", %{text: "We recycle 80% of what we haul"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       assert html =~ "Same-day service available"
@@ -228,7 +230,7 @@ defmodule HaulWeb.ChatLiveTest do
       |> form("form", %{text: "I'm Mike, we're Junk & Handy, call us at 555-1234"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Sandbox returns complete profile — CTA should appear
@@ -318,9 +320,9 @@ defmodule HaulWeb.ChatLiveTest do
 
       # Send two messages so message_count > 1
       view |> form("form", %{text: "Hello"}) |> render_submit()
-      Process.sleep(500)
+      Process.sleep(150)
       view |> form("form", %{text: "More info"}) |> render_submit()
-      Process.sleep(500)
+      Process.sleep(150)
 
       # Simulate AI error after multiple messages (message_count == 2)
       send(view.pid, {:ai_error, "API error"})

@@ -1,5 +1,5 @@
 defmodule HaulWeb.QRControllerTest do
-  use HaulWeb.ConnCase
+  use HaulWeb.ConnCase, async: true
 
   describe "GET /scan/qr" do
     test "returns SVG by default", %{conn: conn} do

@@ -267,6 +267,7 @@ _llm:
     - Dark theme (pure grayscale, hue 0, saturation 0%). --radius: 0rem (sharp edges)
     - Print: @media print flips to white bg, Oswald 42pt/22pt, tear-off strip at bottom
     - Operator config via runtime env vars (OPERATOR_NAME, OPERATOR_PHONE, etc.)
+    - Test targeting: CLAUDE.md § "Test Targeting" maps source→test files. Run targeted tests during implement, full suite before review.
 
     ## CI guardrails
     - Pre-commit hook: blocks debug statements, hardcoded secrets, .env files

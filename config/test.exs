@@ -51,6 +51,18 @@ config :haul, Oban, testing: :manual
 # Base domain for tenant resolver tests
 config :haul, :base_domain, "haulpage.test"
 
+# Fast bcrypt in test (default 12 rounds → 1 round)
+config :bcrypt_elixir, log_rounds: 1
+
+# Fast extraction debounce in test (default 800ms → 50ms)
+config :haul, extraction_debounce_ms: 50
+
+# Lower chat message limit for faster rate-limit tests (default 50 → 10)
+config :haul, max_chat_messages: 10
+
+# Enable dev routes (proxy tenant, LiveDashboard) in test
+config :haul, dev_routes: true
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

@@ -15,6 +15,7 @@
 # Test / Coverage
 /cover/
 /doc/
+/test/reports/
 
 # Generated
 *.tar

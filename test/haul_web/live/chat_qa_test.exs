@@ -70,7 +70,7 @@ defmodule HaulWeb.ChatQATest do
       |> render_submit()
 
       # Wait for streaming + extraction
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # User message appears
@@ -88,7 +88,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "We do junk removal, yard waste, and garage cleanouts"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Both turns' messages present
@@ -105,7 +105,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "Hi there"})
       |> render_submit()
 
-      Process.sleep(500)
+      Process.sleep(150)
       html = render(view)
 
       # User bubble: right-aligned with zinc-700 bg
@@ -138,7 +138,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "Hello"})
       |> render_submit()
 
-      Process.sleep(500)
+      Process.sleep(150)
       html = render(view)
 
       # Input should not be disabled after streaming completes
@@ -169,7 +169,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "We're Junk & Handy in Portland"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Sandbox default profile fields
@@ -188,7 +188,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "We do junk removal"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       assert html =~ "Junk Removal"
@@ -204,7 +204,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "We recycle 80%"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       assert html =~ "What Sets You Apart"
@@ -220,7 +220,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "Hello"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       # Sandbox fills all 7 fields — progress bar at 100%
@@ -235,7 +235,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "I'm Mike from Junk & Handy"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
       html = render(view)
 
       assert html =~ "Your profile is complete!"
@@ -259,7 +259,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "I'm Mike from Junk & Handy"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
 
       # After extraction, show_profile? is set to true — toggle shows "Hide Profile"
       html = render(view)
@@ -284,7 +284,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "I'm Mike"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
 
       # Click "Build my site"
       html = render_click(view, "provision_site")
@@ -299,7 +299,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "I'm Mike"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
 
       # Start provisioning
       render_click(view, "provision_site")
@@ -327,7 +327,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "I'm Mike"})
       |> render_submit()
 
-      Process.sleep(1500)
+      Process.sleep(200)
 
       # Start provisioning
       render_click(view, "provision_site")
@@ -356,7 +356,7 @@ defmodule HaulWeb.ChatQATest do
       |> form("form", %{text: "Hi, I'm starting a business"})
       |> render_submit()
 
-      Process.sleep(500)
+      Process.sleep(150)
 
       # Second connection: same session_id
       conn2 =
@@ -402,11 +402,11 @@ defmodule HaulWeb.ChatQATest do
 
       # Send first message successfully
       view |> form("form", %{text: "Hello"}) |> render_submit()
-      Process.sleep(500)
+      Process.sleep(150)
 
       # Send second message successfully
       view |> form("form", %{text: "More info"}) |> render_submit()
-      Process.sleep(500)
+      Process.sleep(150)
 
       # Simulate error after multiple messages
       send(view.pid, {:ai_error, "Connection reset"})
@@ -420,12 +420,14 @@ defmodule HaulWeb.ChatQATest do
   end
 
   describe "rate limiting" do
-    test "shows message limit error at 50 messages", %{conn: conn} do
+    test "shows message limit error at max messages", %{conn: conn} do
       ChatSandbox.set_response("OK")
       {:ok, view, _html} = live(conn, "/start")
 
-      # Send 50 messages
-      for i <- 1..50 do
+      max = Application.get_env(:haul, :max_chat_messages, 50)
+
+      # Send max messages
+      for i <- 1..max do
         view
         |> form("form", %{text: "Message #{i}"})
         |> render_submit()
@@ -433,7 +435,7 @@ defmodule HaulWeb.ChatQATest do
         Process.sleep(50)
       end
 
-      # 51st should be rejected
+      # Next should be rejected
       html =
         view
         |> form("form", %{text: "One more"})

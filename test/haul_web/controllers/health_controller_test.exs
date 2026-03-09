@@ -1,5 +1,5 @@
 defmodule HaulWeb.HealthControllerTest do
-  use HaulWeb.ConnCase
+  use HaulWeb.ConnCase, async: true
 
   test "GET /healthz returns 200 ok", %{conn: conn} do
     conn = get(conn, "/healthz")

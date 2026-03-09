@@ -5,7 +5,7 @@ title: timing-analysis
 type: spike
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-024-01]
 ---
 

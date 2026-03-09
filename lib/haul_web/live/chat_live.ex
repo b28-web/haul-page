@@ -13,10 +13,10 @@ defmodule HaulWeb.ChatLive do
 
   require Logger
 
-  @max_messages 50
+  @max_messages Application.compile_env(:haul, :max_chat_messages, 50)
   @max_edit_rounds 10
   @rate_window 86_400
-  @extraction_debounce_ms 800
+  @extraction_debounce_ms Application.compile_env(:haul, :extraction_debounce_ms, 800)
   @total_profile_fields 7
 
   @impl true
@@ -45,6 +45,7 @@ defmodule HaulWeb.ChatLive do
        |> assign(:input, "")
        |> assign(:streaming?, false)
        |> assign(:message_count, message_count)
+       |> assign(:max_messages, @max_messages)
        |> assign(:session_id, session_id)
        |> assign(:conversation, conversation)
        |> assign(:system_prompt, system_prompt)
@@ -223,7 +224,7 @@ defmodule HaulWeb.ChatLive do
               </button>
             </form>
 
-            <%= if not @edit_mode? and @message_count >= 50 do %>
+            <%= if not @edit_mode? and @message_count >= @max_messages do %>
               <p class="text-xs text-red-400 mt-1 text-center">
                 Message limit reached. Please refresh to start a new session.
               </p>

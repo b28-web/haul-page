@@ -5,7 +5,7 @@ title: agent-test-targeting
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-024-03]
 ---
 

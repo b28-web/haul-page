@@ -75,17 +75,8 @@ defmodule HaulWeb.ConnCase do
       )
       |> Ash.update()
 
-    # Sign in to get a token
-    {:ok, signed_in} =
-      User
-      |> Ash.Query.for_read(
-        :sign_in_with_password,
-        %{email: user_attrs.email, password: user_attrs.password},
-        tenant: tenant
-      )
-      |> Ash.read_one()
-
-    token = signed_in.__metadata__.token
+    # Generate token directly (skip bcrypt verify for speed)
+    {:ok, token, _claims} = AshAuthentication.Jwt.token_for_user(user)
 
     %{company: company, tenant: tenant, user: user, token: token}
   end

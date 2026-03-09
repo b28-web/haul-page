@@ -93,7 +93,7 @@ defmodule HaulWeb.ProvisionQATest do
       |> form("form", %{text: "I run QA Pipeline Co in QA Metro"})
       |> render_submit()
 
-      Process.sleep(500)
+      Process.sleep(200)
       html = render(view)
 
       assert html =~ "QA Pipeline Co"

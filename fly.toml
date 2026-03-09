@@ -4,7 +4,8 @@ primary_region = "iad"
 [build]
 
 [env]
-  PHX_HOST = "haul-page.fly.dev"
+  PHX_HOST = "haulpage.com"
+  BASE_DOMAIN = "haulpage.com"
   PORT = "4000"
 
 [http_service]

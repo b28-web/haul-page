@@ -25,12 +25,18 @@ defmodule HaulWeb.Router do
     get "/scan/qr", QRController, :generate
     live "/scan", ScanLive
     live "/book", BookingLive
+    live "/pay/:job_id", PaymentLive
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", HaulWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", HaulWeb do
+    pipe_through :api
+    get "/places/autocomplete", PlacesController, :autocomplete
+  end
+
+  scope "/webhooks", HaulWeb do
+    pipe_through :api
+    post "/stripe", WebhookController, :stripe
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:haul, :dev_routes) do

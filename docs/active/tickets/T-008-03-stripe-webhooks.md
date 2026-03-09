@@ -5,7 +5,7 @@ title: stripe-webhooks
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-008-01, T-003-01]
 ---
 

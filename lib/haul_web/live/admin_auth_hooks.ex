@@ -2,20 +2,21 @@ defmodule HaulWeb.AdminAuthHooks do
   @moduledoc """
   LiveView on_mount hooks for superadmin authentication.
   Returns 404 (not redirect) when unauthenticated to avoid revealing route existence.
+  Blocks admin LiveViews during impersonation (no privilege stacking).
   """
   import Phoenix.LiveView
 
   alias Haul.Admin.AdminUser
   alias AshAuthentication.Jwt
 
-  @doc """
-  Requires an authenticated admin user.
-  Returns 404 if not authenticated.
-  """
   def on_mount(:require_admin, _params, session, socket) do
     case load_admin_from_session(session) do
       {:ok, admin} ->
-        {:cont, Phoenix.Component.assign(socket, :current_admin, admin)}
+        if session["impersonating_slug"] do
+          {:halt, socket |> redirect(to: "/")}
+        else
+          {:cont, Phoenix.Component.assign(socket, :current_admin, admin)}
+        end
 
       :error ->
         {:halt, socket |> redirect(to: "/")}

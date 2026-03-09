@@ -3,9 +3,10 @@ defmodule HaulWeb.Plugs.TenantResolver do
   Resolves tenant context from the HTTP Host header.
 
   Resolution order:
-  1. Custom domain — look up Company by `domain` field
-  2. Subdomain — extract prefix from Host, look up Company by `slug`
-  3. Fallback — use operator config slug as demo tenant
+  1. Impersonation — if admin is impersonating, use impersonated slug
+  2. Custom domain — look up Company by `domain` field
+  3. Subdomain — extract prefix from Host, look up Company by `slug`
+  4. Fallback — use operator config slug as demo tenant
 
   Sets `conn.assigns.current_tenant` (Company struct or nil) and
   `conn.assigns.tenant` (Postgres schema string for Ash operations).
@@ -15,6 +16,7 @@ defmodule HaulWeb.Plugs.TenantResolver do
 
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Accounts.Company
+  alias HaulWeb.Impersonation
 
   @behaviour Plug
 
@@ -23,6 +25,60 @@ defmodule HaulWeb.Plugs.TenantResolver do
 
   @impl true
   def call(conn, _opts) do
+    if has_session?(conn) do
+      session = get_session(conn)
+
+      if Impersonation.active?(session) do
+        handle_impersonation(conn, session)
+      else
+        handle_normal(conn)
+      end
+    else
+      handle_normal(conn)
+    end
+  end
+
+  defp has_session?(%{private: %{plug_session: _}}), do: true
+  defp has_session?(_), do: false
+
+  defp handle_impersonation(conn, session) do
+    case Impersonation.check_admin_session(session) do
+      {:ok, _admin} ->
+        if Impersonation.expired?(session) do
+          conn
+          |> Impersonation.end_session(:expired)
+          |> Phoenix.Controller.put_flash(:error, "Impersonation session expired")
+          |> Phoenix.Controller.redirect(to: "/admin")
+          |> halt()
+        else
+          slug = session["impersonating_slug"]
+          resolve_by_slug(conn, slug)
+        end
+
+      :error ->
+        # No valid admin session — ignore impersonation keys
+        handle_normal(conn)
+    end
+  end
+
+  defp resolve_by_slug(conn, slug) do
+    case load_company_by_slug(slug) do
+      {:ok, %Company{} = company} ->
+        tenant = ProvisionTenant.tenant_schema(company.slug)
+
+        conn
+        |> assign(:current_tenant, company)
+        |> assign(:tenant, tenant)
+        |> assign(:is_platform_host, false)
+        |> maybe_put_session("tenant_slug", company.slug)
+        |> store_remote_ip()
+
+      _ ->
+        handle_normal(conn)
+    end
+  end
+
+  defp handle_normal(conn) do
     host = conn.host
     base_domain = Application.get_env(:haul, :base_domain, "localhost")
     is_platform_host = platform_host?(host, base_domain)
@@ -76,13 +132,21 @@ defmodule HaulWeb.Plugs.TenantResolver do
         :not_found
 
       subdomain ->
-        Company
-        |> Ash.Query.filter(slug == ^subdomain)
-        |> Ash.read_one()
+        load_company_by_slug(subdomain)
         |> case do
           {:ok, %Company{} = company} -> {:ok, company}
           _ -> :not_found
         end
+    end
+  end
+
+  defp load_company_by_slug(slug) do
+    Company
+    |> Ash.Query.filter(slug == ^slug)
+    |> Ash.read_one()
+    |> case do
+      {:ok, %Company{} = company} -> {:ok, company}
+      _ -> :not_found
     end
   end
 

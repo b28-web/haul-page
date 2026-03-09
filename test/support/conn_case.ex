@@ -90,6 +90,51 @@ defmodule HaulWeb.ConnCase do
   end
 
   @doc """
+  Creates a completed admin user and returns auth context with JWT token.
+  """
+  def create_admin_session do
+    alias Haul.Admin.AdminUser
+
+    email = "admin-#{System.unique_integer([:positive])}@test.com"
+    password = "SuperSecure123!"
+
+    raw_token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+    token_hash = :crypto.hash(:sha256, raw_token) |> Base.encode16(case: :lower)
+
+    {:ok, admin} =
+      AdminUser
+      |> Ash.Changeset.for_create(
+        :create_bootstrap,
+        %{email: email, setup_token_hash_value: token_hash},
+        authorize?: false
+      )
+      |> Ash.create()
+
+    hashed = Bcrypt.hash_pwd_salt(password)
+
+    {:ok, _admin} =
+      admin
+      |> Ash.Changeset.for_update(:complete_setup, %{hashed_password: hashed}, authorize?: false)
+      |> Ash.update()
+
+    {:ok, completed_admin} =
+      AdminUser
+      |> Ash.Query.for_read(:sign_in_with_password, %{email: email, password: password})
+      |> Ash.read_one()
+
+    token = completed_admin.__metadata__.token
+    %{admin: completed_admin, token: token}
+  end
+
+  @doc """
+  Sets up a conn with admin authentication session.
+  """
+  def log_in_admin(conn, %{token: token}) do
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{_admin_user_token: token})
+  end
+
+  @doc """
   Clear rate limiter ETS entries to prevent cross-test interference.
   """
   def clear_rate_limits do

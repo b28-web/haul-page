@@ -87,6 +87,7 @@ defmodule HaulWeb.Router do
     live "/login", Admin.LoginLive
     post "/session", AdminSessionController, :create
     delete "/session", AdminSessionController, :delete
+    post "/exit-impersonation", AdminSessionController, :exit_impersonation
   end
 
   # Superadmin: authenticated routes
@@ -100,6 +101,8 @@ defmodule HaulWeb.Router do
       live "/accounts", Admin.AccountsLive
       live "/accounts/:slug", Admin.AccountDetailLive
     end
+
+    post "/impersonate/:slug", AdminSessionController, :impersonate
   end
 
   scope "/api", HaulWeb do

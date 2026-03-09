@@ -20,8 +20,11 @@ defmodule HaulWeb.App.DashboardLive do
       <h1 class="font-display text-3xl uppercase tracking-wider">Dashboard</h1>
 
       <div class="space-y-2">
-        <p class="text-lg text-foreground">
+        <p :if={@current_user} class="text-lg text-foreground">
           Welcome, {@current_user.name || @current_user.email}.
+        </p>
+        <p :if={assigns[:impersonating]} class="text-lg text-foreground">
+          Viewing operator dashboard as admin.
         </p>
         <p :if={@site_url} class="text-muted-foreground">
           Your site is live at <a

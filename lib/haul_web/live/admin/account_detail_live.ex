@@ -68,13 +68,25 @@ defmodule HaulWeb.Admin.AccountDetailLive do
             {@company.name}
           </h1>
         </div>
-        <button
-          disabled
-          title="Coming soon (T-023-03)"
-          class="rounded-md bg-zinc-700 px-4 py-2 text-sm text-zinc-400 cursor-not-allowed"
-        >
-          Impersonate
-        </button>
+        <%= if @provisioned do %>
+          <form method="post" action={~p"/admin/impersonate/#{@company.slug}"}>
+            <input type="hidden" name="_csrf_token" value={Phoenix.Controller.get_csrf_token()} />
+            <button
+              type="submit"
+              class="rounded-md bg-amber-600 px-4 py-2 text-sm text-black font-medium hover:bg-amber-500"
+            >
+              Impersonate
+            </button>
+          </form>
+        <% else %>
+          <button
+            disabled
+            title="Tenant not provisioned"
+            class="rounded-md bg-zinc-700 px-4 py-2 text-sm text-zinc-400 cursor-not-allowed"
+          >
+            Impersonate
+          </button>
+        <% end %>
       </div>
 
       <%!-- Status indicators --%>

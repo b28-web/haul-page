@@ -6,6 +6,8 @@ defmodule HaulWeb.TenantHook do
   from the database, and sets `socket.assigns.tenant` and
   `socket.assigns.current_tenant`. Re-verifies on every mount including
   WebSocket reconnects.
+
+  During impersonation, uses `impersonating_slug` instead of `tenant_slug`.
   """
   import Phoenix.Component
 
@@ -15,12 +17,20 @@ defmodule HaulWeb.TenantHook do
   require Ash.Query
 
   def on_mount(:resolve_tenant, _params, session, socket) do
-    case session["tenant_slug"] do
-      slug when is_binary(slug) and slug != "" ->
-        resolve_and_assign(socket, slug)
+    slug = impersonation_slug(session) || session["tenant_slug"]
+
+    case slug do
+      s when is_binary(s) and s != "" ->
+        resolve_and_assign(socket, s)
 
       _ ->
         {:cont, assign_fallback(socket)}
+    end
+  end
+
+  defp impersonation_slug(session) do
+    if HaulWeb.Impersonation.active?(session) do
+      session["impersonating_slug"]
     end
   end
 

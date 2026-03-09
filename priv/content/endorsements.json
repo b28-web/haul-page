@@ -1,0 +1,26 @@
+[
+  {
+    "customer_name": "Jane D.",
+    "quote_text": "Called in the morning, they were here by lunch. Took everything in one load. Fantastic service!",
+    "star_rating": 5,
+    "date": "2025-11-15"
+  },
+  {
+    "customer_name": "Mike R.",
+    "quote_text": "Showed up on time, gave a fair price, and left the place cleaner than they found it.",
+    "star_rating": 5,
+    "date": "2025-10-22"
+  },
+  {
+    "customer_name": "Sarah K.",
+    "quote_text": "Used them for a full basement cleanout. Three truckloads and they didn't bat an eye. Highly recommend.",
+    "star_rating": 5,
+    "date": "2025-09-08"
+  },
+  {
+    "customer_name": "Tom W.",
+    "quote_text": "Professional crew, reasonable prices. Will definitely use again for our next renovation project.",
+    "star_rating": 4,
+    "date": "2025-08-30"
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "before_photo_url": "/images/gallery/before-1.jpg",
+    "after_photo_url": "/images/gallery/after-1.jpg",
+    "caption": "Full garage cleanout — hauled in one trip"
+  },
+  {
+    "before_photo_url": "/images/gallery/before-2.jpg",
+    "after_photo_url": "/images/gallery/after-2.jpg",
+    "caption": "Backyard debris removal after storm damage"
+  },
+  {
+    "before_photo_url": "/images/gallery/before-3.jpg",
+    "after_photo_url": "/images/gallery/after-3.jpg",
+    "caption": "Office furniture removal — ready for new tenants"
+  }
+]

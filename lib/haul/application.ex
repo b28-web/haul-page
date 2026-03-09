@@ -20,6 +20,8 @@ defmodule Haul.Application do
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
+    Haul.Content.Loader.load!()
+
     opts = [strategy: :one_for_one, name: Haul.Supervisor]
     Supervisor.start_link(children, opts)
   end

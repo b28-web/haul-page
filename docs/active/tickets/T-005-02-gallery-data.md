@@ -5,7 +5,7 @@ title: gallery-data
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-005-01]
 ---
 

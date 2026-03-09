@@ -9,11 +9,13 @@ import Config
 
 config :haul,
   ecto_repos: [Haul.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  ash_domains: [Haul.Accounts, Haul.Operations, Haul.Content]
 
 # Operator identity — displayed on the landing page and used in templates.
 # Override individual fields via env vars in runtime.exs.
 config :haul, :operator,
+  slug: "junk-and-handy",
   business_name: "Junk & Handy",
   phone: "(555) 123-4567",
   email: "hello@junkandhandy.com",
@@ -22,12 +24,36 @@ config :haul, :operator,
   service_area: "Your Area",
   coupon_text: "10% OFF",
   services: [
-    %{title: "Junk Removal", description: "Furniture, appliances, debris — hauled away same day.", icon: "hero-truck"},
-    %{title: "Cleanouts", description: "Garages, basements, storage units cleared out completely.", icon: "hero-trash"},
-    %{title: "Yard Waste", description: "Branches, clippings, dirt — gone before you know it.", icon: "hero-sparkles"},
-    %{title: "Repairs", description: "Small fixes, patching, and maintenance around the house.", icon: "hero-wrench"},
-    %{title: "Assembly", description: "Furniture, equipment, shelving — built and placed right.", icon: "hero-wrench-screwdriver"},
-    %{title: "Moving Help", description: "Loading, unloading, rearranging — extra hands when you need them.", icon: "hero-cube"}
+    %{
+      title: "Junk Removal",
+      description: "Furniture, appliances, debris — hauled away same day.",
+      icon: "hero-truck"
+    },
+    %{
+      title: "Cleanouts",
+      description: "Garages, basements, storage units cleared out completely.",
+      icon: "hero-trash"
+    },
+    %{
+      title: "Yard Waste",
+      description: "Branches, clippings, dirt — gone before you know it.",
+      icon: "hero-sparkles"
+    },
+    %{
+      title: "Repairs",
+      description: "Small fixes, patching, and maintenance around the house.",
+      icon: "hero-wrench"
+    },
+    %{
+      title: "Assembly",
+      description: "Furniture, equipment, shelving — built and placed right.",
+      icon: "hero-wrench-screwdriver"
+    },
+    %{
+      title: "Moving Help",
+      description: "Loading, unloading, rearranging — extra hands when you need them.",
+      icon: "hero-cube"
+    }
   ]
 
 # Configure the endpoint
@@ -82,6 +108,9 @@ config :phoenix, :json_library, Jason
 # Configure ex_money / ex_cldr
 config :ex_money,
   default_cldr_backend: Haul.Cldr
+
+# Token signing secret for AshAuthentication (override in runtime.exs for prod)
+config :haul, :token_signing_secret, "dev-only-signing-secret-replace-in-prod"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

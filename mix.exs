@@ -78,6 +78,10 @@ defmodule Haul.MixProject do
       {:ash_money, "~> 0.2.5"},
       {:ash_paper_trail, "~> 0.5.7"},
       {:ash_archival, "~> 2.0"},
+      {:picosat_elixir, "~> 0.2"},
+
+      # QR code generation
+      {:eqrcode, "~> 0.1.10"},
 
       # Quality
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},

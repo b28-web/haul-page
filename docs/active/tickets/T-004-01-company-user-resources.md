@@ -5,7 +5,7 @@ title: company-user-resources
 type: task
 status: open
 priority: critical
-phase: ready
+phase: done
 depends_on: [T-002-03]
 ---
 

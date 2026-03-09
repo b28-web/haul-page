@@ -5,7 +5,7 @@ title: impersonation
 type: task
 status: open
 priority: high
-phase: ready
+phase: plan
 depends_on: [T-023-02]
 ---
 

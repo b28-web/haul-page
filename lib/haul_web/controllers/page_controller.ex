@@ -19,7 +19,7 @@ defmodule HaulWeb.PageController do
   end
 
   defp operator_home(conn) do
-    tenant = ContentHelpers.resolve_tenant()
+    tenant = conn.assigns[:tenant] || ContentHelpers.resolve_tenant()
     site_config = ContentHelpers.load_site_config(tenant)
     services = ContentHelpers.load_services(tenant)
 

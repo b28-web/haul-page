@@ -4,12 +4,14 @@ defmodule HaulWeb.AppSessionController do
   """
   use HaulWeb, :controller
 
-  def create(conn, %{"session" => %{"token" => token, "tenant" => tenant}}) do
+  def create(conn, %{"session" => %{"token" => token, "tenant" => tenant} = session}) do
+    redirect_to = Map.get(session, "redirect_to", ~p"/app")
+
     conn
     |> put_session(:user_token, token)
     |> put_session(:tenant, tenant)
     |> configure_session(renew: true)
-    |> redirect(to: ~p"/app")
+    |> redirect(to: redirect_to)
   end
 
   def delete(conn, _params) do

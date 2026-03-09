@@ -99,6 +99,15 @@ defmodule HaulWeb.ConnCase do
   end
 
   @doc """
+  Clear rate limiter ETS entries to prevent cross-test interference.
+  """
+  def clear_rate_limits do
+    if :ets.whereis(Haul.RateLimiter) != :undefined do
+      :ets.delete_all_objects(Haul.RateLimiter)
+    end
+  end
+
+  @doc """
   Cleanup helper for tenant schemas created during tests.
   """
   def cleanup_tenants do

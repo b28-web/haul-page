@@ -10,7 +10,7 @@ import Config
 config :haul,
   ecto_repos: [Haul.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Haul.Accounts, Haul.Operations, Haul.Content]
+  ash_domains: [Haul.Accounts, Haul.Operations, Haul.Content, Haul.AI.Domain]
 
 # Base domain for subdomain extraction (e.g., "haulpage.com" in production)
 config :haul, :base_domain, "localhost"
@@ -86,7 +86,14 @@ config :haul, :sms_adapter, Haul.SMS.Sandbox
 # Oban job processing
 config :haul, Oban,
   repo: Haul.Repo,
-  queues: [notifications: 10]
+  queues: [notifications: 10, default: 5, certs: 3],
+  plugins: [
+    {Oban.Plugins.Cron,
+     crontab: [
+       {"0 6 * * *", Haul.Workers.CheckDunningGrace},
+       {"0 3 * * *", Haul.Workers.CleanupConversations}
+     ]}
+  ]
 
 # Configure esbuild (the version is required)
 config :esbuild,
@@ -125,6 +132,22 @@ config :ex_money,
 config :haul, :payments_adapter, Haul.Payments.Sandbox
 config :haul, :stripe_publishable_key, ""
 config :stripity_stripe, api_key: ""
+
+# Cert provisioning — Sandbox for dev/test, FlyApi for prod (configured in runtime.exs)
+config :haul, :cert_adapter, Haul.Domains.Sandbox
+
+# Billing — Sandbox for dev/test, Stripe for prod (configured in runtime.exs)
+config :haul, :billing_adapter, Haul.Billing.Sandbox
+config :haul, :stripe_price_pro, ""
+config :haul, :stripe_price_business, ""
+config :haul, :stripe_price_dedicated, ""
+
+# Billing webhook secret — separate from payment webhook secret
+config :haul, :stripe_billing_webhook_secret, ""
+
+# AI / BAML — Sandbox for dev, Baml for prod (configured in runtime.exs)
+config :haul, :ai_adapter, Haul.AI.Sandbox
+config :haul, :chat_adapter, Haul.AI.Chat.Sandbox
 
 # Photo upload storage — :local for dev/test, :s3 for prod (Fly Tigris)
 config :haul, :storage, backend: :local

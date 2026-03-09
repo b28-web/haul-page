@@ -5,7 +5,15 @@ defmodule HaulWeb.App.LoginLive do
 
   @impl true
   def mount(_params, session, socket) do
-    tenant = session["tenant"] || Map.get(socket.assigns, :tenant, nil)
+    tenant =
+      session["tenant"] ||
+        case session["tenant_slug"] do
+          slug when is_binary(slug) ->
+            Haul.Accounts.Changes.ProvisionTenant.tenant_schema(slug)
+
+          _ ->
+            Map.get(socket.assigns, :tenant, nil)
+        end
 
     {:ok,
      socket

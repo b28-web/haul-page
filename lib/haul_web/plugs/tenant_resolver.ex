@@ -24,6 +24,8 @@ defmodule HaulWeb.Plugs.TenantResolver do
   @impl true
   def call(conn, _opts) do
     host = conn.host
+    base_domain = Application.get_env(:haul, :base_domain, "localhost")
+    is_platform_host = platform_host?(host, base_domain)
 
     case resolve_company(host) do
       {:ok, %Company{} = company} ->
@@ -32,7 +34,9 @@ defmodule HaulWeb.Plugs.TenantResolver do
         conn
         |> assign(:current_tenant, company)
         |> assign(:tenant, tenant)
+        |> assign(:is_platform_host, false)
         |> maybe_put_session("tenant_slug", company.slug)
+        |> store_remote_ip()
 
       :fallback ->
         slug = fallback_slug()
@@ -41,7 +45,9 @@ defmodule HaulWeb.Plugs.TenantResolver do
         conn
         |> assign(:current_tenant, nil)
         |> assign(:tenant, tenant)
+        |> assign(:is_platform_host, is_platform_host)
         |> maybe_put_session("tenant_slug", slug)
+        |> store_remote_ip()
     end
   end
 
@@ -104,11 +110,34 @@ defmodule HaulWeb.Plugs.TenantResolver do
     end
   end
 
+  @doc """
+  Returns true if the host is the bare platform domain (no subdomain).
+
+  ## Examples
+
+      iex> HaulWeb.Plugs.TenantResolver.platform_host?("haulpage.com", "haulpage.com")
+      true
+
+      iex> HaulWeb.Plugs.TenantResolver.platform_host?("joes.haulpage.com", "haulpage.com")
+      false
+
+      iex> HaulWeb.Plugs.TenantResolver.platform_host?("localhost", "localhost")
+      true
+  """
+  def platform_host?(host, base_domain), do: host == base_domain
+
   defp maybe_put_session(%{private: %{plug_session: _}} = conn, key, value) do
     put_session(conn, key, value)
   end
 
   defp maybe_put_session(conn, _key, _value), do: conn
+
+  defp store_remote_ip(%{private: %{plug_session: _}} = conn) do
+    ip = conn.remote_ip |> :inet.ntoa() |> to_string()
+    put_session(conn, "remote_ip", ip)
+  end
+
+  defp store_remote_ip(conn), do: conn
 
   defp fallback_slug do
     operator = Application.get_env(:haul, :operator, [])

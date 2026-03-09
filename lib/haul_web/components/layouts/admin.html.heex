@@ -34,6 +34,32 @@
         label="Content"
         active={String.starts_with?(@current_path, "/app/content")}
       />
+      <div :if={String.starts_with?(@current_path, "/app/content")} class="ml-6 space-y-1">
+        <.sidebar_link
+          href={~p"/app/content/site"}
+          icon="hero-cog-6-tooth"
+          label="Site Settings"
+          active={@current_path == "/app/content/site"}
+        />
+        <.sidebar_link
+          href={~p"/app/content/services"}
+          icon="hero-wrench-screwdriver"
+          label="Services"
+          active={@current_path == "/app/content/services"}
+        />
+        <.sidebar_link
+          href={~p"/app/content/gallery"}
+          icon="hero-photo"
+          label="Gallery"
+          active={@current_path == "/app/content/gallery"}
+        />
+        <.sidebar_link
+          href={~p"/app/content/endorsements"}
+          icon="hero-chat-bubble-left-right"
+          label="Endorsements"
+          active={@current_path == "/app/content/endorsements"}
+        />
+      </div>
       <.sidebar_link
         href={~p"/app/bookings"}
         icon="hero-calendar"
@@ -46,6 +72,20 @@
         label="Settings"
         active={String.starts_with?(@current_path, "/app/settings")}
       />
+      <div :if={String.starts_with?(@current_path, "/app/settings")} class="ml-6 space-y-1">
+        <.sidebar_link
+          href={~p"/app/settings/billing"}
+          icon="hero-credit-card"
+          label="Billing"
+          active={@current_path == "/app/settings/billing"}
+        />
+        <.sidebar_link
+          href={~p"/app/settings/domain"}
+          icon="hero-globe-alt"
+          label="Domain"
+          active={@current_path == "/app/settings/domain"}
+        />
+      </div>
     </nav>
   </aside>
 

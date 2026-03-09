@@ -72,6 +72,32 @@ if places_key = System.get_env("GOOGLE_PLACES_API_KEY") do
   config :haul, :google_places_api_key, places_key
 end
 
+# Fly.io certificate provisioning — enable when API token is set
+if fly_token = System.get_env("FLY_API_TOKEN") do
+  config :haul, :cert_adapter, Haul.Domains.FlyApi
+  config :haul, :fly_api_token, fly_token
+
+  config :haul,
+         :fly_app_name,
+         System.get_env("FLY_APP_NAME") ||
+           raise("FLY_APP_NAME is required when FLY_API_TOKEN is set")
+end
+
+# AI / BAML — store API key for all envs, but only switch adapter outside test
+if anthropic_key = System.get_env("ANTHROPIC_API_KEY") do
+  config :haul, :anthropic_api_key, anthropic_key
+
+  if config_env() != :test do
+    config :haul, :ai_adapter, Haul.AI.Baml
+    config :haul, :chat_adapter, Haul.AI.Chat.Anthropic
+  end
+else
+  # In production without an API key, disable chat so /start redirects to /signup
+  if config_env() == :prod do
+    config :haul, :chat_available, false
+  end
+end
+
 # Sentry error tracking — enable when DSN is set (any environment)
 if sentry_dsn = System.get_env("SENTRY_DSN") do
   config :sentry, dsn: sentry_dsn
@@ -165,6 +191,30 @@ if config_env() == :prod do
 
     if webhook_secret = System.get_env("STRIPE_WEBHOOK_SECRET") do
       config :stripity_stripe, signing_secret: webhook_secret
+    end
+
+    # Billing webhook secret — falls back to payment webhook secret if not set
+    billing_webhook_secret =
+      System.get_env("STRIPE_BILLING_WEBHOOK_SECRET") ||
+        System.get_env("STRIPE_WEBHOOK_SECRET")
+
+    if billing_webhook_secret do
+      config :haul, :stripe_billing_webhook_secret, billing_webhook_secret
+    end
+
+    # Billing adapter — use Stripe when Stripe keys are present
+    config :haul, :billing_adapter, Haul.Billing.Stripe
+
+    if price_pro = System.get_env("STRIPE_PRICE_PRO") do
+      config :haul, :stripe_price_pro, price_pro
+    end
+
+    if price_business = System.get_env("STRIPE_PRICE_BUSINESS") do
+      config :haul, :stripe_price_business, price_business
+    end
+
+    if price_dedicated = System.get_env("STRIPE_PRICE_DEDICATED") do
+      config :haul, :stripe_price_dedicated, price_dedicated
     end
   end
 

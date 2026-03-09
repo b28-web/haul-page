@@ -9,6 +9,7 @@ defmodule HaulWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug HaulWeb.Plugs.TenantResolver
+    plug HaulWeb.Plugs.EnsureChatSession
   end
 
   pipeline :api do
@@ -34,6 +35,7 @@ defmodule HaulWeb.Router do
       live "/scan", ScanLive
       live "/book", BookingLive
       live "/pay/:job_id", PaymentLive
+      live "/start", ChatLive
     end
   end
 
@@ -41,6 +43,7 @@ defmodule HaulWeb.Router do
   scope "/app", HaulWeb do
     pipe_through :browser
 
+    live "/signup", App.SignupLive
     live "/login", App.LoginLive
     post "/session", AppSessionController, :create
     delete "/session", AppSessionController, :delete
@@ -54,10 +57,16 @@ defmodule HaulWeb.Router do
       on_mount: [{HaulWeb.AuthHooks, :require_auth}],
       layout: {HaulWeb.Layouts, :admin} do
       live "/", App.DashboardLive
+      live "/onboarding", App.OnboardingLive
       live "/content", App.DashboardLive
       live "/content/site", App.SiteConfigLive
+      live "/content/services", App.ServicesLive
+      live "/content/gallery", App.GalleryLive
+      live "/content/endorsements", App.EndorsementsLive
       live "/bookings", App.DashboardLive
       live "/settings", App.DashboardLive
+      live "/settings/billing", App.BillingLive
+      live "/settings/domain", App.DomainSettingsLive
     end
   end
 
@@ -69,6 +78,7 @@ defmodule HaulWeb.Router do
   scope "/webhooks", HaulWeb do
     pipe_through :api
     post "/stripe", WebhookController, :stripe
+    post "/stripe/billing", BillingWebhookController, :billing
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

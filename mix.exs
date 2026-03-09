@@ -100,6 +100,9 @@ defmodule Haul.MixProject do
       # Error tracking (Sentry)
       {:sentry, "~> 12.0"},
 
+      # BAML — structured LLM output via Rust NIF
+      {:baml_elixir, "~> 0.2.0"},
+
       # Quality
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},

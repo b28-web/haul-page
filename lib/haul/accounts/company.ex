@@ -30,8 +30,8 @@ defmodule Haul.Accounts.Company do
 
     attribute :subscription_plan, :atom do
       allow_nil? false
-      default :free
-      constraints one_of: [:free, :pro]
+      default :starter
+      constraints one_of: [:starter, :pro, :business, :dedicated]
       public? true
     end
 
@@ -40,7 +40,34 @@ defmodule Haul.Accounts.Company do
       public? true
     end
 
+    attribute :stripe_subscription_id, :string do
+      allow_nil? true
+      public? true
+    end
+
     attribute :domain, :string do
+      allow_nil? true
+      public? true
+    end
+
+    attribute :domain_status, :atom do
+      allow_nil? true
+      constraints one_of: [:pending, :verified, :provisioning, :active]
+      public? true
+    end
+
+    attribute :onboarding_complete, :boolean do
+      allow_nil? false
+      default false
+      public? true
+    end
+
+    attribute :dunning_started_at, :utc_datetime do
+      allow_nil? true
+      public? true
+    end
+
+    attribute :domain_verified_at, :utc_datetime do
       allow_nil? true
       public? true
     end
@@ -82,7 +109,25 @@ defmodule Haul.Accounts.Company do
     end
 
     update :update_company do
-      accept [:name, :timezone, :subscription_plan, :stripe_customer_id, :domain]
+      accept [
+        :name,
+        :timezone,
+        :subscription_plan,
+        :stripe_customer_id,
+        :stripe_subscription_id,
+        :domain,
+        :domain_status,
+        :domain_verified_at,
+        :onboarding_complete,
+        :dunning_started_at
+      ]
+    end
+
+    read :by_stripe_customer_id do
+      argument :stripe_customer_id, :string, allow_nil?: false
+      get? true
+
+      filter expr(stripe_customer_id == ^arg(:stripe_customer_id))
     end
   end
 end

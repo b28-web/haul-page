@@ -4,6 +4,21 @@ defmodule HaulWeb.PageController do
   alias HaulWeb.ContentHelpers
 
   def home(conn, _params) do
+    if conn.assigns[:is_platform_host] do
+      marketing(conn)
+    else
+      operator_home(conn)
+    end
+  end
+
+  defp marketing(conn) do
+    conn
+    |> put_layout(false)
+    |> assign(:page_title, "Haul — Your hauling business online in 2 minutes")
+    |> render(:marketing)
+  end
+
+  defp operator_home(conn) do
     tenant = ContentHelpers.resolve_tenant()
     site_config = ContentHelpers.load_site_config(tenant)
     services = ContentHelpers.load_services(tenant)

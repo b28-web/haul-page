@@ -31,7 +31,7 @@ defmodule Haul.Accounts.CompanyTest do
       assert company.name == "Test Hauling"
       assert company.slug == "test-hauling"
       assert company.timezone == "Etc/UTC"
-      assert company.subscription_plan == :free
+      assert company.subscription_plan == :starter
     end
 
     test "derives slug from name when not provided" do

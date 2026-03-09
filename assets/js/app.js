@@ -25,13 +25,22 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/haul"
 import StripePayment from "./hooks/stripe_payment"
 import AddressAutocomplete from "./hooks/address_autocomplete"
+import ChatScroll from "./hooks/chat_scroll"
 import topbar from "../vendor/topbar"
+
+const ExternalRedirect = {
+  mounted() {
+    this.handleEvent("redirect", ({url}) => {
+      window.location.href = url
+    })
+  }
+}
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, StripePayment, AddressAutocomplete},
+  hooks: {...colocatedHooks, StripePayment, AddressAutocomplete, ChatScroll, ExternalRedirect},
 })
 
 // Show progress bar on live navigation and form submits

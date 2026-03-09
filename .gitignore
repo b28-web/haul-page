@@ -48,6 +48,9 @@ Thumbs.db
 # Dialyzer
 /priv/plts/
 
+# Tenant uploads (test artifacts)
+/priv/static/uploads/tenant_*/
+
 # Playwright MCP
 .playwright-mcp/
 walkthrough-*.png

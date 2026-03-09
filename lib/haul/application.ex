@@ -17,6 +17,7 @@ defmodule Haul.Application do
       {Oban, Application.fetch_env!(:haul, Oban)},
       {DNSCluster, query: Application.get_env(:haul, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Haul.PubSub},
+      Haul.RateLimiter,
       # Start to serve requests, typically the last entry
       HaulWeb.Endpoint
     ]

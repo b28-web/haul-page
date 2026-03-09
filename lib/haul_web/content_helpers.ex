@@ -43,8 +43,13 @@ defmodule HaulWeb.ContentHelpers do
   """
   def load_gallery_items(tenant) do
     case Ash.read(GalleryItem, tenant: tenant) do
-      {:ok, items} -> Enum.filter(items, & &1.active)
-      _ -> []
+      {:ok, items} ->
+        items
+        |> Enum.filter(& &1.active)
+        |> Enum.sort_by(& &1.sort_order)
+
+      _ ->
+        []
     end
   end
 

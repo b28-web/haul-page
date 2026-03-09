@@ -29,11 +29,12 @@ defmodule HaulWeb.PageControllerTest do
       end
     end)
 
-    %{operator: operator, tenant: tenant}
+    # Use subdomain host so TenantResolver resolves operator (not platform marketing page)
+    %{operator: operator, tenant: tenant, host: "#{operator_slug}.localhost"}
   end
 
-  test "GET / returns 200 with landing page content from Ash", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "GET / returns 200 with landing page content from Ash", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     # Business identity from SiteConfig (seeded from site_config.yml)
@@ -42,22 +43,22 @@ defmodule HaulWeb.PageControllerTest do
     assert body =~ "hello@junkandhandy.com"
   end
 
-  test "phone number is a tel: link", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "phone number is a tel: link", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     assert body =~ "tel:5551234567"
   end
 
-  test "email is a mailto: link", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "email is a mailto: link", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     assert body =~ "mailto:hello@junkandhandy.com"
   end
 
-  test "page contains all section headings", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "page contains all section headings", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     assert body =~ "Junk Hauling"
@@ -66,8 +67,8 @@ defmodule HaulWeb.PageControllerTest do
     assert body =~ "Ready to Get Started?"
   end
 
-  test "page contains services from seeded content", %{conn: conn, tenant: tenant} do
-    conn = get(conn, ~p"/")
+  test "page contains services from seeded content", %{conn: conn, host: host, tenant: tenant} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     services = Ash.read!(Haul.Content.Service, tenant: tenant)
@@ -80,24 +81,24 @@ defmodule HaulWeb.PageControllerTest do
     end
   end
 
-  test "page does not render the app layout navbar", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "page does not render the app layout navbar", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     refute body =~ "navbar"
     refute body =~ "phoenixframework.org"
   end
 
-  test "print button uses progressive enhancement", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "print button uses progressive enhancement", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     assert body =~ "window.print()"
     assert body =~ "print-button"
   end
 
-  test "coupon text comes from SiteConfig", %{conn: conn} do
-    conn = get(conn, ~p"/")
+  test "coupon text comes from SiteConfig", %{conn: conn, host: host} do
+    conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     assert body =~ "10% OFF"

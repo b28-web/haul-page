@@ -32,6 +32,15 @@ config :haul, :sms_adapter, Haul.SMS.Sandbox
 # Payments — use sandbox adapter in test (no Stripe calls)
 config :haul, :payments_adapter, Haul.Payments.Sandbox
 
+# Billing — use sandbox adapter in test (no Stripe calls)
+config :haul, :billing_adapter, Haul.Billing.Sandbox
+config :haul, :stripe_price_pro, "price_test_pro"
+config :haul, :stripe_price_business, "price_test_business"
+config :haul, :stripe_price_dedicated, "price_test_dedicated"
+
+# AI — use sandbox adapter in test (no LLM calls)
+config :haul, :ai_adapter, Haul.AI.Sandbox
+
 # Places — use sandbox adapter in test (no Google API calls)
 config :haul, :places_adapter, Haul.Places.Sandbox
 config :stripity_stripe, api_key: "sk_test_fake"

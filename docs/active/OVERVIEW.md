@@ -4,32 +4,39 @@
 
 ## Current state
 
-**Phase:** Foundation (S-001) complete. Landing page (S-002) complete. Accounts domain (S-004) complete. Scan page (S-005) complete. Booking form (S-003) nearly complete — 3/4 done. Content domain (S-006) in progress — 1/5 done, T-006-01 implementing.
+**Phase:** Foundation (S-001) complete. Landing page (S-002) complete. Accounts domain (S-004) complete. Scan page (S-005) complete. Booking form (S-003) complete. Content domain (S-006) complete. Notifications (S-007) nearly complete — 4/5 done, T-007-04 implementing. Payments (S-008) started — 1/4 done, T-008-02 in planning.
 
-**What works:** Dev server healthy on port 4000. 128 tests passing. All work committed and pushed to origin/main. Ash resources live: Accounts domain (Company, User, Token with tenant provisioning), Operations domain (Job with state machine), Content domain (SiteConfig, Service, GalleryItem, Endorsement, Page). Landing page at `/` with dark grayscale theme + print stylesheet. Scan page LiveView at `/scan` with gallery. Booking LiveView at `/book`. QR code generation. CI pipeline. Dockerfile. Fly deploy configured.
+**What works:** Dev server healthy on port 4000. 164 tests passing, 0 failures. Ash resources live: Accounts domain (Company, User, Token with tenant provisioning), Operations domain (Job with state machine), Content domain (SiteConfig, Service, GalleryItem, Endorsement, Page). Content rendering via MDEx. Seed task populates content from YAML/Markdown files. Content-driven page routes. Photo upload on booking form. Swoosh email + SMS client configured. Oban-based notification workers. Stripe deps installed. Landing page at `/` with dark grayscale theme + print stylesheet. Scan page LiveView at `/scan` with gallery. Booking LiveView at `/book` with photo upload. QR code generation. CI pipeline. Dockerfile. Fly deploy configured.
 
-**What's next:** T-001-06 (mix-setup) done — service integration stories are unblocked:
-- **Content chain:** T-006-01 (content-resources) implementing → T-006-02 → T-006-03 → T-006-04
-- **Booking finish:** T-003-03 (photo-upload) in research → T-003-04 (browser-qa)
-- **Service integrations now unblocked:** T-007-01/02 (swoosh/SMS), T-008-01 (stripe), T-009-01 (places proxy)
+**What's next:**
+- **Notifications finish:** T-007-04 (notification-templates) implementing — all components built, needs final review
+- **Payments continue:** T-008-02 (payment-element) in plan phase → T-008-03 (stripe-webhooks) → T-008-04 (browser-qa)
+- **Address autocomplete:** T-009-01 (places-proxy) ready → T-009-02 → T-009-03
+- **Bugfixes:** T-010-01, T-010-02 ready → T-010-03 (smoke test)
+- **SaaS platform:** T-012-01 (tenant-plug), T-013-01 (app-layout) ready — gate most of Phase 2
 
 ## Active tickets
 
 | Ticket | Title | Phase | Agent notes |
 |--------|-------|-------|-------------|
-| T-006-01 | content-resources | implement | Content Ash domain resources being built |
-| T-003-03 | photo-upload | research | Photo upload for booking form |
+| T-007-04 | notification-templates | implement | All 5 components done: BookingEmail (operator alert + customer confirmation), BookingSMS, worker refactoring, 15 unit tests. Needs review. |
+| T-008-02 | payment-element | plan | Research, design, structure, plan docs complete. Ready for implementation. |
 
 ## Ready to start (unblocked)
 
 | Ticket | Title | Blocked by (done) |
 |--------|-------|--------------------|
-| T-007-01 | swoosh-setup | T-001-06 ✓ |
-| T-007-02 | sms-client | T-001-06 ✓ |
-| T-008-01 | stripe-setup | T-001-06 ✓ |
+| T-008-03 | stripe-webhooks | T-003-01 ✓, T-008-01 ✓ |
 | T-009-01 | places-proxy | T-001-06 ✓ |
-| T-006-02 | mdex-rendering | T-006-01 (in progress) |
-| T-003-04 | browser-qa | T-003-03 (in progress) |
+| T-010-01 | fix-booking-crash | (no deps) |
+| T-010-02 | gallery-placeholders | (no deps) |
+| T-011-01 | onboarding-runbook | T-001-06 ✓ |
+| T-011-02 | customer-seed-content | T-006-03 ✓ |
+| T-011-03 | monitoring-setup | T-001-05 ✓ |
+| T-012-01 | tenant-plug | T-004-01 ✓ |
+| T-013-01 | app-layout | T-004-01 ✓ |
+| T-014-02 | default-content-pack | T-006-03 ✓ |
+| T-018-01 | baml-dep-setup | T-001-06 ✓ |
 
 ## Recently completed
 
@@ -48,22 +55,26 @@
 | T-004-01 | company-user-resources | Accounts domain: Company (tenant root), User, Token. Tenant provisioning. |
 | T-003-01 | job-resource | Operations domain: Job with state machine (lead→scheduled→completed). |
 | T-003-02 | booking-liveview | Booking LiveView at `/book`. Creates Job in :lead state. |
+| T-003-03 | photo-upload | LiveView upload with Storage module. photo_urls field on Job. |
+| T-003-04 | browser-qa | Booking form Playwright QA passed. |
 | T-005-01 | scan-page-layout | Scan page LiveView at `/scan`. Dark theme, gallery, CTA. |
 | T-005-02 | gallery-data | Gallery data model for before/after photos. |
 | T-005-03 | qr-generation | QR code generation for scan page URL. QrController. |
 | T-005-04 | browser-qa | Scan page Playwright QA passed. |
-
-## Ready to start (unblocked) — bugfixes
-
-| Ticket | Title | Story | Notes |
-|--------|-------|-------|-------|
-| T-010-01 | fix-booking-crash | S-010 | `/book` KeyError on `@max_photos` — missing assign in mount |
-| T-010-02 | gallery-placeholders | S-010 | `/scan` gallery images 404 — no files in priv/static |
-| T-010-03 | smoke-test | S-010 | Smoke test for all public routes (depends on T-010-01, T-010-02) |
+| T-006-01 | content-resources | Content Ash domain: SiteConfig, Service, GalleryItem, Endorsement, Page. |
+| T-006-02 | mdex-rendering | MDEx-based Markdown rendering for content pages. |
+| T-006-03 | seed-task | mix haul.seed task populates content from priv/content/ YAML+MD files. |
+| T-006-04 | content-driven-pages | PageController renders content pages from DB via Content domain. |
+| T-006-05 | browser-qa | Content pages Playwright QA passed. |
+| T-007-01 | swoosh-setup | Swoosh mailer configured with Mailgun adapter. |
+| T-007-02 | sms-client | SMS client module with Twilio adapter. |
+| T-007-03 | notifier-oban | Oban workers: SendBookingEmail, SendBookingSMS. Job state change triggers. |
+| T-008-01 | stripe-setup | Stripe deps (stripity_stripe) installed and configured. |
 
 ## Blockers & risks
 
 - **Dockerfile image size** — 278MB vs 100MB target. Ash ecosystem is the cause. Acceptable for now.
+- **Pending TODOs in user.ex** — password reset and magic link email implementations reference Haul.Mailer but are stubbed. Not blocking anything currently.
 
 ## Decisions made during implementation
 
@@ -75,53 +86,84 @@
 - **Scan page uses LiveView** — ScanLive for dynamic gallery content.
 - **Booking uses LiveView** — BookingLive with real-time validation, creates Job in :lead state.
 - **Content domain resources defined** — SiteConfig, Service, GalleryItem, Endorsement, Page with Ash resources and Content.Loader.
+- **MDEx for Markdown rendering** — content pages rendered server-side, no client-side JS.
+- **Oban for async notifications** — booking emails and SMS sent via Oban workers, not inline.
+- **Notification templates as separate modules** — BookingEmail and BookingSMS modules with pure functions, workers delegate to them.
 
 ## Cross-ticket notes
 
 - **Ash resources now live** — Accounts (Company, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
-- **Test count: 128** — substantial test coverage across accounts, operations, content, controllers, storage.
-- **Browser QA tickets completed:** T-002-04 (landing page), T-005-04 (scan page) — both passed.
-- **Remaining browser QA:** T-003-04 (booking), T-006-05 (content pages), T-007-05 (notifications), T-008-04 (payments), T-009-03 (address autocomplete).
+- **Test count: 164** — substantial test coverage across accounts, operations, content, controllers, storage, notifications.
+- **Browser QA tickets completed:** T-002-04 (landing page), T-003-04 (booking), T-005-04 (scan page), T-006-05 (content pages) — all passed.
+- **Remaining browser QA:** T-007-05 (notifications), T-008-04 (payments), T-009-03 (address autocomplete).
+- **Content seeding works** — `mix haul.seed` populates from priv/content/ directory (YAML configs, Markdown pages).
+- **Uncommitted work** — significant uncommitted changes across config, lib, and test files. See `git status` for details.
 
 ---
 
 ## Quick reference
 
-**DAG:** 39 tickets total. 16 done, 2 in progress, 9 ready, 12 blocked. Max 2 concurrent.
+**DAG:** 68 tickets, 85 edges. 28 done, 2 in progress, 13 ready, 25 blocked. Max 2 concurrent.
 
 **Chains:**
 ```
 Infra:    T-001-01✓ → 02✓ → 03✓ → 04✓ → 05✓ → 06✓  (COMPLETE)
 Surface:  T-002-03✓ → T-002-01✓ → T-002-02✓ → T-002-04✓  (COMPLETE)
 Scan:     T-005-01✓ → 02✓ → 03✓ → 04✓  (COMPLETE)
-Tenancy:  T-004-01✓ → T-003-01✓ → T-003-02✓ → T-003-03* → T-003-04
-Content:  T-004-01✓ → T-006-01* → 02 → 03 → 04 → 05
-Notify:   T-001-06✓ → T-007-01,02 → 03 → 04 → 05
-Payments: T-001-06✓ → T-008-01 → 02, 03 → 04
+Booking:  T-004-01✓ → T-003-01✓ → T-003-02✓ → T-003-03✓ → T-003-04✓  (COMPLETE)
+Content:  T-004-01✓ → T-006-01✓ → 02✓ → 03✓ → 04✓ → 05✓  (COMPLETE)
+Notify:   T-001-06✓ → T-007-01✓,02✓ → 03✓ → 04* → 05
+Payments: T-001-06✓ → T-008-01✓ → 02*, 03 → 04
 Address:  T-001-06✓ → T-009-01 → 02 → 03
 Fixes:    T-010-01, T-010-02 → T-010-03
+
+--- SaaS Platform (E-010) ---
+Phase 1:  T-011-01 (runbook), T-011-02 (customer seed), T-011-03 (monitoring)
+Phase 2:  T-012-01 (tenant plug) → T-012-02 (LV tenant) → T-012-04 (isolation tests)
+          T-012-01 → T-012-03 (wildcard DNS)
+          T-013-01 (app layout) → T-013-02..05 (content admin CRUD)
+          T-014-01 (mix onboard) + T-014-02 (default content)
+Phase 3:  T-015-01 (signup) → T-015-02 (wizard) + T-015-03 (marketing landing)
+          T-016-01 (stripe subs) → T-016-02 (upgrade flow) → T-016-03 (billing webhooks)
+          T-017-01 (domain UI) → T-017-02 (cert provisioning)
+
+--- AI Onboarding (E-011) ---
+Phase 1:  T-018-01 (baml dep) → T-018-02 (profile types) → T-018-03 (extraction) → T-018-04 (tests)
+Phase 2:  T-019-01 (chat LV) → T-019-02 (live extraction) + T-019-03 (persistence)
 ```
 *in progress
 
 **Stories:**
 - S-001 Foundation — COMPLETE (6/6)
 - S-002 Landing Page — COMPLETE (4/4)
-- S-003 Booking Form — 3/4 done (T-003-03 photo-upload in research)
+- S-003 Booking Form — COMPLETE (4/4)
 - S-004 Accounts Domain — COMPLETE (1/1)
 - S-005 Scan Page — COMPLETE (4/4)
-- S-006 Content Domain — 1/5 done (T-006-01 implementing)
-- S-007 Notifications — 0/5 (ready to start — T-007-01, T-007-02 unblocked)
-- S-008 Payments — 0/4 (ready to start — T-008-01 unblocked)
-- S-009 Address Autocomplete — 0/3 (ready to start — T-009-01 unblocked)
-- S-010 Walkthrough Fixes — 0/3 (bugfixes from visual walkthrough, all ready)
+- S-006 Content Domain — COMPLETE (5/5)
+- S-007 Notifications — 4/5 done (T-007-04 notification-templates implementing)
+- S-008 Payments — 1/4 done (T-008-01 stripe-setup ✓, T-008-02 in plan)
+- S-009 Address Autocomplete — 0/3 (T-009-01 places-proxy ready)
+- S-010 Walkthrough Fixes — 0/3 (T-010-01, T-010-02 ready)
+- S-011 First Operator Launch — 0/3 (T-011-01, T-011-02, T-011-03 all ready)
+- S-012 Tenant Routing — 0/4 (T-012-01 tenant-plug ready)
+- S-013 Content Admin — 0/5 (T-013-01 app-layout ready)
+- S-014 CLI Onboarding — 0/2 (T-014-02 ready, T-014-01 blocked on T-012-01)
+- S-015 Self-Service Signup — 0/3 (blocked on T-012-01, T-014-01)
+- S-016 Subscription Billing — 0/3 (blocked on T-008-01 ✓ + T-013-01)
+- S-017 Custom Domains — 0/2 (blocked on T-012-01 + T-013-01 + T-016-01)
+- S-018 BAML Foundation — 0/4 (T-018-01 baml-dep-setup ready)
+- S-019 Conversational Onboarding — 0/3 (blocked on T-018-03)
+- S-020 Content Generation — 0/0 (no tickets created yet)
 
 **Epics (ongoing health):**
 - E-001 Dev environment — GOOD (foundation complete, mix setup works)
 - E-002 Deploy pipeline — GOOD (fly-deploy done, CI working)
-- E-003 Public surface — GOOD (landing page, scan page, booking form all live)
-- E-004 Domain model — GOOD (Accounts + Operations domains built, tested)
-- E-005 Content system — IN PROGRESS (resources defined, T-006-01 implementing)
-- E-006 First customer — PROGRESSING (3 public pages live, booking creates leads, need notifications)
-- E-007 Demo instance — PARTIAL (pages live, content system not seeded yet)
+- E-003 Public surface — GOOD (landing page, scan page, booking form, content pages all live)
+- E-004 Domain model — GOOD (Accounts + Operations + Content domains built, tested)
+- E-005 Content system — GOOD (resources, rendering, seeding, content-driven pages all done)
+- E-006 First customer — PROGRESSING (all public pages live, booking creates leads, notifications nearly done, payments started)
+- E-007 Demo instance — PROGRESSING (pages live, content seeded, notifications almost ready)
 - E-008 Data security — PROGRESSING (tenant provisioning built, policies on resources)
-- E-009 Service integrations — READY (all three stories unblocked, none started)
+- E-009 Service integrations — IN PROGRESS (notifications 4/5, payments 1/4, address 0/3)
+- E-010 SaaS platform — PLANNED (3 phases: first customer → hybrid platform → self-service SaaS)
+- E-011 AI onboarding — PLANNED (3 phases: BAML foundation → conversational onboarding → content generation)

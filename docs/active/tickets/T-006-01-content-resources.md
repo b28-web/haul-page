@@ -5,7 +5,7 @@ title: content-resources
 type: task
 status: open
 priority: high
-phase: ready
+phase: implement
 depends_on: [T-004-01]
 ---
 

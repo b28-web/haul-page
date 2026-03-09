@@ -135,21 +135,50 @@ if config_env() == :prod do
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
 
-  # ## Configuring the mailer
-  #
-  # In production you need to configure the mailer to use a different adapter.
-  # Here is an example configuration for Mailgun:
-  #
-  #     config :haul, Haul.Mailer,
-  #       adapter: Swoosh.Adapters.Mailgun,
-  #       api_key: System.get_env("MAILGUN_API_KEY"),
-  #       domain: System.get_env("MAILGUN_DOMAIN")
-  #
-  # Most non-SMTP adapters require an API client. Swoosh supports Req, Hackney,
-  # and Finch out-of-the-box. This configuration is typically done at
-  # compile-time in your config/prod.exs:
-  #
-  #     config :swoosh, :api_client, Swoosh.ApiClient.Req
-  #
-  # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+  # Payments — Stripe (optional, only if env vars are set)
+  if stripe_key = System.get_env("STRIPE_SECRET_KEY") do
+    config :haul, :payments_adapter, Haul.Payments.Stripe
+    config :stripity_stripe, api_key: stripe_key
+
+    if pk = System.get_env("STRIPE_PUBLISHABLE_KEY") do
+      config :haul, :stripe_publishable_key, pk
+    end
+
+    if webhook_secret = System.get_env("STRIPE_WEBHOOK_SECRET") do
+      config :stripity_stripe, signing_secret: webhook_secret
+    end
+  end
+
+  # SMS — Twilio (optional, only if env vars are set)
+  if twilio_sid = System.get_env("TWILIO_ACCOUNT_SID") do
+    config :haul, :sms_adapter, Haul.SMS.Twilio
+
+    config :haul, :twilio,
+      account_sid: twilio_sid,
+      auth_token:
+        System.get_env("TWILIO_AUTH_TOKEN") ||
+          raise("TWILIO_AUTH_TOKEN is required when TWILIO_ACCOUNT_SID is set"),
+      from_number:
+        System.get_env("TWILIO_FROM_NUMBER") ||
+          raise("TWILIO_FROM_NUMBER is required when TWILIO_ACCOUNT_SID is set")
+  end
+
+  # Mailer — Postmark (preferred) or Resend via env var
+  cond do
+    api_key = System.get_env("POSTMARK_API_KEY") ->
+      config :haul, Haul.Mailer,
+        adapter: Swoosh.Adapters.Postmark,
+        api_key: api_key
+
+    api_key = System.get_env("RESEND_API_KEY") ->
+      config :haul, Haul.Mailer,
+        adapter: Swoosh.Adapters.Resend,
+        api_key: api_key
+
+    true ->
+      raise """
+      No email adapter configured for production.
+      Set POSTMARK_API_KEY or RESEND_API_KEY environment variable.
+      """
+  end
 end

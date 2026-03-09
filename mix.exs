@@ -86,10 +86,16 @@ defmodule Haul.MixProject do
       # Markdown rendering
       {:mdex, "~> 0.2"},
 
+      # YAML parsing (content seeding)
+      {:yaml_elixir, "~> 2.11"},
+
       # S3-compatible storage (Fly Tigris)
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7"},
+
+      # Stripe payments
+      {:stripity_stripe, "~> 3.2"},
 
       # Quality
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
@@ -108,7 +114,7 @@ defmodule Haul.MixProject do
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
     [
-      setup: ["deps.get", "ecto.setup", "assets.setup", "assets.build"],
+      setup: ["deps.get", "ecto.setup", "haul.seed_content", "assets.setup", "assets.build"],
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],

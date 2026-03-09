@@ -26,6 +26,16 @@ config :haul, Haul.Mailer, adapter: Swoosh.Adapters.Test
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
+# SMS — use sandbox adapter in test (no Twilio calls)
+config :haul, :sms_adapter, Haul.SMS.Sandbox
+
+# Payments — use sandbox adapter in test (no Stripe calls)
+config :haul, :payments_adapter, Haul.Payments.Sandbox
+config :stripity_stripe, api_key: "sk_test_fake"
+
+# Oban — manual testing mode (jobs don't run automatically)
+config :haul, Oban, testing: :manual
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

@@ -23,6 +23,7 @@ config :haul, :operator,
     "Fast, honest, affordable junk removal and handyman services for homes and businesses.",
   service_area: "Your Area",
   coupon_text: "10% OFF",
+  deposit_amount_cents: 5000,
   services: [
     %{
       title: "Junk Removal",
@@ -76,6 +77,14 @@ config :haul, HaulWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :haul, Haul.Mailer, adapter: Swoosh.Adapters.Local
 
+# SMS adapter — Sandbox for dev, Twilio for prod (configured in runtime.exs)
+config :haul, :sms_adapter, Haul.SMS.Sandbox
+
+# Oban job processing
+config :haul, Oban,
+  repo: Haul.Repo,
+  queues: [notifications: 10]
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
@@ -108,6 +117,11 @@ config :phoenix, :json_library, Jason
 # Configure ex_money / ex_cldr
 config :ex_money,
   default_cldr_backend: Haul.Cldr
+
+# Payments — Sandbox for dev/test, Stripe for prod (configured in runtime.exs)
+config :haul, :payments_adapter, Haul.Payments.Sandbox
+config :haul, :stripe_publishable_key, ""
+config :stripity_stripe, api_key: ""
 
 # Photo upload storage — :local for dev/test, :s3 for prod (Fly Tigris)
 config :haul, :storage, backend: :local

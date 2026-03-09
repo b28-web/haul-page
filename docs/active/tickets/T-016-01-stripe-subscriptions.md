@@ -5,7 +5,7 @@ title: stripe-subscriptions
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-008-01, T-013-01]
 ---
 

@@ -71,6 +71,11 @@ defmodule Haul.Operations.Job do
       public? true
     end
 
+    attribute :payment_intent_id, :string do
+      allow_nil? true
+      public? true
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
@@ -78,8 +83,23 @@ defmodule Haul.Operations.Job do
   actions do
     defaults [:read]
 
+    update :record_payment do
+      accept [:payment_intent_id]
+    end
+
     create :create_from_online_booking do
-      accept [:customer_name, :customer_phone, :customer_email, :address, :item_description, :preferred_dates, :notes, :photo_urls]
+      accept [
+        :customer_name,
+        :customer_phone,
+        :customer_email,
+        :address,
+        :item_description,
+        :preferred_dates,
+        :notes,
+        :photo_urls
+      ]
+
+      change Haul.Operations.Changes.EnqueueNotifications
     end
   end
 end

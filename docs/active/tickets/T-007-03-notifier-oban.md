@@ -5,7 +5,7 @@ title: notifier-oban
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-007-01, T-007-02, T-003-01]
 ---
 

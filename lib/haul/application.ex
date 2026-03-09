@@ -10,10 +10,9 @@ defmodule Haul.Application do
     children = [
       HaulWeb.Telemetry,
       Haul.Repo,
+      {Oban, Application.fetch_env!(:haul, Oban)},
       {DNSCluster, query: Application.get_env(:haul, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Haul.PubSub},
-      # Start a worker by calling: Haul.Worker.start_link(arg)
-      # {Haul.Worker, arg},
       # Start to serve requests, typically the last entry
       HaulWeb.Endpoint
     ]

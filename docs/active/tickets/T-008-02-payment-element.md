@@ -5,7 +5,7 @@ title: payment-element
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-008-01, T-003-02]
 ---
 

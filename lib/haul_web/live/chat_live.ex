@@ -3,6 +3,8 @@ defmodule HaulWeb.ChatLive do
 
   alias Haul.AI.Chat
   alias Haul.AI.Conversation
+  alias Haul.AI.EditApplier
+  alias Haul.AI.EditClassifier
   alias Haul.AI.Extractor
   alias Haul.AI.OperatorProfile
   alias Haul.AI.Prompt
@@ -12,6 +14,7 @@ defmodule HaulWeb.ChatLive do
   require Logger
 
   @max_messages 50
+  @max_edit_rounds 10
   @rate_window 86_400
   @extraction_debounce_ms 800
   @total_profile_fields 7
@@ -53,7 +56,12 @@ defmodule HaulWeb.ChatLive do
        |> assign(:profile_complete?, false)
        |> assign(:show_profile?, false)
        |> assign(:provisioning?, false)
-       |> assign(:provisioned_url, nil)}
+       |> assign(:provisioned_url, nil)
+       |> assign(:edit_mode?, false)
+       |> assign(:edit_count, 0)
+       |> assign(:tenant, nil)
+       |> assign(:company, nil)
+       |> assign(:finalized?, false)}
     end
   end
 
@@ -66,35 +74,61 @@ defmodule HaulWeb.ChatLive do
         <%!-- Header --%>
         <header class="flex-none border-b border-border px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 class="text-lg font-display uppercase tracking-wide">Get Started</h1>
+            <h1 class="text-lg font-display uppercase tracking-wide">
+              {if @edit_mode?, do: "Preview & Edit", else: "Get Started"}
+            </h1>
             <p class="text-sm text-muted-foreground">
-              Tell us about your business —
-              <a href={~p"/app/signup"} class="underline hover:text-foreground">
-                or sign up manually
-              </a>
+              <%= if @edit_mode? do %>
+                Request changes or finalize your site
+              <% else %>
+                Tell us about your business —
+                <a href={~p"/app/signup"} class="underline hover:text-foreground">
+                  or sign up manually
+                </a>
+              <% end %>
             </p>
           </div>
-          <%!-- Mobile profile toggle --%>
-          <%= if @profile do %>
+          <%!-- Mobile toggle --%>
+          <%= if @edit_mode? do %>
             <button
               phx-click="toggle_profile"
               class="md:hidden rounded-full px-3 py-1.5 text-xs font-medium bg-zinc-700 text-zinc-100 hover:bg-zinc-600 transition-colors"
             >
-              {if @show_profile?, do: "Hide Profile", else: "View Profile"}
+              {if @show_profile?, do: "Hide Preview", else: "Show Preview"}
             </button>
+          <% else %>
+            <%= if @profile do %>
+              <button
+                phx-click="toggle_profile"
+                class="md:hidden rounded-full px-3 py-1.5 text-xs font-medium bg-zinc-700 text-zinc-100 hover:bg-zinc-600 transition-colors"
+              >
+                {if @show_profile?, do: "Hide Profile", else: "View Profile"}
+              </button>
+            <% end %>
           <% end %>
         </header>
 
-        <%!-- Mobile profile card --%>
-        <%= if @show_profile? and @profile do %>
+        <%!-- Mobile panel --%>
+        <%= if @show_profile? do %>
           <div class="md:hidden border-b border-border">
-            <.profile_panel
-              profile={@profile}
-              missing_fields={@missing_fields}
-              profile_complete?={@profile_complete?}
-              provisioning?={@provisioning?}
-              provisioned_url={@provisioned_url}
-            />
+            <%= if @edit_mode? do %>
+              <.preview_panel
+                provisioned_url={@provisioned_url}
+                edit_count={@edit_count}
+                max_edits={@max_edit_rounds}
+                finalized?={@finalized?}
+              />
+            <% else %>
+              <%= if @profile do %>
+                <.profile_panel
+                  profile={@profile}
+                  missing_fields={@missing_fields}
+                  profile_complete?={@profile_complete?}
+                  provisioning?={@provisioning?}
+                  provisioned_url={@provisioned_url}
+                />
+              <% end %>
+            <% end %>
           </div>
         <% end %>
 
@@ -149,62 +183,134 @@ defmodule HaulWeb.ChatLive do
 
         <%!-- Input --%>
         <div class="flex-none border-t border-border px-4 py-3">
-          <form phx-submit="send_message" class="flex gap-2">
-            <input
-              type="text"
-              name="text"
-              value={@input}
-              phx-change="update_input"
-              placeholder="Type a message..."
-              autocomplete="off"
-              disabled={@streaming?}
-              class={[
-                "flex-1 rounded-full px-4 py-2 text-sm",
-                "bg-card border border-border text-foreground",
-                "placeholder:text-muted-foreground",
-                "focus:outline-none focus:ring-1 focus:ring-zinc-500",
-                "disabled:opacity-50"
-              ]}
-            />
-            <button
-              type="submit"
-              disabled={@streaming? or String.trim(@input) == ""}
-              class={[
-                "rounded-full px-4 py-2 text-sm font-medium",
-                "bg-zinc-700 text-zinc-100 hover:bg-zinc-600",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-                "transition-colors"
-              ]}
-            >
-              Send
-            </button>
-          </form>
-
-          <%= if @message_count >= 50 do %>
-            <p class="text-xs text-red-400 mt-1 text-center">
-              Message limit reached. Please refresh to start a new session.
+          <%= if @finalized? do %>
+            <p class="text-sm text-muted-foreground text-center py-2">
+              Your site is finalized. Manage it from the
+              <a href={~p"/app/content/site"} class="underline hover:text-foreground">admin panel</a>.
             </p>
-          <% end %>
+          <% else %>
+            <form phx-submit="send_message" class="flex gap-2">
+              <input
+                type="text"
+                name="text"
+                value={@input}
+                phx-change="update_input"
+                placeholder={if @edit_mode?, do: "Request a change...", else: "Type a message..."}
+                autocomplete="off"
+                disabled={@streaming?}
+                class={[
+                  "flex-1 rounded-full px-4 py-2 text-sm",
+                  "bg-card border border-border text-foreground",
+                  "placeholder:text-muted-foreground",
+                  "focus:outline-none focus:ring-1 focus:ring-zinc-500",
+                  "disabled:opacity-50"
+                ]}
+              />
+              <button
+                type="submit"
+                disabled={@streaming? or String.trim(@input) == ""}
+                class={[
+                  "rounded-full px-4 py-2 text-sm font-medium",
+                  "bg-zinc-700 text-zinc-100 hover:bg-zinc-600",
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
+                  "transition-colors"
+                ]}
+              >
+                Send
+              </button>
+            </form>
 
-          <p class="text-xs text-muted-foreground mt-2 text-center">
-            Prefer a form?
-            <a href={~p"/app/signup"} class="underline hover:text-foreground">
-              Fill out a form instead
-            </a>
-          </p>
+            <%= if not @edit_mode? and @message_count >= 50 do %>
+              <p class="text-xs text-red-400 mt-1 text-center">
+                Message limit reached. Please refresh to start a new session.
+              </p>
+            <% end %>
+
+            <%= if not @edit_mode? do %>
+              <p class="text-xs text-muted-foreground mt-2 text-center">
+                Prefer a form?
+                <a href={~p"/app/signup"} class="underline hover:text-foreground">
+                  Fill out a form instead
+                </a>
+              </p>
+            <% end %>
+          <% end %>
         </div>
       </div>
 
-      <%!-- Desktop profile sidebar --%>
+      <%!-- Desktop sidebar --%>
       <div class="hidden md:block w-80 border-l border-border overflow-y-auto">
-        <.profile_panel
-          profile={@profile}
-          missing_fields={@missing_fields}
-          profile_complete?={@profile_complete?}
-          provisioning?={@provisioning?}
-          provisioned_url={@provisioned_url}
-        />
+        <%= if @edit_mode? do %>
+          <.preview_panel
+            provisioned_url={@provisioned_url}
+            edit_count={@edit_count}
+            max_edits={@max_edit_rounds}
+            finalized?={@finalized?}
+          />
+        <% else %>
+          <.profile_panel
+            profile={@profile}
+            missing_fields={@missing_fields}
+            profile_complete?={@profile_complete?}
+            provisioning?={@provisioning?}
+            provisioned_url={@provisioned_url}
+          />
+        <% end %>
       </div>
+    </div>
+    """
+  end
+
+  # Preview panel — shown after provisioning in edit mode
+  defp preview_panel(assigns) do
+    ~H"""
+    <div class="p-4 space-y-4" id="preview-panel" phx-hook="PreviewReload">
+      <div>
+        <h2 class="text-sm font-display uppercase tracking-wide text-foreground">Site Preview</h2>
+        <p class="text-xs text-muted-foreground mt-1">
+          {@edit_count} of {@max_edits} edits used
+        </p>
+      </div>
+
+      <%!-- Iframe preview --%>
+      <%= if @provisioned_url do %>
+        <div class="rounded-lg overflow-hidden border border-border bg-white">
+          <iframe
+            src={@provisioned_url}
+            class="w-full h-64 md:h-80"
+            title="Site preview"
+          >
+          </iframe>
+        </div>
+
+        <a
+          href={@provisioned_url}
+          target="_blank"
+          class="block text-center text-xs text-muted-foreground underline hover:text-foreground"
+        >
+          Open in new tab
+        </a>
+      <% end %>
+
+      <%!-- Go live button --%>
+      <%= if not @finalized? do %>
+        <button
+          phx-click="go_live"
+          class="w-full rounded-full px-4 py-2.5 text-sm font-medium bg-zinc-100 text-zinc-900 hover:bg-white transition-colors"
+        >
+          Looks good — go live!
+        </button>
+      <% else %>
+        <div class="p-3 rounded-lg bg-zinc-800 border border-zinc-600">
+          <p class="text-sm font-medium text-foreground">Your site is live!</p>
+          <a
+            href={~p"/app/content/site"}
+            class="mt-2 block w-full text-center rounded-full px-4 py-2 text-sm font-medium bg-zinc-100 text-zinc-900 hover:bg-white transition-colors"
+          >
+            Go to admin panel
+          </a>
+        </div>
+      <% end %>
     </div>
     """
   end
@@ -352,6 +458,12 @@ defmodule HaulWeb.ChatLive do
       socket.assigns.streaming? ->
         {:noreply, socket}
 
+      socket.assigns.finalized? ->
+        {:noreply, socket}
+
+      socket.assigns.edit_mode? ->
+        handle_edit_message(socket, text)
+
       socket.assigns.message_count >= @max_messages ->
         {:noreply, put_flash(socket, :error, "Message limit reached for this session.")}
 
@@ -413,6 +525,25 @@ defmodule HaulWeb.ChatLive do
 
   def handle_event("toggle_profile", _params, socket) do
     {:noreply, assign(socket, :show_profile?, !socket.assigns.show_profile?)}
+  end
+
+  def handle_event("go_live", _params, socket) do
+    if socket.assigns.finalized? do
+      {:noreply, socket}
+    else
+      finalize_msg = %{
+        id: Ecto.UUID.generate(),
+        role: :assistant,
+        content:
+          "Your site is finalized and live! You can manage your content anytime from the admin panel."
+      }
+
+      {:noreply,
+       socket
+       |> assign(:finalized?, true)
+       |> assign(:messages, socket.assigns.messages ++ [finalize_msg])
+       |> push_event("scroll_to_bottom", %{})}
+    end
   end
 
   @impl true
@@ -516,17 +647,27 @@ defmodule HaulWeb.ChatLive do
   end
 
   def handle_info({:provisioning_complete, result}, socket) do
-    success_msg = %{
+    preview_msg = %{
       id: Ecto.UUID.generate(),
       role: :assistant,
-      content: "Your site is live! Visit it here: #{result.site_url}"
+      content:
+        "Here's your site — take a look: #{result.site_url}\n\n" <>
+          "You can request changes like:\n" <>
+          "- \"Change the phone number to 555-1234\"\n" <>
+          "- \"Update the tagline\"\n" <>
+          "- \"Remove the Assembly service\"\n\n" <>
+          "When you're happy, click \"Looks good — go live!\" in the preview panel."
     }
 
     {:noreply,
      socket
      |> assign(:provisioning?, false)
      |> assign(:provisioned_url, result.site_url)
-     |> assign(:messages, socket.assigns.messages ++ [success_msg])
+     |> assign(:edit_mode?, true)
+     |> assign(:tenant, result.tenant)
+     |> assign(:company, result.company)
+     |> assign(:show_profile?, true)
+     |> assign(:messages, socket.assigns.messages ++ [preview_msg])
      |> push_event("scroll_to_bottom", %{})}
   end
 
@@ -565,7 +706,68 @@ defmodule HaulWeb.ChatLive do
 
   def handle_info(_msg, socket), do: {:noreply, socket}
 
-  # Private
+  # Private — Edit mode handling
+
+  defp handle_edit_message(socket, text) do
+    if socket.assigns.edit_count >= @max_edit_rounds do
+      limit_msg = %{
+        id: Ecto.UUID.generate(),
+        role: :assistant,
+        content:
+          "You've reached the edit limit (#{@max_edit_rounds}). " <>
+            "You can make further changes in the admin panel."
+      }
+
+      user_msg = %{id: Ecto.UUID.generate(), role: :user, content: text}
+
+      {:noreply,
+       socket
+       |> assign(:messages, socket.assigns.messages ++ [user_msg, limit_msg])
+       |> push_event("scroll_to_bottom", %{})}
+    else
+      user_msg = %{id: Ecto.UUID.generate(), role: :user, content: text}
+      messages = socket.assigns.messages ++ [user_msg]
+
+      # Persist user message
+      persist_message(socket.assigns.conversation, %{"role" => "user", "content" => text})
+
+      instruction = EditClassifier.classify(text)
+
+      case EditApplier.apply_edit(instruction, socket.assigns.tenant, socket.assigns.profile) do
+        {:ok, confirmation} ->
+          response_msg = %{id: Ecto.UUID.generate(), role: :assistant, content: confirmation}
+
+          persist_message(socket.assigns.conversation, %{
+            "role" => "assistant",
+            "content" => confirmation
+          })
+
+          {:noreply,
+           socket
+           |> assign(:messages, messages ++ [response_msg])
+           |> assign(:input, "")
+           |> assign(:edit_count, socket.assigns.edit_count + 1)
+           |> push_event("reload_preview", %{})
+           |> push_event("scroll_to_bottom", %{})}
+
+        {:error, error_msg} ->
+          response_msg = %{id: Ecto.UUID.generate(), role: :assistant, content: error_msg}
+
+          persist_message(socket.assigns.conversation, %{
+            "role" => "assistant",
+            "content" => error_msg
+          })
+
+          {:noreply,
+           socket
+           |> assign(:messages, messages ++ [response_msg])
+           |> assign(:input, "")
+           |> push_event("scroll_to_bottom", %{})}
+      end
+    end
+  end
+
+  # Private — Chat mode handling
 
   defp send_user_message(socket, text) do
     user_msg = %{id: Ecto.UUID.generate(), role: :user, content: text}

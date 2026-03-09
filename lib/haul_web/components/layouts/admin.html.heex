@@ -1,0 +1,82 @@
+<%!-- Sidebar + Header admin layout --%>
+<div class="flex h-screen bg-background text-foreground">
+  <%!-- Mobile sidebar overlay --%>
+  <div
+    id="sidebar-overlay"
+    class="fixed inset-0 z-30 bg-black/50 hidden md:hidden"
+    phx-click={JS.add_class("hidden", to: "#sidebar-overlay") |> JS.add_class("-translate-x-full", to: "#sidebar")}
+  />
+
+  <%!-- Sidebar --%>
+  <aside
+    id="sidebar"
+    class="fixed md:static z-40 flex flex-col w-64 h-full bg-card border-r border-border transition-transform -translate-x-full md:translate-x-0"
+  >
+    <div class="flex items-center h-16 px-6 border-b border-border">
+      <a href={~p"/"} class="flex items-center gap-2">
+        <span class="font-display text-xl uppercase tracking-wider text-foreground">Haul</span>
+      </a>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      <.sidebar_link href={~p"/app"} icon="hero-home" label="Dashboard" active={@current_path == "/app"} />
+      <.sidebar_link
+        href={~p"/app/content"}
+        icon="hero-document-text"
+        label="Content"
+        active={String.starts_with?(@current_path, "/app/content")}
+      />
+      <.sidebar_link
+        href={~p"/app/bookings"}
+        icon="hero-calendar"
+        label="Bookings"
+        active={String.starts_with?(@current_path, "/app/bookings")}
+      />
+      <.sidebar_link
+        href={~p"/app/settings"}
+        icon="hero-cog-6-tooth"
+        label="Settings"
+        active={String.starts_with?(@current_path, "/app/settings")}
+      />
+    </nav>
+  </aside>
+
+  <%!-- Main content area --%>
+  <div class="flex-1 flex flex-col min-w-0">
+    <%!-- Header --%>
+    <header class="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-border bg-card">
+      <div class="flex items-center gap-3">
+        <button
+          class="md:hidden p-2 text-muted-foreground hover:text-foreground"
+          phx-click={JS.remove_class("-translate-x-full", to: "#sidebar") |> JS.remove_class("hidden", to: "#sidebar-overlay")}
+        >
+          <.icon name="hero-bars-3" class="size-6" />
+        </button>
+        <span :if={@current_company} class="font-display text-lg uppercase tracking-wider">
+          {@current_company.name}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <span :if={@current_user} class="text-sm text-muted-foreground hidden sm:inline">
+          {@current_user.email}
+        </span>
+        <.theme_toggle />
+        <.link
+          href={~p"/app/session"}
+          method="delete"
+          class="text-sm text-muted-foreground hover:text-foreground"
+          data-confirm="Sign out?"
+        >
+          Sign out
+        </.link>
+      </div>
+    </header>
+
+    <%!-- Page content --%>
+    <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+      <.flash_group flash={@flash} />
+      {@inner_content}
+    </main>
+  </div>
+</div>

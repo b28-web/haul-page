@@ -116,6 +116,32 @@ defmodule HaulWeb.Layouts do
   end
 
   @doc """
+  Renders a sidebar navigation link with icon.
+  """
+  attr :href, :string, required: true
+  attr :icon, :string, required: true
+  attr :label, :string, required: true
+  attr :active, :boolean, default: false
+
+  def sidebar_link(assigns) do
+    ~H"""
+    <a
+      href={@href}
+      class={[
+        "flex items-center gap-3 px-3 py-2 text-sm rounded transition-colors",
+        if(@active,
+          do: "bg-foreground/10 text-foreground font-medium",
+          else: "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+        )
+      ]}
+    >
+      <.icon name={@icon} class="size-5" />
+      {@label}
+    </a>
+    """
+  end
+
+  @doc """
   Provides dark vs light theme toggle based on themes defined in app.css.
 
   See <head> in root.html.heex which applies the theme before page load.

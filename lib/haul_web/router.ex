@@ -8,10 +8,16 @@ defmodule HaulWeb.Router do
     plug :put_root_layout, html: {HaulWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug HaulWeb.Plugs.TenantResolver
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+  end
+
+  pipeline :api_with_tenant do
+    plug :accepts, ["json"]
+    plug HaulWeb.Plugs.TenantResolver
   end
 
   scope "/" do
@@ -23,13 +29,39 @@ defmodule HaulWeb.Router do
 
     get "/", PageController, :home
     get "/scan/qr", QRController, :generate
-    live "/scan", ScanLive
-    live "/book", BookingLive
-    live "/pay/:job_id", PaymentLive
+
+    live_session :tenant, on_mount: [{HaulWeb.TenantHook, :resolve_tenant}] do
+      live "/scan", ScanLive
+      live "/book", BookingLive
+      live "/pay/:job_id", PaymentLive
+    end
+  end
+
+  # App admin: login (public)
+  scope "/app", HaulWeb do
+    pipe_through :browser
+
+    live "/login", App.LoginLive
+    post "/session", AppSessionController, :create
+    delete "/session", AppSessionController, :delete
+  end
+
+  # App admin: authenticated routes
+  scope "/app", HaulWeb do
+    pipe_through :browser
+
+    live_session :authenticated,
+      on_mount: [{HaulWeb.AuthHooks, :require_auth}],
+      layout: {HaulWeb.Layouts, :admin} do
+      live "/", App.DashboardLive
+      live "/content", App.DashboardLive
+      live "/bookings", App.DashboardLive
+      live "/settings", App.DashboardLive
+    end
   end
 
   scope "/api", HaulWeb do
-    pipe_through :api
+    pipe_through :api_with_tenant
     get "/places/autocomplete", PlacesController, :autocomplete
   end
 
@@ -52,6 +84,7 @@ defmodule HaulWeb.Router do
 
       live_dashboard "/dashboard", metrics: HaulWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+      get "/sentry-test", HaulWeb.DebugController, :error
     end
   end
 end

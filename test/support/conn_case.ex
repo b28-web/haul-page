@@ -35,4 +35,81 @@ defmodule HaulWeb.ConnCase do
     Haul.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Creates a company, provisions tenant, registers a user, and returns auth context.
+  """
+  def create_authenticated_context(attrs \\ %{}) do
+    alias Haul.Accounts.Changes.ProvisionTenant
+    alias Haul.Accounts.Company
+    alias Haul.Accounts.User
+
+    {:ok, company} =
+      Company
+      |> Ash.Changeset.for_create(:create_company, %{name: "Test Co"})
+      |> Ash.create()
+
+    tenant = ProvisionTenant.tenant_schema(company.slug)
+
+    user_attrs = %{
+      email: attrs[:email] || "admin@example.com",
+      password: "Password123!",
+      password_confirmation: "Password123!"
+    }
+
+    {:ok, user} =
+      User
+      |> Ash.Changeset.for_create(:register_with_password, user_attrs,
+        tenant: tenant,
+        authorize?: false
+      )
+      |> Ash.create()
+
+    role = attrs[:role] || :owner
+
+    {:ok, user} =
+      user
+      |> Ash.Changeset.for_update(:update_user, %{role: role},
+        tenant: tenant,
+        authorize?: false
+      )
+      |> Ash.update()
+
+    # Sign in to get a token
+    {:ok, signed_in} =
+      User
+      |> Ash.Query.for_read(
+        :sign_in_with_password,
+        %{email: user_attrs.email, password: user_attrs.password},
+        tenant: tenant
+      )
+      |> Ash.read_one()
+
+    token = signed_in.__metadata__.token
+
+    %{company: company, tenant: tenant, user: user, token: token}
+  end
+
+  @doc """
+  Sets up a conn with authentication session.
+  """
+  def log_in_user(conn, %{token: token, tenant: tenant}) do
+    conn
+    |> Phoenix.ConnTest.init_test_session(%{user_token: token, tenant: tenant})
+  end
+
+  @doc """
+  Cleanup helper for tenant schemas created during tests.
+  """
+  def cleanup_tenants do
+    {:ok, result} =
+      Ecto.Adapters.SQL.query(Haul.Repo, """
+      SELECT schema_name FROM information_schema.schemata
+      WHERE schema_name LIKE 'tenant_%'
+      """)
+
+    for [schema] <- result.rows do
+      Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
+    end
+  end
 end

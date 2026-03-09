@@ -95,7 +95,8 @@
 - **Ash resources now live** — Accounts (Company, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
 - **Test count: 164** — substantial test coverage across accounts, operations, content, controllers, storage, notifications.
 - **Browser QA tickets completed:** T-002-04 (landing page), T-003-04 (booking), T-005-04 (scan page), T-006-05 (content pages) — all passed.
-- **Remaining browser QA:** T-007-05 (notifications), T-008-04 (payments), T-009-03 (address autocomplete).
+- **Remaining browser QA:** T-007-05 (notifications), T-008-04 (payments), T-009-03 (address autocomplete), T-012-05 (tenant routing), T-013-06 (content admin), T-014-03 (CLI onboard), T-015-04 (signup flow), T-016-04 (billing), T-017-03 (custom domains), T-019-06 (chat onboarding), T-020-05 (AI provision pipeline).
+- **Playwright screenshots gitignored** — walkthrough-*.png and work artifact PNGs excluded from git. Agents produce them locally but they don't go to GitHub.
 - **Content seeding works** — `mix haul.seed` populates from priv/content/ directory (YAML configs, Markdown pages).
 - **Uncommitted work** — significant uncommitted changes across config, lib, and test files. See `git status` for details.
 
@@ -103,7 +104,7 @@
 
 ## Quick reference
 
-**DAG:** 68 tickets, 85 edges. 28 done, 2 in progress, 13 ready, 25 blocked. Max 2 concurrent.
+**DAG:** 83 tickets. 28 done, 2 in progress, 11 ready, 41 blocked. Max 2 concurrent.
 
 **Chains:**
 ```
@@ -121,15 +122,23 @@ Fixes:    T-010-01, T-010-02 → T-010-03
 Phase 1:  T-011-01 (runbook), T-011-02 (customer seed), T-011-03 (monitoring)
 Phase 2:  T-012-01 (tenant plug) → T-012-02 (LV tenant) → T-012-04 (isolation tests)
           T-012-01 → T-012-03 (wildcard DNS)
-          T-013-01 (app layout) → T-013-02..05 (content admin CRUD)
-          T-014-01 (mix onboard) + T-014-02 (default content)
-Phase 3:  T-015-01 (signup) → T-015-02 (wizard) + T-015-03 (marketing landing)
-          T-016-01 (stripe subs) → T-016-02 (upgrade flow) → T-016-03 (billing webhooks)
-          T-017-01 (domain UI) → T-017-02 (cert provisioning)
+          T-012-02 + T-012-03 → T-012-05 (🎭 browser-qa)
+          T-013-01 (app layout) → T-013-02..05 (content admin CRUD) → T-013-06 (🎭 browser-qa)
+          T-014-01 (mix onboard) + T-014-02 (default content) → T-014-03 (🎭 browser-qa)
+Phase 3:  T-015-01 (signup) → T-015-02 (wizard) + T-015-03 (marketing landing) → T-015-04 (🎭 browser-qa)
+          T-016-01 (stripe subs) → T-016-02 (upgrade flow) → T-016-03 (billing webhooks) → T-016-04 (🎭 browser-qa)
+          T-017-01 (domain UI) → T-017-02 (cert provisioning) → T-017-03 (🎭 browser-qa)
 
 --- AI Onboarding (E-011) ---
 Phase 1:  T-018-01 (baml dep) → T-018-02 (profile types) → T-018-03 (extraction) → T-018-04 (tests)
 Phase 2:  T-019-01 (chat LV) → T-019-02 (live extraction) + T-019-03 (persistence)
+          T-019-04 (agent prompt), T-019-05 (fallback form)
+          T-019-02 + T-019-05 → T-019-06 (🎭 browser-qa)
+Phase 3:  T-020-01 (content gen) → T-020-02 (auto-provision) → T-020-03 (preview/edit)
+          T-020-03 → T-020-05 (🎭 browser-qa) + T-020-04 (cost tracking)
+
+--- Capstone ---
+All 15 🎭 browser-qa tickets → T-021-01 (walkthrough report + dev briefing)
 ```
 *in progress
 
@@ -145,15 +154,16 @@ Phase 2:  T-019-01 (chat LV) → T-019-02 (live extraction) + T-019-03 (persiste
 - S-009 Address Autocomplete — 0/3 (T-009-01 places-proxy ready)
 - S-010 Walkthrough Fixes — 0/3 (T-010-01, T-010-02 ready)
 - S-011 First Operator Launch — 0/3 (T-011-01, T-011-02, T-011-03 all ready)
-- S-012 Tenant Routing — 0/4 (T-012-01 tenant-plug ready)
-- S-013 Content Admin — 0/5 (T-013-01 app-layout ready)
-- S-014 CLI Onboarding — 0/2 (T-014-02 ready, T-014-01 blocked on T-012-01)
-- S-015 Self-Service Signup — 0/3 (blocked on T-012-01, T-014-01)
-- S-016 Subscription Billing — 0/3 (blocked on T-008-01 ✓ + T-013-01)
-- S-017 Custom Domains — 0/2 (blocked on T-012-01 + T-013-01 + T-016-01)
+- S-012 Tenant Routing — 0/5 (T-012-01 ready; +QA T-012-05)
+- S-013 Content Admin — 0/6 (T-013-01 ready; +QA T-013-06)
+- S-014 CLI Onboarding — 0/3 (T-014-02 ready; +QA T-014-03)
+- S-015 Self-Service Signup — 0/4 (blocked on T-012-01, T-014-01; +QA T-015-04)
+- S-016 Subscription Billing — 0/4 (blocked on T-008-01 ✓ + T-013-01; +QA T-016-04)
+- S-017 Custom Domains — 0/3 (blocked on T-012-01 + T-013-01 + T-016-01; +QA T-017-03)
 - S-018 BAML Foundation — 0/4 (T-018-01 baml-dep-setup ready)
-- S-019 Conversational Onboarding — 0/3 (blocked on T-018-03)
-- S-020 Content Generation — 0/0 (no tickets created yet)
+- S-019 Conversational Onboarding — 0/6 (blocked on T-018-03; +QA T-019-06)
+- S-020 Content Generation — 0/5 (+QA T-020-05)
+- S-021 QA Walkthrough Report — 0/1 (capstone: depends on all 15 browser-qa tickets, produces visual walkthrough + dev briefing)
 
 **Epics (ongoing health):**
 - E-001 Dev environment — GOOD (foundation complete, mix setup works)

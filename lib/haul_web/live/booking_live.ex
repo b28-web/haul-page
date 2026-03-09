@@ -20,6 +20,7 @@ defmodule HaulWeb.BookingLive do
      |> assign(:business_name, get_field(site_config, :business_name))
      |> assign(:tenant, tenant)
      |> assign(:submitted, false)
+     |> assign(:max_photos, @max_photos)
      |> allow_upload(:photos,
        accept: ~w(.jpg .jpeg .png .webp .heic),
        max_entries: @max_photos,
@@ -206,7 +207,7 @@ defmodule HaulWeb.BookingLive do
             />
 
             <div>
-              <span class="label mb-1">Photos of your junk (optional, up to 5)</span>
+              <span class="label mb-1">Photos of your junk (optional, up to {@max_photos})</span>
               <p class="text-sm text-muted-foreground mb-2">
                 Snap a few photos so we can give you a better estimate.
               </p>

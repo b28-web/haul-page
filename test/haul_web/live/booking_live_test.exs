@@ -73,6 +73,11 @@ defmodule HaulWeb.BookingLiveTest do
       assert html =~ ~s(type="date")
     end
 
+    test "shows photo upload label with max count", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/book")
+      assert html =~ "up to 5"
+    end
+
     test "shows operator phone for direct contact", %{conn: conn, operator: operator} do
       {:ok, _view, html} = live(conn, "/book")
       assert html =~ operator[:phone]

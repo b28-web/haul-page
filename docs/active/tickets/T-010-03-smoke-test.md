@@ -5,7 +5,7 @@ title: smoke-test
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-010-01, T-010-02]
 ---
 

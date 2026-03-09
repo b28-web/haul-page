@@ -1,5 +1,5 @@
-before_image_url: "/images/gallery/before-2.jpg"
-after_image_url: "/images/gallery/after-2.jpg"
+before_image_url: "/images/gallery/before-2.svg"
+after_image_url: "/images/gallery/after-2.svg"
 caption: "Backyard debris removal after storm damage"
 alt_text: "Backyard before and after debris cleanup"
 sort_order: 2

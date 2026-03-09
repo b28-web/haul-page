@@ -5,7 +5,7 @@ title: gallery-placeholders
 type: bug
 status: open
 priority: medium
-phase: research
+phase: done
 depends_on: []
 ---
 

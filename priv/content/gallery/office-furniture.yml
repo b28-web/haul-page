@@ -1,5 +1,5 @@
-before_image_url: "/images/gallery/before-3.jpg"
-after_image_url: "/images/gallery/after-3.jpg"
+before_image_url: "/images/gallery/before-3.svg"
+after_image_url: "/images/gallery/after-3.svg"
 caption: "Office furniture removal — desks, chairs, and filing cabinets"
 alt_text: "Office space before and after furniture removal"
 sort_order: 3

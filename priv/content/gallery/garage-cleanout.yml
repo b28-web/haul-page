@@ -1,5 +1,5 @@
-before_image_url: "/images/gallery/before-1.jpg"
-after_image_url: "/images/gallery/after-1.jpg"
+before_image_url: "/images/gallery/before-1.svg"
+after_image_url: "/images/gallery/after-1.svg"
 caption: "Full garage cleanout — hauled in one trip"
 alt_text: "Garage before and after junk removal"
 sort_order: 1

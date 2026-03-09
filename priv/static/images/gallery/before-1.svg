@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#1a1a1a"/>
+  <!-- Scattered boxes suggesting clutter -->
+  <rect x="80" y="120" width="140" height="100" rx="4" fill="#333" transform="rotate(-8 150 170)"/>
+  <rect x="250" y="80" width="120" height="160" rx="4" fill="#2a2a2a" transform="rotate(5 310 160)"/>
+  <rect x="420" y="140" width="180" height="90" rx="4" fill="#383838" transform="rotate(-3 510 185)"/>
+  <rect x="150" y="300" width="100" height="130" rx="4" fill="#2e2e2e" transform="rotate(12 200 365)"/>
+  <rect x="350" y="280" width="160" height="110" rx="4" fill="#353535" transform="rotate(-6 430 335)"/>
+  <rect x="560" y="250" width="130" height="150" rx="4" fill="#303030" transform="rotate(4 625 325)"/>
+  <rect x="100" y="430" width="170" height="80" rx="4" fill="#2c2c2c" transform="rotate(-5 185 470)"/>
+  <rect x="480" y="400" width="140" height="120" rx="4" fill="#343434" transform="rotate(7 550 460)"/>
+  <!-- Label -->
+  <text x="400" y="560" text-anchor="middle" font-family="sans-serif" font-size="36" font-weight="bold" fill="#888" letter-spacing="8">BEFORE</text>
+</svg>

@@ -48,7 +48,7 @@ defmodule HaulWeb.ScanLive do
         </div>
 
         <a
-          href="/book"
+          href={tenant_path(assigns, "/book")}
           class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
         >
           <.icon name="hero-calendar-days" class="size-5" /> Book Online
@@ -154,7 +154,7 @@ defmodule HaulWeb.ScanLive do
           </a>
 
           <a
-            href="/book"
+            href={tenant_path(assigns, "/book")}
             class="inline-flex items-center gap-2 border border-foreground text-foreground px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-foreground hover:text-background transition-colors"
           >
             <.icon name="hero-calendar-days" class="size-5" /> Book Online

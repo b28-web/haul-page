@@ -43,6 +43,7 @@ defmodule HaulWeb do
       use Gettext, backend: HaulWeb.Gettext
 
       import Plug.Conn
+      import HaulWeb.ProxyHelpers
 
       unquote(verified_routes())
     end
@@ -86,6 +87,8 @@ defmodule HaulWeb do
       import Phoenix.HTML
       # Core UI components
       import HaulWeb.CoreComponents
+      # Proxy-aware path helpers
+      import HaulWeb.ProxyHelpers
 
       # Common modules used in templates
       alias HaulWeb.Layouts

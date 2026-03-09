@@ -5,7 +5,7 @@ title: proxy-tenant-plug
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-024-04]
 ---
 

@@ -143,7 +143,7 @@ defmodule HaulWeb.PaymentLive do
                 The booking you're looking for doesn't exist or the link has expired.
               </p>
               <a
-                href="/"
+                href={tenant_path(assigns, "/")}
                 class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
               >
                 Go Home
@@ -172,7 +172,7 @@ defmodule HaulWeb.PaymentLive do
                 {@error_message}
               </p>
               <a
-                href={~p"/pay/#{@job.id}"}
+                href={tenant_path(assigns, ~p"/pay/#{@job.id}")}
                 class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
               >
                 Try Again
@@ -273,7 +273,7 @@ defmodule HaulWeb.PaymentLive do
                 {@error_message}
               </p>
               <a
-                href={~p"/pay/#{@job.id}"}
+                href={tenant_path(assigns, ~p"/pay/#{@job.id}")}
                 class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
               >
                 Try Again

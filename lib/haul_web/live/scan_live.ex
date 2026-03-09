@@ -5,7 +5,7 @@ defmodule HaulWeb.ScanLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    tenant = ContentHelpers.resolve_tenant()
+    tenant = socket.assigns.tenant
     site_config = ContentHelpers.load_site_config(tenant)
 
     {:ok,

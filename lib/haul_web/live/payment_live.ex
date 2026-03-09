@@ -6,7 +6,7 @@ defmodule HaulWeb.PaymentLive do
 
   @impl true
   def mount(%{"job_id" => job_id}, _session, socket) do
-    tenant = ContentHelpers.resolve_tenant()
+    tenant = socket.assigns.tenant
     site_config = ContentHelpers.load_site_config(tenant)
     operator = Application.get_env(:haul, :operator, [])
     amount = operator[:deposit_amount_cents] || 5000
@@ -35,7 +35,10 @@ defmodule HaulWeb.PaymentLive do
                |> assign(:error_message, nil)
                |> assign(:job, job)
                |> assign(:client_secret, intent.client_secret)
-               |> assign(:stripe_publishable_key, Application.get_env(:haul, :stripe_publishable_key, ""))
+               |> assign(
+                 :stripe_publishable_key,
+                 Application.get_env(:haul, :stripe_publishable_key, "")
+               )
                |> assign(:amount_cents, amount)
                |> assign(:phone, get_field(site_config, :phone))
                |> assign(:business_name, get_field(site_config, :business_name))
@@ -129,7 +132,10 @@ defmodule HaulWeb.PaymentLive do
         <%= case @payment_status do %>
           <% :not_found -> %>
             <div class="text-center">
-              <.icon name="hero-exclamation-triangle" class="size-16 text-muted-foreground mx-auto mb-6" />
+              <.icon
+                name="hero-exclamation-triangle"
+                class="size-16 text-muted-foreground mx-auto mb-6"
+              />
               <h1 class="text-3xl md:text-4xl font-bold font-display uppercase tracking-wider mb-4">
                 Job Not Found
               </h1>
@@ -143,7 +149,6 @@ defmodule HaulWeb.PaymentLive do
                 Go Home
               </a>
             </div>
-
           <% :already_paid -> %>
             <div class="text-center">
               <.icon name="hero-check-circle" class="size-16 text-foreground mx-auto mb-6" />
@@ -154,10 +159,12 @@ defmodule HaulWeb.PaymentLive do
                 Payment has already been received for this booking. Thank you!
               </p>
             </div>
-
           <% :error -> %>
             <div class="text-center">
-              <.icon name="hero-exclamation-triangle" class="size-16 text-muted-foreground mx-auto mb-6" />
+              <.icon
+                name="hero-exclamation-triangle"
+                class="size-16 text-muted-foreground mx-auto mb-6"
+              />
               <h1 class="text-3xl md:text-4xl font-bold font-display uppercase tracking-wider mb-4">
                 Payment Error
               </h1>
@@ -171,7 +178,6 @@ defmodule HaulWeb.PaymentLive do
                 Try Again
               </a>
             </div>
-
           <% :pending -> %>
             <div class="text-center mb-10">
               <h1 class="text-3xl md:text-4xl font-bold font-display uppercase tracking-wider mb-3">
@@ -215,8 +221,7 @@ defmodule HaulWeb.PaymentLive do
                   type="submit"
                   class="w-full inline-flex items-center justify-center gap-2 bg-foreground text-background px-8 py-4 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
                 >
-                  <.icon name="hero-credit-card" class="size-5" />
-                  Pay {format_amount(@amount_cents)}
+                  <.icon name="hero-credit-card" class="size-5" /> Pay {format_amount(@amount_cents)}
                 </button>
               </form>
             </div>
@@ -224,7 +229,6 @@ defmodule HaulWeb.PaymentLive do
             <p class="text-center text-xs text-muted-foreground mt-6">
               Payments processed securely by Stripe. Your card details never touch our servers.
             </p>
-
           <% :processing -> %>
             <div class="text-center py-16">
               <div class="animate-spin size-12 border-4 border-muted-foreground border-t-foreground rounded-full mx-auto mb-6">
@@ -236,7 +240,6 @@ defmodule HaulWeb.PaymentLive do
                 Please wait while we confirm your payment...
               </p>
             </div>
-
           <% :succeeded -> %>
             <div class="text-center">
               <.icon name="hero-check-circle" class="size-16 text-foreground mx-auto mb-6" />
@@ -257,10 +260,12 @@ defmodule HaulWeb.PaymentLive do
                 {@business_name}
               </p>
             </div>
-
           <% :failed -> %>
             <div class="text-center">
-              <.icon name="hero-exclamation-triangle" class="size-16 text-muted-foreground mx-auto mb-6" />
+              <.icon
+                name="hero-exclamation-triangle"
+                class="size-16 text-muted-foreground mx-auto mb-6"
+              />
               <h1 class="text-3xl md:text-4xl font-bold font-display uppercase tracking-wider mb-4">
                 Payment Failed
               </h1>

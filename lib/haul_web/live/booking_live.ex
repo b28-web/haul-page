@@ -10,7 +10,7 @@ defmodule HaulWeb.BookingLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    tenant = ContentHelpers.resolve_tenant()
+    tenant = socket.assigns.tenant
     site_config = ContentHelpers.load_site_config(tenant)
 
     {:ok,
@@ -190,8 +190,7 @@ defmodule HaulWeb.BookingLive do
             <% address_errors =
               if Phoenix.Component.used_input?(@form[:address]),
                 do: @form[:address].errors,
-                else: []
-            %>
+                else: [] %>
             <div class="fieldset mb-2">
               <label for="address-autocomplete">
                 <span class="label mb-1">Pickup Address</span>

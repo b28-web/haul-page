@@ -87,9 +87,16 @@ defmodule HaulWeb.PaymentLiveTest do
     assert html =~ "Card declined"
   end
 
-  test "shows already paid for job with payment_intent_id", %{conn: conn, job: job, tenant: tenant} do
+  test "shows already paid for job with payment_intent_id", %{
+    conn: conn,
+    job: job,
+    tenant: tenant
+  } do
     {:ok, _updated} =
-      Ash.update(job, %{payment_intent_id: "pi_already_paid"}, action: :record_payment, tenant: tenant)
+      Ash.update(job, %{payment_intent_id: "pi_already_paid"},
+        action: :record_payment,
+        tenant: tenant
+      )
 
     {:ok, _view, html} = live(conn, "/pay/#{job.id}")
 

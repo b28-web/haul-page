@@ -5,7 +5,7 @@ title: liveview-tenant
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-012-01]
 ---
 

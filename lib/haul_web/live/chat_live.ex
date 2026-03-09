@@ -186,8 +186,10 @@ defmodule HaulWeb.ChatLive do
         <div class="flex-none border-t border-border px-4 py-3">
           <%= if @finalized? do %>
             <p class="text-sm text-muted-foreground text-center py-2">
-              Your site is finalized. Manage it from the
-              <a href={~p"/app/content/site"} class="underline hover:text-foreground">admin panel</a>.
+              Your site is finalized. Manage it from the <a
+                href={~p"/app/content/site"}
+                class="underline hover:text-foreground"
+              >admin panel</a>.
             </p>
           <% else %>
             <form phx-submit="send_message" class="flex gap-2">

@@ -143,7 +143,8 @@ defmodule HaulWeb.ChatQATest do
 
       # Input should not be disabled after streaming completes
       # (input element without disabled attribute)
-      refute html =~ ~s(name="text" value="" phx-change="update_input" placeholder="Type a message..." autocomplete="off" disabled)
+      refute html =~
+               ~s(name="text" value="" phx-change="update_input" placeholder="Type a message..." autocomplete="off" disabled)
     end
 
     test "typing indicator has animated dots", %{conn: conn} do
@@ -304,7 +305,12 @@ defmodule HaulWeb.ChatQATest do
       render_click(view, "provision_site")
 
       # Simulate completion
-      send(view.pid, {:provisioning_complete, %{site_url: "https://test.example.com", company_name: "Junk & Handy", duration_ms: 15000}})
+      send(
+        view.pid,
+        {:provisioning_complete,
+         %{site_url: "https://test.example.com", company_name: "Junk & Handy", duration_ms: 15000}}
+      )
+
       Process.sleep(50)
       html = render(view)
 

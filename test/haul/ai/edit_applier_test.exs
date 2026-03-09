@@ -23,7 +23,13 @@ defmodule Haul.AI.EditApplierTest do
 
   setup do
     # Provision a tenant with content
-    {:ok, result} = Haul.Onboarding.run(%{name: "Edit Test Co", phone: "555-0000", email: "edit@example.com", area: "Test City"})
+    {:ok, result} =
+      Haul.Onboarding.run(%{
+        name: "Edit Test Co",
+        phone: "555-0000",
+        email: "edit@example.com",
+        area: "Test City"
+      })
 
     on_exit(fn ->
       {:ok, res} =
@@ -51,7 +57,9 @@ defmodule Haul.AI.EditApplierTest do
     end
 
     test "updates email", %{tenant: tenant} do
-      assert {:ok, msg} = EditApplier.apply_edit({:direct, :email, "new@example.com"}, tenant, @profile)
+      assert {:ok, msg} =
+               EditApplier.apply_edit({:direct, :email, "new@example.com"}, tenant, @profile)
+
       assert msg =~ "email"
 
       [config] = Ash.read!(SiteConfig, tenant: tenant)
@@ -59,21 +67,24 @@ defmodule Haul.AI.EditApplierTest do
     end
 
     test "updates business name", %{tenant: tenant} do
-      assert {:ok, _} = EditApplier.apply_edit({:direct, :business_name, "New Name Co"}, tenant, @profile)
+      assert {:ok, _} =
+               EditApplier.apply_edit({:direct, :business_name, "New Name Co"}, tenant, @profile)
 
       [config] = Ash.read!(SiteConfig, tenant: tenant)
       assert config.business_name == "New Name Co"
     end
 
     test "updates service area", %{tenant: tenant} do
-      assert {:ok, _} = EditApplier.apply_edit({:direct, :service_area, "New Area"}, tenant, @profile)
+      assert {:ok, _} =
+               EditApplier.apply_edit({:direct, :service_area, "New Area"}, tenant, @profile)
 
       [config] = Ash.read!(SiteConfig, tenant: tenant)
       assert config.service_area == "New Area"
     end
 
     test "updates owner name", %{tenant: tenant} do
-      assert {:ok, _} = EditApplier.apply_edit({:direct, :owner_name, "Jane Doe"}, tenant, @profile)
+      assert {:ok, _} =
+               EditApplier.apply_edit({:direct, :owner_name, "Jane Doe"}, tenant, @profile)
 
       [config] = Ash.read!(SiteConfig, tenant: tenant)
       assert config.owner_name == "Jane Doe"
@@ -84,10 +95,16 @@ defmodule Haul.AI.EditApplierTest do
     test "removes a service by name (soft delete)", %{tenant: tenant} do
       # First add a known service
       Service
-      |> Ash.Changeset.for_create(:add, %{title: "Test Service", description: "Desc", icon: "fa-test"}, tenant: tenant)
+      |> Ash.Changeset.for_create(
+        :add,
+        %{title: "Test Service", description: "Desc", icon: "fa-test"},
+        tenant: tenant
+      )
       |> Ash.create!()
 
-      assert {:ok, msg} = EditApplier.apply_edit({:remove_service, "Test Service"}, tenant, @profile)
+      assert {:ok, msg} =
+               EditApplier.apply_edit({:remove_service, "Test Service"}, tenant, @profile)
+
       assert msg =~ "Removed"
 
       services = Ash.read!(Service, tenant: tenant)
@@ -96,7 +113,9 @@ defmodule Haul.AI.EditApplierTest do
     end
 
     test "returns error for nonexistent service", %{tenant: tenant} do
-      assert {:error, msg} = EditApplier.apply_edit({:remove_service, "Nonexistent"}, tenant, @profile)
+      assert {:error, msg} =
+               EditApplier.apply_edit({:remove_service, "Nonexistent"}, tenant, @profile)
+
       assert msg =~ "Could not find"
     end
 
@@ -111,7 +130,9 @@ defmodule Haul.AI.EditApplierTest do
 
   describe "apply_edit/3 regeneration" do
     test "regenerates tagline", %{tenant: tenant} do
-      assert {:ok, msg} = EditApplier.apply_edit({:regenerate, :tagline, "make it catchy"}, tenant, @profile)
+      assert {:ok, msg} =
+               EditApplier.apply_edit({:regenerate, :tagline, "make it catchy"}, tenant, @profile)
+
       assert msg =~ "tagline"
 
       [config] = Ash.read!(SiteConfig, tenant: tenant)
@@ -120,7 +141,13 @@ defmodule Haul.AI.EditApplierTest do
     end
 
     test "regenerates service descriptions", %{tenant: tenant} do
-      assert {:ok, msg} = EditApplier.apply_edit({:regenerate, :descriptions, "more professional"}, tenant, @profile)
+      assert {:ok, msg} =
+               EditApplier.apply_edit(
+                 {:regenerate, :descriptions, "more professional"},
+                 tenant,
+                 @profile
+               )
+
       assert msg =~ "descriptions"
     end
   end

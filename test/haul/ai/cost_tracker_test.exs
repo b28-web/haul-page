@@ -2,7 +2,6 @@ defmodule Haul.AI.CostTrackerTest do
   use Haul.DataCase, async: true
 
   alias Haul.AI.CostTracker
-  alias Haul.AI.CostEntry
   alias Haul.AI.Conversation
 
   defp create_conversation do
@@ -53,7 +52,9 @@ defmodule Haul.AI.CostTrackerTest do
 
   describe "model_for_function/1" do
     test "maps extraction functions to Sonnet" do
-      assert CostTracker.model_for_function("ExtractOperatorProfile") == "claude-sonnet-4-20250514"
+      assert CostTracker.model_for_function("ExtractOperatorProfile") ==
+               "claude-sonnet-4-20250514"
+
       assert CostTracker.model_for_function("ExtractName") == "claude-sonnet-4-20250514"
     end
 
@@ -147,9 +148,7 @@ defmodule Haul.AI.CostTrackerTest do
       result = %{"first_name" => "John", "last_name" => "Doe"}
 
       {:ok, entry} =
-        CostTracker.record_baml_call("ExtractName", args, result,
-          conversation_id: conv.id
-        )
+        CostTracker.record_baml_call("ExtractName", args, result, conversation_id: conv.id)
 
       assert entry.conversation_id == conv.id
     end

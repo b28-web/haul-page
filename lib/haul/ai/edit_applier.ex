@@ -130,7 +130,9 @@ defmodule Haul.AI.EditApplier do
 
     Enum.each(services, fn svc ->
       case Map.get(desc_map, svc.title) do
-        nil -> :ok
+        nil ->
+          :ok
+
         desc ->
           svc
           |> Ash.Changeset.for_update(:edit, %{description: desc})

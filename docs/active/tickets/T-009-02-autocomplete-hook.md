@@ -3,7 +3,7 @@ id: T-009-02
 story: S-009
 title: autocomplete-hook
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-009-01, T-003-02]

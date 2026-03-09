@@ -3,7 +3,7 @@ id: T-011-01
 story: S-011
 title: onboarding-runbook
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-001-06]

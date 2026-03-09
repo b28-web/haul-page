@@ -3,7 +3,7 @@ id: T-012-03
 story: S-012
 title: wildcard-dns
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-012-01]

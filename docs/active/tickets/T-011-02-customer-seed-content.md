@@ -3,7 +3,7 @@ id: T-011-02
 story: S-011
 title: customer-seed-content
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-006-03]

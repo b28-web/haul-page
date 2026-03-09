@@ -3,7 +3,7 @@ id: T-009-03
 story: S-009
 title: browser-qa
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-009-02]

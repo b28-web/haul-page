@@ -3,7 +3,7 @@ id: T-012-02
 story: S-012
 title: liveview-tenant
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-012-01]

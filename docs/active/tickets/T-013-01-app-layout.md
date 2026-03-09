@@ -3,7 +3,7 @@ id: T-013-01
 story: S-013
 title: app-layout
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-004-01]

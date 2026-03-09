@@ -3,7 +3,7 @@ id: T-012-01
 story: S-012
 title: tenant-plug
 type: task
-status: open
+status: done
 priority: critical
 phase: done
 depends_on: [T-004-01]

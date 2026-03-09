@@ -3,7 +3,7 @@ id: T-010-03
 story: S-010
 title: smoke-test
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-010-01, T-010-02]

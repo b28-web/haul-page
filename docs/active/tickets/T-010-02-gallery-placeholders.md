@@ -3,7 +3,7 @@ id: T-010-02
 story: S-010
 title: gallery-placeholders
 type: bug
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: []

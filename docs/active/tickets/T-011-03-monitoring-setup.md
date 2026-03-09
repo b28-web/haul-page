@@ -3,7 +3,7 @@ id: T-011-03
 story: S-011
 title: monitoring-setup
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-001-05]

@@ -5,6 +5,10 @@ defmodule Haul.Content.Endorsement do
     data_layer: AshPostgres.DataLayer,
     extensions: [AshPaperTrail.Resource]
 
+  paper_trail do
+    change_tracking_mode :changes_only
+  end
+
   postgres do
     table "endorsements"
     repo Haul.Repo

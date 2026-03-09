@@ -45,7 +45,9 @@ defmodule Haul.Content.PageTest do
       assert page.slug == "about"
       assert page.title == "About Us"
       assert page.body == "# About\n\nWe haul junk."
-      assert page.body_html == "# About\n\nWe haul junk."
+      assert page.body_html =~ "<h1>"
+      assert page.body_html =~ "About"
+      assert page.body_html =~ "<p>We haul junk.</p>"
       assert page.published == false
       assert is_nil(page.published_at)
     end
@@ -89,7 +91,44 @@ defmodule Haul.Content.PageTest do
                |> Ash.update()
 
       assert updated.body == new_body
-      assert updated.body_html == new_body
+      assert updated.body_html =~ "<h1>"
+      assert updated.body_html =~ "Updated"
+      assert updated.body_html =~ "<p>New content here.</p>"
+    end
+
+    test "renders GFM tables in body_html", %{tenant: tenant} do
+      table_body = """
+      | Item | Price |
+      |------|-------|
+      | Sofa | $50   |
+      """
+
+      {:ok, page} =
+        Page
+        |> Ash.Changeset.for_create(
+          :draft,
+          Map.put(@valid_attrs, :body, table_body),
+          tenant: tenant
+        )
+        |> Ash.create()
+
+      assert page.body_html =~ "<table>"
+      assert page.body_html =~ "<td>"
+      assert page.body_html =~ "Sofa"
+    end
+
+    test "renders strikethrough in body_html", %{tenant: tenant} do
+      {:ok, page} =
+        Page
+        |> Ash.Changeset.for_create(
+          :draft,
+          Map.put(@valid_attrs, :body, "~~removed~~"),
+          tenant: tenant
+        )
+        |> Ash.create()
+
+      assert page.body_html =~ "<del>"
+      assert page.body_html =~ "removed"
     end
   end
 

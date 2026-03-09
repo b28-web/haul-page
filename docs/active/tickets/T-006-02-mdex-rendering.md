@@ -5,7 +5,7 @@ title: mdex-rendering
 type: task
 status: open
 priority: high
-phase: implement
+phase: done
 depends_on: [T-006-01]
 ---
 

@@ -46,7 +46,12 @@ defmodule HaulWeb.ProxyQATest do
     Service
     |> Ash.Changeset.for_create(
       :add,
-      %{title: "#{name} Junk Removal", description: "Full-service junk removal", icon: "hero-truck", sort_order: 1},
+      %{
+        title: "#{name} Junk Removal",
+        description: "Full-service junk removal",
+        icon: "hero-truck",
+        sort_order: 1
+      },
       tenant: tenant
     )
     |> Ash.create!()
@@ -129,7 +134,11 @@ defmodule HaulWeb.ProxyQATest do
   end
 
   describe "cross-tenant isolation" do
-    test "different slugs show different business names", %{conn: conn, company_a: a, company_b: b} do
+    test "different slugs show different business names", %{
+      conn: conn,
+      company_a: a,
+      company_b: b
+    } do
       conn_a = get(conn, "/proxy/#{a.slug}")
       html_a = html_response(conn_a, 200)
 

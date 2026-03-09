@@ -5,7 +5,7 @@ title: proxy-browser-qa
 type: task
 status: open
 priority: medium
-phase: implement
+phase: done
 depends_on: [T-022-02]
 ---
 

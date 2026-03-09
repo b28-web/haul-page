@@ -1,0 +1,41 @@
+<%!-- Minimal superadmin layout --%>
+<div class="min-h-screen bg-background text-foreground">
+  <header class="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-border bg-card">
+    <div class="flex items-center gap-6">
+      <a href={~p"/admin"} class="font-display text-xl uppercase tracking-wider text-foreground">
+        Haul Admin
+      </a>
+      <nav class="hidden sm:flex items-center gap-4">
+        <.link navigate={~p"/admin"} class="text-sm text-muted-foreground hover:text-foreground">
+          Dashboard
+        </.link>
+        <.link
+          navigate={~p"/admin/accounts"}
+          class="text-sm text-muted-foreground hover:text-foreground"
+        >
+          Accounts
+        </.link>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <span :if={@current_admin} class="text-sm text-muted-foreground hidden sm:inline">
+        {@current_admin.email}
+      </span>
+      <.theme_toggle />
+      <.link
+        href={~p"/admin/session"}
+        method="delete"
+        class="text-sm text-muted-foreground hover:text-foreground"
+        data-confirm="Sign out?"
+      >
+        Sign out
+      </.link>
+    </div>
+  </header>
+
+  <main class="p-4 sm:p-6 lg:p-8">
+    <.flash_group flash={@flash} />
+    {@inner_content}
+  </main>
+</div>

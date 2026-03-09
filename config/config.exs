@@ -10,7 +10,7 @@ import Config
 config :haul,
   ecto_repos: [Haul.Repo],
   generators: [timestamp_type: :utc_datetime],
-  ash_domains: [Haul.Accounts, Haul.Operations, Haul.Content, Haul.AI.Domain]
+  ash_domains: [Haul.Accounts, Haul.Operations, Haul.Content, Haul.AI.Domain, Haul.Admin]
 
 # Base domain for subdomain extraction (e.g., "haulpage.com" in production)
 config :haul, :base_domain, "localhost"

@@ -40,19 +40,25 @@ defmodule Haul.Accounts.Company do
       public? true
     end
 
+    attribute :domain, :string do
+      allow_nil? true
+      public? true
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
 
   identities do
     identity :unique_slug, [:slug]
+    identity :unique_domain, [:domain]
   end
 
   actions do
     defaults [:read]
 
     create :create_company do
-      accept [:name, :slug, :timezone, :subscription_plan]
+      accept [:name, :slug, :timezone, :subscription_plan, :domain]
 
       change fn changeset, _context ->
         case Ash.Changeset.get_attribute(changeset, :slug) do
@@ -76,7 +82,7 @@ defmodule Haul.Accounts.Company do
     end
 
     update :update_company do
-      accept [:name, :timezone, :subscription_plan, :stripe_customer_id]
+      accept [:name, :timezone, :subscription_plan, :stripe_customer_id, :domain]
     end
   end
 end

@@ -5,7 +5,7 @@ title: tenant-plug
 type: task
 status: open
 priority: critical
-phase: ready
+phase: done
 depends_on: [T-004-01]
 ---
 

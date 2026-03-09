@@ -39,6 +39,9 @@ config :stripity_stripe, api_key: "sk_test_fake"
 # Oban — manual testing mode (jobs don't run automatically)
 config :haul, Oban, testing: :manual
 
+# Base domain for tenant resolver tests
+config :haul, :base_domain, "haulpage.test"
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

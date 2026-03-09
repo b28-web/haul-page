@@ -1,0 +1,161 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  MIX_ENV: test
+  ELIXIR_VERSION: "1.19"
+  OTP_VERSION: "28"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ runner.os }}-
+
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors
+      - run: mix test
+
+  quality:
+    name: Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ env.ELIXIR_VERSION }}
+          otp-version: ${{ env.OTP_VERSION }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: mix-${{ runner.os }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ runner.os }}-
+
+      - run: mix deps.get
+      - run: mix format --check-formatted
+      - run: mix credo --strict
+
+  guardrails:
+    name: Guardrails
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check diff size
+        run: |
+          MAX_LINES=800
+          DIFF_LINES=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1 | grep -oE '[0-9]+ insertion' | grep -oE '[0-9]+' || echo 0)
+          DEL_LINES=$(git diff --stat origin/${{ github.base_ref }}...HEAD | tail -1 | grep -oE '[0-9]+ deletion' | grep -oE '[0-9]+' || echo 0)
+          TOTAL=$((DIFF_LINES + DEL_LINES))
+          echo "Total changed lines: $TOTAL"
+          if [ "$TOTAL" -gt "$MAX_LINES" ]; then
+            echo "::error::PR changes $TOTAL lines (max $MAX_LINES). Break this into smaller PRs."
+            exit 1
+          fi
+
+      - name: Check for fixup/wip commits
+        run: |
+          BAD_COMMITS=$(git log --oneline origin/${{ github.base_ref }}...HEAD | grep -iE '^\w+ (fixup|wip|tmp|todo|hack|xxx|broken|revert me)' || true)
+          if [ -n "$BAD_COMMITS" ]; then
+            echo "::error::Found unresolved commits that need squashing or fixing:"
+            echo "$BAD_COMMITS"
+            exit 1
+          fi
+
+      - name: Check for debug leftovers
+        run: |
+          FOUND=""
+          # Elixir debug
+          FOUND+=$(grep -rn 'IO\.inspect\|IO\.puts\|dbg(' lib/ test/ 2>/dev/null | grep -v '#.*IO\.' || true)
+          # JS debug
+          FOUND+=$(grep -rn 'console\.log\|debugger' assets/js/ 2>/dev/null | grep -v '//.*console' || true)
+          if [ -n "$FOUND" ]; then
+            echo "::warning::Debug statements found (not blocking, but clean up):"
+            echo "$FOUND"
+          fi
+
+      - name: Check no secrets in code
+        run: |
+          PATTERNS='password\s*=\s*"[^"]+"|secret_key_base.*=.*"[^"]+"|DATABASE_URL\s*=\s*"postgres'
+          FOUND=$(grep -rniE "$PATTERNS" lib/ config/ assets/ 2>/dev/null | grep -v '\.exs:.*System\.get_env\|\.exs:.*#\|test/' || true)
+          if [ -n "$FOUND" ]; then
+            echo "::error::Possible hardcoded secrets:"
+            echo "$FOUND"
+            exit 1
+          fi
+
+      - name: Check test file exists for new modules
+        run: |
+          NEW_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD | grep '^lib/.*\.ex$' | grep -v '__using__' || true)
+          MISSING=""
+          for f in $NEW_FILES; do
+            # lib/haul/foo.ex → test/haul/foo_test.exs
+            TEST_PATH=$(echo "$f" | sed 's|^lib/|test/|; s|\.ex$|_test.exs|')
+            if [ ! -f "$TEST_PATH" ]; then
+              # Check if test exists anywhere for this module
+              MODULE=$(basename "$f" .ex)
+              if ! git diff --name-only --diff-filter=A origin/${{ github.base_ref }}...HEAD | grep -q "${MODULE}_test\.exs"; then
+                MISSING+="  $f → expected $TEST_PATH\n"
+              fi
+            fi
+          done
+          if [ -n "$MISSING" ]; then
+            echo "::warning::New modules without test files:"
+            printf "$MISSING"
+          fi
+
+  deploy:
+    name: Deploy
+    needs: [test, quality, guardrails]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

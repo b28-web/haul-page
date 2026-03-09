@@ -5,7 +5,7 @@ title: auto-provision-pipeline
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-020-01, T-014-01, T-019-02]
 ---
 

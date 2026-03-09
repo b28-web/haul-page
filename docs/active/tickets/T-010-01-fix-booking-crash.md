@@ -5,7 +5,7 @@ title: fix-booking-crash
 type: bug
 status: open
 priority: high
-phase: implement
+phase: done
 depends_on: []
 ---
 

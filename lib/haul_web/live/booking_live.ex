@@ -187,14 +187,39 @@ defmodule HaulWeb.BookingLive do
               autocomplete="email"
             />
 
-            <.input
-              field={@form[:address]}
-              label="Pickup Address"
-              placeholder="123 Main St, Anytown, USA"
-              required
-              class="w-full input input-lg"
-              autocomplete="street-address"
-            />
+            <% address_errors =
+              if Phoenix.Component.used_input?(@form[:address]),
+                do: @form[:address].errors,
+                else: []
+            %>
+            <div class="fieldset mb-2">
+              <label for="address-autocomplete">
+                <span class="label mb-1">Pickup Address</span>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="address-autocomplete"
+                    name={@form[:address].name}
+                    value={Phoenix.HTML.Form.normalize_value("text", @form[:address].value)}
+                    placeholder="123 Main St, Anytown, USA"
+                    required
+                    autocomplete="off"
+                    phx-hook="AddressAutocomplete"
+                    class={[
+                      "w-full input input-lg",
+                      address_errors != [] && "input-error"
+                    ]}
+                  />
+                </div>
+              </label>
+              <p
+                :for={msg <- Enum.map(address_errors, &translate_error(&1))}
+                class="mt-1.5 flex gap-2 items-center text-sm text-error"
+              >
+                <.icon name="hero-exclamation-circle" class="size-5" />
+                {msg}
+              </p>
+            </div>
 
             <.input
               field={@form[:item_description]}

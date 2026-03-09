@@ -5,7 +5,7 @@ title: autocomplete-hook
 type: task
 status: open
 priority: medium
-phase: plan
+phase: implement
 depends_on: [T-009-01, T-003-02]
 ---
 

@@ -63,6 +63,12 @@ defmodule Haul.Content.Endorsement do
       public? true
     end
 
+    attribute :sort_order, :integer do
+      allow_nil? false
+      default 0
+      public? true
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
@@ -77,11 +83,20 @@ defmodule Haul.Content.Endorsement do
     defaults [:read, :destroy]
 
     create :add do
-      accept [:customer_name, :quote_text, :star_rating, :source, :date, :featured]
+      accept [:customer_name, :quote_text, :star_rating, :source, :date, :featured, :sort_order]
     end
 
     update :edit do
-      accept [:customer_name, :quote_text, :star_rating, :source, :date, :featured, :active]
+      accept [
+        :customer_name,
+        :quote_text,
+        :star_rating,
+        :source,
+        :date,
+        :featured,
+        :active,
+        :sort_order
+      ]
     end
   end
 end

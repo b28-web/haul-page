@@ -77,5 +77,9 @@ defmodule Haul.Content.GalleryItem do
     update :edit do
       accept [:caption, :alt_text, :sort_order, :featured, :active]
     end
+
+    update :reorder do
+      accept [:sort_order]
+    end
   end
 end

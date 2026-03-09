@@ -52,6 +52,21 @@ defmodule Haul.Content.Service do
       public? true
     end
 
+    attribute :category, :atom do
+      allow_nil? true
+      public? true
+
+      constraints one_of: [
+                    :junk_removal,
+                    :cleanouts,
+                    :yard_waste,
+                    :repairs,
+                    :assembly,
+                    :moving_help,
+                    :other
+                  ]
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
@@ -60,11 +75,11 @@ defmodule Haul.Content.Service do
     defaults [:read, :destroy]
 
     create :add do
-      accept [:title, :description, :icon, :sort_order]
+      accept [:title, :description, :icon, :sort_order, :category]
     end
 
     update :edit do
-      accept [:title, :description, :icon, :sort_order, :active]
+      accept [:title, :description, :icon, :sort_order, :active, :category]
     end
   end
 

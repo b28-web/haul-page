@@ -5,7 +5,7 @@ title: site-config-editor
 type: task
 status: open
 priority: high
-phase: implement
+phase: done
 depends_on: [T-013-01, T-006-01]
 ---
 

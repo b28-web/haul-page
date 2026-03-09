@@ -36,8 +36,7 @@ defmodule HaulWeb.App.SiteConfigLive do
          |> assign_form(config)}
 
       {:error, ash_form} ->
-        {:noreply,
-         assign(socket, ash_form: ash_form, form: to_form(ash_form, as: "site_config"))}
+        {:noreply, assign(socket, ash_form: ash_form, form: to_form(ash_form, as: "site_config"))}
     end
   end
 

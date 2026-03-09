@@ -5,7 +5,7 @@ title: gallery-manager
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-013-01, T-005-02]
 ---
 

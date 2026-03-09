@@ -5,7 +5,7 @@ title: endorsements-crud
 type: task
 status: open
 priority: low
-phase: ready
+phase: done
 depends_on: [T-013-01, T-006-01]
 ---
 

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#1a1a1a"/>
+  <!-- Desk with stacked items suggesting office clutter -->
+  <rect x="100" y="320" width="600" height="20" rx="2" fill="#333"/>
+  <rect x="120" y="340" width="40" height="160" rx="2" fill="#2a2a2a"/>
+  <rect x="640" y="340" width="40" height="160" rx="2" fill="#2a2a2a"/>
+  <!-- Stacked boxes on desk -->
+  <rect x="150" y="180" width="120" height="140" rx="4" fill="#2e2e2e" transform="rotate(-4 210 250)"/>
+  <rect x="300" y="200" width="100" height="120" rx="4" fill="#353535" transform="rotate(6 350 260)"/>
+  <rect x="430" y="160" width="140" height="160" rx="4" fill="#303030" transform="rotate(-3 500 240)"/>
+  <rect x="580" y="220" width="90" height="100" rx="4" fill="#383838" transform="rotate(8 625 270)"/>
+  <!-- Floor items -->
+  <rect x="200" y="440" width="160" height="70" rx="4" fill="#2c2c2c" transform="rotate(-5 280 475)"/>
+  <rect x="450" y="420" width="130" height="90" rx="4" fill="#343434" transform="rotate(4 515 465)"/>
+  <!-- Label -->
+  <text x="400" y="560" text-anchor="middle" font-family="sans-serif" font-size="36" font-weight="bold" fill="#888" letter-spacing="8">BEFORE</text>
+</svg>

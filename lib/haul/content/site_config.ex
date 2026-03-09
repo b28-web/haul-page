@@ -77,6 +77,11 @@ defmodule Haul.Content.SiteConfig do
       public? true
     end
 
+    attribute :owner_name, :string do
+      allow_nil? true
+      public? true
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
@@ -95,7 +100,8 @@ defmodule Haul.Content.SiteConfig do
         :coupon_text,
         :meta_description,
         :primary_color,
-        :logo_url
+        :logo_url,
+        :owner_name
       ]
     end
 
@@ -110,7 +116,8 @@ defmodule Haul.Content.SiteConfig do
         :coupon_text,
         :meta_description,
         :primary_color,
-        :logo_url
+        :logo_url,
+        :owner_name
       ]
     end
   end

@@ -11,7 +11,9 @@ defmodule HaulWeb.PageControllerTest do
     body = html_response(conn, 200)
 
     # Business identity from operator config (& is HTML-escaped)
-    assert body =~ Phoenix.HTML.html_escape(operator[:business_name]) |> Phoenix.HTML.safe_to_string()
+    assert body =~
+             Phoenix.HTML.html_escape(operator[:business_name]) |> Phoenix.HTML.safe_to_string()
+
     assert body =~ operator[:phone]
     assert body =~ operator[:email]
   end

@@ -22,6 +22,9 @@ defmodule HaulWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/scan/qr", QRController, :generate
+    live "/scan", ScanLive
+    live "/book", BookingLive
   end
 
   # Other scopes may use custom stacks.

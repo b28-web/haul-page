@@ -50,3 +50,9 @@ Thumbs.db
 
 # Playwright MCP
 .playwright-mcp/
+walkthrough-*.png
+docs/active/work/**/screenshot*.png
+docs/active/work/**/*-screenshot*.png
+docs/active/work/**/desktop*.png
+docs/active/work/**/mobile*.png
+docs/active/work/**/*-full.png

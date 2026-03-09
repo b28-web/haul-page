@@ -5,7 +5,7 @@ title: onboarding-wizard
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-015-01, T-013-02]
 ---
 

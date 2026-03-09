@@ -3,6 +3,10 @@ defmodule HaulWeb.BookingLive do
 
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Operations.Job
+  alias Haul.Storage
+
+  @max_photos 5
+  @max_file_size 10_000_000
 
   @impl true
   def mount(_params, _session, socket) do
@@ -16,6 +20,11 @@ defmodule HaulWeb.BookingLive do
      |> assign(:business_name, operator[:business_name])
      |> assign(:tenant, tenant)
      |> assign(:submitted, false)
+     |> allow_upload(:photos,
+       accept: ~w(.jpg .jpeg .png .webp .heic),
+       max_entries: @max_photos,
+       max_file_size: @max_file_size
+     )
      |> assign_form()}
   end
 
@@ -28,6 +37,8 @@ defmodule HaulWeb.BookingLive do
 
   def handle_event("submit", %{"form" => params}, socket) do
     params = merge_preferred_dates(params)
+    photo_urls = upload_photos(socket)
+    params = Map.put(params, "photo_urls", photo_urls)
 
     case AshPhoenix.Form.submit(socket.assigns.ash_form, params: params) do
       {:ok, _job} ->
@@ -36,6 +47,10 @@ defmodule HaulWeb.BookingLive do
       {:error, ash_form} ->
         {:noreply, assign(socket, ash_form: ash_form, form: to_form(ash_form, as: "form"))}
     end
+  end
+
+  def handle_event("cancel-upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :photos, ref)}
   end
 
   def handle_event("reset", _params, socket) do
@@ -67,6 +82,27 @@ defmodule HaulWeb.BookingLive do
     |> Map.put("preferred_dates", dates)
     |> Map.drop(["preferred_date_1", "preferred_date_2", "preferred_date_3"])
   end
+
+  defp upload_photos(socket) do
+    tenant = socket.assigns.tenant
+
+    consume_uploaded_entries(socket, :photos, fn %{path: path}, entry ->
+      binary = File.read!(path)
+      key = Storage.upload_key(tenant, "jobs", entry.client_name)
+      content_type = entry.client_type
+
+      case Storage.put_object(key, binary, content_type) do
+        {:ok, key} -> {:ok, key}
+        {:error, _reason} -> {:ok, nil}
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp friendly_error(:too_large), do: "File is too large (max 10MB)"
+  defp friendly_error(:too_many_files), do: "Too many files (max #{@max_photos})"
+  defp friendly_error(:not_accepted), do: "File type not supported"
+  defp friendly_error(err), do: to_string(err)
 
   @impl true
   def render(assigns) do
@@ -165,6 +201,56 @@ defmodule HaulWeb.BookingLive do
               rows="4"
               class="w-full textarea textarea-lg"
             />
+
+            <div>
+              <span class="label mb-1">Photos of your junk (optional, up to {@max_photos})</span>
+              <p class="text-sm text-muted-foreground mb-2">
+                Snap a few photos so we can give you a better estimate.
+              </p>
+
+              <label class="flex items-center justify-center gap-2 border-2 border-dashed border-muted rounded-lg p-6 cursor-pointer hover:border-foreground transition-colors">
+                <.icon name="hero-camera" class="size-6 text-muted-foreground" />
+                <span class="text-muted-foreground">Tap to add photos</span>
+                <.live_file_input upload={@uploads.photos} class="hidden" />
+              </label>
+
+              <div :if={@uploads.photos.entries != []} class="grid grid-cols-3 gap-3 mt-3">
+                <div
+                  :for={entry <- @uploads.photos.entries}
+                  class="relative rounded-lg overflow-hidden bg-muted aspect-square"
+                >
+                  <.live_img_preview entry={entry} class="w-full h-full object-cover" />
+
+                  <div
+                    :if={entry.progress > 0 and entry.progress < 100}
+                    class="absolute bottom-0 left-0 right-0 h-1 bg-muted"
+                  >
+                    <div class="h-full bg-foreground" style={"width: #{entry.progress}%"}></div>
+                  </div>
+
+                  <button
+                    type="button"
+                    phx-click="cancel-upload"
+                    phx-value-ref={entry.ref}
+                    class="absolute top-1 right-1 bg-background/80 rounded-full p-1 hover:bg-background transition-colors"
+                    aria-label="Remove photo"
+                  >
+                    <.icon name="hero-x-mark" class="size-4" />
+                  </button>
+
+                  <p
+                    :for={err <- upload_errors(@uploads.photos, entry)}
+                    class="text-xs text-error mt-1"
+                  >
+                    {friendly_error(err)}
+                  </p>
+                </div>
+              </div>
+
+              <p :for={err <- upload_errors(@uploads.photos)} class="text-sm text-error mt-2">
+                {friendly_error(err)}
+              </p>
+            </div>
 
             <div>
               <span class="label mb-1">Preferred Dates (optional)</span>

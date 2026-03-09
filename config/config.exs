@@ -109,6 +109,9 @@ config :phoenix, :json_library, Jason
 config :ex_money,
   default_cldr_backend: Haul.Cldr
 
+# Photo upload storage — :local for dev/test, :s3 for prod (Fly Tigris)
+config :haul, :storage, backend: :local
+
 # Token signing secret for AshAuthentication (override in runtime.exs for prod)
 config :haul, :token_signing_secret, "dev-only-signing-secret-replace-in-prod"
 

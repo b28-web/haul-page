@@ -65,6 +65,12 @@ defmodule Haul.Operations.Job do
       public? true
     end
 
+    attribute :photo_urls, {:array, :string} do
+      allow_nil? true
+      default []
+      public? true
+    end
+
     create_timestamp :inserted_at
     update_timestamp :updated_at
   end
@@ -73,7 +79,7 @@ defmodule Haul.Operations.Job do
     defaults [:read]
 
     create :create_from_online_booking do
-      accept [:customer_name, :customer_phone, :customer_email, :address, :item_description, :preferred_dates, :notes]
+      accept [:customer_name, :customer_phone, :customer_email, :address, :item_description, :preferred_dates, :notes, :photo_urls]
     end
   end
 end

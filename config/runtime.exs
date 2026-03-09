@@ -40,6 +40,24 @@ if operator_overrides != [] do
   config :haul, :operator, Keyword.merge(base, operator_overrides)
 end
 
+# Storage configuration — S3-compatible (Fly Tigris) when env vars are set
+if System.get_env("STORAGE_BUCKET") do
+  config :haul, :storage,
+    backend: :s3,
+    bucket: System.get_env("STORAGE_BUCKET")
+
+  config :ex_aws,
+    access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+    secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
+    region: System.get_env("AWS_REGION", "auto")
+
+  tigris_endpoint = System.get_env("STORAGE_ENDPOINT", "fly.storage.tigris.dev")
+
+  config :ex_aws, :s3,
+    scheme: "https://",
+    host: tigris_endpoint
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

@@ -83,6 +83,11 @@ defmodule Haul.MixProject do
       # QR code generation
       {:eqrcode, "~> 0.1.10"},
 
+      # S3-compatible storage (Fly Tigris)
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7"},
+
       # Quality
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},

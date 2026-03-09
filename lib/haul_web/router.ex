@@ -55,6 +55,7 @@ defmodule HaulWeb.Router do
       layout: {HaulWeb.Layouts, :admin} do
       live "/", App.DashboardLive
       live "/content", App.DashboardLive
+      live "/content/site", App.SiteConfigLive
       live "/bookings", App.DashboardLive
       live "/settings", App.DashboardLive
     end

@@ -86,6 +86,61 @@ defmodule Haul.Content.SeederTest do
     end
   end
 
+  describe "seed!/2 with custom content root" do
+    test "seeds from operator-specific content directory", %{tenant: tenant} do
+      content_root =
+        :haul
+        |> :code.priv_dir()
+        |> Path.join("content/operators/customer-1")
+
+      summary = Seeder.seed!(tenant, content_root)
+
+      assert summary.site_config == :created
+      assert length(summary.services) == 4
+      assert length(summary.gallery_items) == 3
+      assert length(summary.endorsements) == 3
+      assert length(summary.pages) == 2
+
+      # Verify operator-specific data
+      assert [config] = Ash.read!(SiteConfig, tenant: tenant)
+      assert config.business_name == "Rapid Haul Junk Removal"
+      assert config.phone == "(512) 555-0198"
+
+      services = Ash.read!(Service, tenant: tenant)
+      titles = Enum.map(services, & &1.title)
+      assert "Junk Removal" in titles
+      assert "Yard Waste Removal" in titles
+
+      endorsements = Ash.read!(Endorsement, tenant: tenant)
+      maria = Enum.find(endorsements, &(&1.customer_name == "Maria G."))
+      assert maria.star_rating == 5
+
+      pages = Ash.read!(Page, tenant: tenant)
+      about = Enum.find(pages, &(&1.slug == "about"))
+      assert about.title == "About Rapid Haul"
+      assert about.body_html =~ "Rapid Haul"
+    end
+
+    test "is idempotent with custom content root", %{tenant: tenant} do
+      content_root =
+        :haul
+        |> :code.priv_dir()
+        |> Path.join("content/operators/customer-1")
+
+      Seeder.seed!(tenant, content_root)
+      summary = Seeder.seed!(tenant, content_root)
+
+      assert summary.site_config == :updated
+      assert Enum.all?(summary.services, &(&1 == :updated))
+      assert Enum.all?(summary.endorsements, &(&1 == :updated))
+      assert Enum.all?(summary.pages, &(&1 == :updated))
+
+      # Record counts unchanged
+      assert length(Ash.read!(Service, tenant: tenant)) == 4
+      assert length(Ash.read!(Endorsement, tenant: tenant)) == 3
+    end
+  end
+
   describe "parse_frontmatter!/1" do
     test "splits YAML frontmatter from markdown body" do
       content = """

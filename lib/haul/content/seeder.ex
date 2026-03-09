@@ -4,23 +4,25 @@ defmodule Haul.Content.Seeder do
   alias Haul.Content.{Endorsement, GalleryItem, Page, Service, SiteConfig}
 
   @doc """
-  Seeds all content resources for the given tenant from YAML/markdown files
-  in priv/content/. Idempotent — safe to run repeatedly.
+  Seeds all content resources for the given tenant from YAML/markdown files.
+  Idempotent — safe to run repeatedly.
+
+  Accepts an optional `content_root` path. Defaults to `priv/content/`.
 
   Returns a summary map with counts per resource type.
   """
-  def seed!(tenant) do
+  def seed!(tenant, content_root \\ default_content_root()) do
     %{
-      site_config: seed_site_config(tenant),
-      services: seed_services(tenant),
-      gallery_items: seed_gallery_items(tenant),
-      endorsements: seed_endorsements(tenant),
-      pages: seed_pages(tenant)
+      site_config: seed_site_config(tenant, content_root),
+      services: seed_services(tenant, content_root),
+      gallery_items: seed_gallery_items(tenant, content_root),
+      endorsements: seed_endorsements(tenant, content_root),
+      pages: seed_pages(tenant, content_root)
     }
   end
 
-  defp seed_site_config(tenant) do
-    path = content_path("site_config.yml")
+  defp seed_site_config(tenant, content_root) do
+    path = content_path(content_root, "site_config.yml")
 
     if File.exists?(path) do
       attrs = read_yaml!(path)
@@ -45,8 +47,8 @@ defmodule Haul.Content.Seeder do
     end
   end
 
-  defp seed_services(tenant) do
-    files = glob_yaml("services")
+  defp seed_services(tenant, content_root) do
+    files = glob_yaml(content_root, "services")
     existing = Ash.read!(Service, tenant: tenant)
     by_title = Map.new(existing, &{&1.title, &1})
 
@@ -72,8 +74,8 @@ defmodule Haul.Content.Seeder do
     end)
   end
 
-  defp seed_gallery_items(tenant) do
-    files = glob_yaml("gallery")
+  defp seed_gallery_items(tenant, content_root) do
+    files = glob_yaml(content_root, "gallery")
     existing = Ash.read!(GalleryItem, tenant: tenant)
     by_url = Map.new(existing, &{&1.before_image_url, &1})
 
@@ -101,8 +103,8 @@ defmodule Haul.Content.Seeder do
     end)
   end
 
-  defp seed_endorsements(tenant) do
-    files = glob_yaml("endorsements")
+  defp seed_endorsements(tenant, content_root) do
+    files = glob_yaml(content_root, "endorsements")
     existing = Ash.read!(Endorsement, tenant: tenant)
     by_name = Map.new(existing, &{&1.customer_name, &1})
 
@@ -135,8 +137,8 @@ defmodule Haul.Content.Seeder do
     end)
   end
 
-  defp seed_pages(tenant) do
-    files = glob_files("pages", "*.md")
+  defp seed_pages(tenant, content_root) do
+    files = glob_files(content_root, "pages", "*.md")
     existing = Ash.read!(Page, tenant: tenant)
     by_slug = Map.new(existing, &{&1.slug, &1})
 
@@ -180,18 +182,22 @@ defmodule Haul.Content.Seeder do
     end
   end
 
-  defp content_path(relative) do
+  defp default_content_root do
     :haul
     |> :code.priv_dir()
-    |> Path.join("content/#{relative}")
+    |> Path.join("content")
   end
 
-  defp glob_yaml(subdir) do
-    glob_files(subdir, "*.yml")
+  defp content_path(root, relative) do
+    Path.join(root, relative)
   end
 
-  defp glob_files(subdir, pattern) do
-    content_path(subdir)
+  defp glob_yaml(root, subdir) do
+    glob_files(root, subdir, "*.yml")
+  end
+
+  defp glob_files(root, subdir, pattern) do
+    content_path(root, subdir)
     |> Path.join(pattern)
     |> Path.wildcard()
     |> Enum.sort()

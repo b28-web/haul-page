@@ -47,3 +47,6 @@ Thumbs.db
 
 # Dialyzer
 /priv/plts/
+
+# Playwright MCP
+.playwright-mcp/

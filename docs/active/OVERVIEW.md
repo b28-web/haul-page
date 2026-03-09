@@ -4,28 +4,26 @@
 
 ## Current state
 
-**Phase:** 18 of 21 stories complete. All infrastructure, public surface, domain model, integrations, SaaS platform features, and BAML foundation are done. Finishing AI onboarding (S-019 5/6, S-020 2/5) then capstone QA (S-021).
+**Phase:** 20 of 21 stories complete. S-019 and S-020 done. Capstone QA (S-021) implementing. New planning: S-023 (superadmin), S-024 (test performance).
 
-**What works:** 624 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt.
+**What works:** 742 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA.
 
 **What's next:**
-- **T-019-06** (chat onboarding browser QA) — implementing
-- **T-020-03** (preview and edit) — implementing
-- Then: T-020-04 (cost tracking) + T-020-05 (QA) → T-021-01 (capstone)
+- **T-021-01** (capstone QA walkthrough report) — implementing
+- Then: S-023 (superadmin panel) + S-024 (test performance)
 
 ## Active tickets
 
 | Ticket | Title | Phase | Agent notes |
 |--------|-------|-------|-------------|
-| T-019-06 | browser-qa (chat) | implement | EditApplier, EditClassifier, chat QA test scaffolded |
-| T-020-03 | preview-and-edit | implement | Preview reload hook, design/plan done |
+| T-021-01 | qa-walkthrough-report | implement | Capstone QA — all browser-qa tickets done |
 
 ## Ready to start (unblocked)
 
 | Ticket | Title | Blocked by |
 |--------|-------|------------|
-| T-020-04 | cost-tracking | T-020-03* |
-| T-020-05 | browser-qa (AI provision) | T-020-03* |
+| T-023-01..04 | Superadmin Panel (S-023) | — (new story, ready) |
+| T-024-01..04 | Test Performance (S-024) | — (new story, ready) |
 
 ## Recently completed
 
@@ -49,8 +47,8 @@
 | T-016-01..04 | Subscription Billing (S-016) | Stripe subscriptions, upgrade flow, billing webhooks, browser QA |
 | T-017-01..03 | Custom Domains (S-017) | Domain settings UI, cert provisioning, browser QA |
 | T-018-01..04 | BAML Foundation (S-018) | baml_elixir dep, profile types, extraction function, extraction tests |
-| T-019-01..05 | Conversational Onboarding (S-019, partial) | Chat LiveView, live extraction, conversation persistence, agent prompt, fallback form |
-| T-020-01..02 | Content Generation (S-020, partial) | Content generation functions, auto-provision pipeline |
+| T-019-01..06 | Conversational Onboarding (S-019) | Chat LiveView, live extraction, conversation persistence, agent prompt, fallback form, browser QA |
+| T-020-01..05 | Content Generation (S-020) | Content generation, auto-provision, preview/edit, cost tracking, browser QA |
 
 ## Blockers & risks
 
@@ -79,19 +77,20 @@
 ## Cross-ticket notes
 
 - **Ash resources now live** — Accounts (Company with domain, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
-- **Test count: 624** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, and isolation.
-- **All 15 browser QA tickets accounted for** — 10 done (T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03, T-012-05, T-013-06, T-014-03, T-015-04, T-016-04, T-017-03), 2 remaining (T-019-06, T-020-05).
+- **Test count: 742** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, and isolation.
+- **All 15 browser QA tickets done** — T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03, T-012-05, T-013-06, T-014-03, T-015-04, T-016-04, T-017-03, T-019-06, T-020-05.
 - **Playwright screenshots gitignored** — walkthrough-*.png and work artifact PNGs excluded from git.
 - **Content seeding works** — `mix haul.seed` populates from priv/content/ directory. Multi-tenant: `mix haul.seed --operator customer-1`.
-- **All work committed** — uncommitted changes are ticket/work docs only.
+- **All work committed** — clean working tree as of 2026-03-09.
+- **mise shims in justfile** — agent shells now find elixir/mix via `export PATH` in system.just.
 
 ---
 
 ## Quick reference
 
-**DAG:** 83 tickets. 77 done, 2 implementing, 4 ready/blocked. Max 2 concurrent.
+**DAG:** 91 tickets. 81 done, 1 implementing, 9 ready/blocked. Max 2 concurrent.
 
-**Critical path:** T-020-03* → T-020-05 → T-021-01 (3 tickets)
+**Critical path:** T-021-01* (capstone) then S-023/S-024 (new stories)
 
 **Chains:**
 ```
@@ -118,12 +117,16 @@ Phase 3:  T-015-01✓ → 02✓, T-015-03✓ → T-015-04✓  (COMPLETE)
 Phase 1:  T-018-01✓ → T-018-02✓ → T-018-03✓ → T-018-04✓  (COMPLETE)
 Phase 2:  T-019-01✓ → T-019-02✓ + T-019-03✓
           T-019-04✓, T-019-05✓ (fallback form)
-          T-019-02✓ + T-019-05✓ → T-019-06* (🎭 browser-qa)
-Phase 3:  T-020-01✓ (content gen) → T-020-02✓ (auto-provision) → T-020-03* (preview/edit)
-          T-020-03* → T-020-05 (🎭 browser-qa) + T-020-04 (cost tracking)
+          T-019-02✓ + T-019-05✓ → T-019-06✓ (🎭 browser-qa)
+Phase 3:  T-020-01✓ (content gen) → T-020-02✓ (auto-provision) → T-020-03✓ (preview/edit)
+          T-020-03✓ → T-020-05✓ (🎭 browser-qa) + T-020-04✓ (cost tracking)
 
 --- Capstone ---
-All 🎭 browser-qa tickets → T-021-01 (walkthrough report + dev briefing)
+All 🎭 browser-qa tickets → T-021-01* (walkthrough report + dev briefing)
+
+--- New Stories ---
+S-023: T-023-01 → T-023-02 → T-023-03 → T-023-04 (🎭 superadmin browser-qa)
+S-024: T-024-01 → T-024-02 → T-024-03 → T-024-04
 ```
 *implementing
 
@@ -146,9 +149,11 @@ All 🎭 browser-qa tickets → T-021-01 (walkthrough report + dev briefing)
 - S-016 Subscription Billing — COMPLETE (4/4)
 - S-017 Custom Domains — COMPLETE (3/3)
 - S-018 BAML Foundation — COMPLETE (4/4)
-- S-019 Conversational Onboarding — 5/6 (T-019-06 implementing)
-- S-020 Content Generation — 2/5 (T-020-03 implementing, T-020-04/05 blocked)
-- S-021 QA Walkthrough Report — 0/1 (capstone, blocked on T-019-06 + T-020-05)
+- S-019 Conversational Onboarding — COMPLETE (6/6)
+- S-020 Content Generation — COMPLETE (5/5)
+- S-021 QA Walkthrough Report — 0/1 (capstone, T-021-01 implementing)
+- S-023 Superadmin Panel — 0/4 (new, ready)
+- S-024 Test Performance — 0/4 (new, ready)
 
 **Epics (ongoing health):**
 - E-001 Dev environment — GOOD (all contributing stories complete)
@@ -160,5 +165,6 @@ All 🎭 browser-qa tickets → T-021-01 (walkthrough report + dev briefing)
 - E-007 Demo instance — GOOD (all contributing stories complete)
 - E-008 Data security — GOOD (tenant isolation tested and passing)
 - E-009 Service integrations — GOOD (all contributing stories complete)
-- E-010 SaaS platform — NEARLY DONE (S-019 5/6, S-020 2/5, rest complete)
-- E-011 AI onboarding — IN PROGRESS (S-018 ✓, S-019 5/6, S-020 2/5)
+- E-010 SaaS platform — NEARLY DONE (S-019 ✓, S-020 ✓, capstone S-021 in progress)
+- E-011 AI onboarding — NEARLY DONE (S-018 ✓, S-019 ✓, S-020 ✓, capstone pending)
+- E-013 Developer agent experience — NEW (S-023, S-024)

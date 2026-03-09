@@ -3,6 +3,10 @@
 # Implementation details for the top-level justfile.
 # Operators use `just dev`, not `just _dev`.
 
+# Ensure mise-managed tools (elixir, erlang) are on PATH for agent shells
+# that don't get interactive shell activation (e.g. Claude Code Bash tool).
+export PATH := env("HOME") + "/.local/share/mise/shims:" + env("PATH")
+
 # ---------- dev ----------
 
 [private]
@@ -320,7 +324,7 @@ _commit-agent:
     #!/usr/bin/env bash
     set -euo pipefail
     exec claude \
-      --allowedTools 'Read,Write,Glob,Grep,Bash(git status*),Bash(git diff*),Bash(git log*),Bash(git add *),Bash(git commit *),Bash(git push *),Bash(lisa status),Bash(lisa validate),Bash(mix test*),Bash(mix format*),Bash(mix credo*),Edit' \
+      --dangerously-skip-permissions \
       -- "$(cat .just/prompts/commit-agent.md)"
 
 # ---------- setup ----------

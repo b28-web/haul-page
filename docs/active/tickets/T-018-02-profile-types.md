@@ -5,7 +5,7 @@ title: profile-types
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-018-01]
 ---
 

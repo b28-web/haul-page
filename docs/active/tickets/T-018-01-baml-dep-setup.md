@@ -5,7 +5,7 @@ title: baml-dep-setup
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-001-06]
 ---
 

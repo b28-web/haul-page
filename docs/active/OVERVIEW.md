@@ -6,7 +6,7 @@
 
 **Phase:** Foundation (S-001) complete. Landing page (S-002) complete. Accounts domain (S-004) complete. Scan page (S-005) complete. Booking form (S-003) nearly complete — 3/4 done. Content domain (S-006) in progress — 1/5 done, T-006-01 implementing.
 
-**What works:** Dev server healthy on port 4000. 86 tests passing. Ash resources live: Accounts domain (Company, User, Token with tenant provisioning), Operations domain (Job with state machine), Content domain (SiteConfig, Service, GalleryItem, Endorsement, Page). Landing page at `/` with dark grayscale theme + print stylesheet. Scan page LiveView at `/scan` with gallery. Booking LiveView at `/book`. QR code generation. CI pipeline. Dockerfile. Fly deploy configured.
+**What works:** Dev server healthy on port 4000. 128 tests passing. All work committed and pushed to origin/main. Ash resources live: Accounts domain (Company, User, Token with tenant provisioning), Operations domain (Job with state machine), Content domain (SiteConfig, Service, GalleryItem, Endorsement, Page). Landing page at `/` with dark grayscale theme + print stylesheet. Scan page LiveView at `/scan` with gallery. Booking LiveView at `/book`. QR code generation. CI pipeline. Dockerfile. Fly deploy configured.
 
 **What's next:** T-001-06 (mix-setup) done — service integration stories are unblocked:
 - **Content chain:** T-006-01 (content-resources) implementing → T-006-02 → T-006-03 → T-006-04
@@ -53,9 +53,16 @@
 | T-005-03 | qr-generation | QR code generation for scan page URL. QrController. |
 | T-005-04 | browser-qa | Scan page Playwright QA passed. |
 
+## Ready to start (unblocked) — bugfixes
+
+| Ticket | Title | Story | Notes |
+|--------|-------|-------|-------|
+| T-010-01 | fix-booking-crash | S-010 | `/book` KeyError on `@max_photos` — missing assign in mount |
+| T-010-02 | gallery-placeholders | S-010 | `/scan` gallery images 404 — no files in priv/static |
+| T-010-03 | smoke-test | S-010 | Smoke test for all public routes (depends on T-010-01, T-010-02) |
+
 ## Blockers & risks
 
-- **All completed work is uncommitted** — 16 tickets worth of code in working tree, nothing committed since `12e40ee`. Serious data-loss risk.
 - **Dockerfile image size** — 278MB vs 100MB target. Ash ecosystem is the cause. Acceptable for now.
 
 ## Decisions made during implementation
@@ -72,7 +79,7 @@
 ## Cross-ticket notes
 
 - **Ash resources now live** — Accounts (Company, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
-- **Test count: 86** — substantial test coverage across accounts, operations, content, controllers.
+- **Test count: 128** — substantial test coverage across accounts, operations, content, controllers, storage.
 - **Browser QA tickets completed:** T-002-04 (landing page), T-005-04 (scan page) — both passed.
 - **Remaining browser QA:** T-003-04 (booking), T-006-05 (content pages), T-007-05 (notifications), T-008-04 (payments), T-009-03 (address autocomplete).
 
@@ -80,7 +87,7 @@
 
 ## Quick reference
 
-**DAG:** 36 tickets total. 16 done, 2 in progress, 6 ready, 12 blocked. Max 2 concurrent.
+**DAG:** 39 tickets total. 16 done, 2 in progress, 9 ready, 12 blocked. Max 2 concurrent.
 
 **Chains:**
 ```
@@ -92,6 +99,7 @@ Content:  T-004-01✓ → T-006-01* → 02 → 03 → 04 → 05
 Notify:   T-001-06✓ → T-007-01,02 → 03 → 04 → 05
 Payments: T-001-06✓ → T-008-01 → 02, 03 → 04
 Address:  T-001-06✓ → T-009-01 → 02 → 03
+Fixes:    T-010-01, T-010-02 → T-010-03
 ```
 *in progress
 
@@ -105,6 +113,7 @@ Address:  T-001-06✓ → T-009-01 → 02 → 03
 - S-007 Notifications — 0/5 (ready to start — T-007-01, T-007-02 unblocked)
 - S-008 Payments — 0/4 (ready to start — T-008-01 unblocked)
 - S-009 Address Autocomplete — 0/3 (ready to start — T-009-01 unblocked)
+- S-010 Walkthrough Fixes — 0/3 (bugfixes from visual walkthrough, all ready)
 
 **Epics (ongoing health):**
 - E-001 Dev environment — GOOD (foundation complete, mix setup works)

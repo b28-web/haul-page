@@ -3,7 +3,7 @@ id: T-024-01
 story: S-024
 title: test-timing-telemetry
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-021-01]

@@ -3,7 +3,7 @@ id: T-021-01
 story: S-021
 title: qa-walkthrough-report
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03, T-012-05, T-013-06, T-014-03, T-015-04, T-016-04, T-017-03, T-019-06, T-020-05]

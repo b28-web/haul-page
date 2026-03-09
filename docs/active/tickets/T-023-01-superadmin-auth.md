@@ -3,7 +3,7 @@ id: T-023-01
 story: S-023
 title: superadmin-auth
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-024-04]

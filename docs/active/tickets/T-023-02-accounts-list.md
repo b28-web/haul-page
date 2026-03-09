@@ -3,7 +3,7 @@ id: T-023-02
 story: S-023
 title: accounts-list
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-023-01]

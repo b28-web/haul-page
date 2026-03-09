@@ -3,7 +3,7 @@ id: T-024-03
 story: S-024
 title: fix-slow-tests
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-024-02]

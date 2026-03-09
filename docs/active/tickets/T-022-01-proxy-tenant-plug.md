@@ -3,7 +3,7 @@ id: T-022-01
 story: S-022
 title: proxy-tenant-plug
 type: task
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-024-04]

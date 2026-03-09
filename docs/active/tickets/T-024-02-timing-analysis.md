@@ -3,7 +3,7 @@ id: T-024-02
 story: S-024
 title: timing-analysis
 type: spike
-status: open
+status: done
 priority: high
 phase: done
 depends_on: [T-024-01]

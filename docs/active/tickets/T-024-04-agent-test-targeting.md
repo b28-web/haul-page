@@ -3,7 +3,7 @@ id: T-024-04
 story: S-024
 title: agent-test-targeting
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-024-03]

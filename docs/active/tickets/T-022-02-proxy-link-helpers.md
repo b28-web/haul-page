@@ -3,7 +3,7 @@ id: T-022-02
 story: S-022
 title: proxy-link-helpers
 type: task
-status: open
+status: done
 priority: medium
 phase: done
 depends_on: [T-022-01]

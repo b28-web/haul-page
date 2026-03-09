@@ -5,7 +5,7 @@ title: job-resource
 type: task
 status: open
 priority: high
-phase: ready
+phase: done
 depends_on: [T-004-01]
 ---
 

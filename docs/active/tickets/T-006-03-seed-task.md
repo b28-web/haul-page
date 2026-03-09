@@ -5,7 +5,7 @@ title: seed-task
 type: task
 status: open
 priority: medium
-phase: ready
+phase: done
 depends_on: [T-006-02]
 ---
 

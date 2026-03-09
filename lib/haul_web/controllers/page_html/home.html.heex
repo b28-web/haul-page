@@ -30,7 +30,10 @@
     </div>
 
     <div class="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-      <a href={"mailto:#{@email}"} class="flex items-center gap-1.5 hover:text-foreground transition-colors">
+      <a
+        href={"mailto:#{@email}"}
+        class="flex items-center gap-1.5 hover:text-foreground transition-colors"
+      >
         <.icon name="hero-envelope" class="size-4" />
         {@email}
       </a>
@@ -116,11 +119,20 @@
       </p>
       <div class="flex">
         <%= for _i <- 1..8 do %>
-          <div class="flex-1 border-r border-dashed border-black last:border-r-0 py-2 flex flex-col items-center justify-center" style="writing-mode: vertical-rl; text-orientation: mixed;">
-            <span class="text-[8px] font-bold uppercase" style="font-family: 'Oswald', sans-serif;">
+          <div
+            class="flex-1 border-r border-dashed border-black last:border-r-0 py-2 flex flex-col items-center justify-center"
+            style="writing-mode: vertical-rl; text-orientation: mixed;"
+          >
+            <span
+              class="text-[8px] font-bold uppercase"
+              style="font-family: 'Oswald', sans-serif;"
+            >
               {@business_name}
             </span>
-            <span class="text-[15px] font-bold uppercase my-1" style="font-family: 'Oswald', sans-serif;">
+            <span
+              class="text-[15px] font-bold uppercase my-1"
+              style="font-family: 'Oswald', sans-serif;"
+            >
               {@coupon_text}
             </span>
             <span class="text-[8px]" style="font-family: 'Source Sans 3', sans-serif;">

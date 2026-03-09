@@ -299,41 +299,9 @@ _llm:
 _overview:
     #!/usr/bin/env bash
     set -euo pipefail
-
-    PROMPT="$(cat <<'EOF'
-    You are the overview agent for haul-page. Your job is to survey the entire repo
-    and produce an updated docs/active/OVERVIEW.md that accurately reflects the
-    current state of the project. Report your findings to the user as you go.
-
-    ## Steps
-
-    1. Run `lisa status` to get the current ticket DAG — waves, what's done, in-progress, ready, blocked.
-    2. Read every ticket in docs/active/tickets/ and check their phase/status fields.
-       Cross-reference with work artifacts in docs/active/work/ to see what's actually been done.
-    3. Run `git log --oneline -20` to see recent commits. Run `git status` for uncommitted work.
-    4. Run `just dev-status` to check if the dev server is running.
-    5. Read the current docs/active/OVERVIEW.md.
-    6. Scan for anything noteworthy:
-       - New or changed files in lib/ that indicate implementation progress
-       - Failing tests: `mix test --max-failures 3` (if mix.exs exists and deps are installed)
-       - Any TODO/FIXME/HACK comments in recently changed files
-    7. Tell the user what you found — what's changed since OVERVIEW.md was last updated,
-       what's working, what's broken, what's blocked.
-    8. Update docs/active/OVERVIEW.md with:
-       - Current state (which stories/tickets are done, in-progress, ready)
-       - Active tickets table with phase and any notes from work artifacts
-       - Recently completed tickets
-       - Blockers and risks (real ones, not speculative)
-       - Decisions made (from work artifacts or commit messages)
-       - Cross-ticket notes
-       - Updated quick reference (DAG stats, chains, epics)
-       Keep the format matching the existing structure. Be factual, not aspirational.
-    EOF
-    )"
-
     exec claude \
       --allowedTools 'Read,Glob,Grep,Bash(lisa status),Bash(lisa validate),Bash(just dev-status),Bash(just dev-log*),Bash(git log*),Bash(git diff*),Bash(git status*),Bash(mix test*),Edit' \
-      -- "$PROMPT"
+      -- "$(cat .just/prompts/overview.md)"
 
 # ---------- status-agent ----------
 
@@ -341,97 +309,19 @@ _overview:
 _status-agent:
     #!/usr/bin/env bash
     set -euo pipefail
-
-    PROMPT="$(cat <<'EOF'
-    You are the status agent for haul-page. You do a comprehensive survey of the
-    project — tickets, stories, epics, code, infra — then brief the user and stay
-    in an interactive session so they can plan next steps with you.
-
-    ## Phase 1: Survey (do all of this before talking)
-
-    Run these in parallel where possible:
-
-    **Ticket state**
-    1. `lisa status` — full DAG with waves, blockers, ready queue
-    2. Read every ticket in docs/active/tickets/ — note phase, status, depends_on
-    3. Read docs/active/work/*/ for any work artifacts (research.md, design.md, etc.)
-       to see what's actually been done vs just "open"
-
-    **Story state**
-    4. Read every story in docs/active/stories/ — map tickets to stories, compute
-       per-story progress (done/total tickets, % complete)
-
-    **Epic health**
-    5. Read every epic in docs/active/epics/ — for each epic:
-       - Which stories feed into it (via the story's `epics:` field)
-       - Roll up story progress to get epic health
-       - Flag epics with zero progress or all-blocked stories
-    6. Check: are there gaps? Epics with no stories? Stories with no tickets?
-       Concerns listed in epics that no ticket addresses?
-
-    **Code & infra**
-    7. `git log --oneline -30` — recent commits, pace of work
-    8. `git status` — uncommitted changes, untracked files
-    9. `just dev-status` — is the dev server running?
-    10. Glob for lib/**/*.ex — what code actually exists vs what's planned?
-    11. If mix.exs exists and deps are installed: `mix test --max-failures 5`
-
-    **Current OVERVIEW.md**
-    12. Read docs/active/OVERVIEW.md — note what's stale or wrong
-
-    ## Phase 2: Brief the user
-
-    Present a structured status report:
-
-    ### Progress summary
-    - Stories: X/N complete, Y in progress, Z not started
-    - Tickets: X done, Y in progress, Z ready, W blocked
-    - Critical path: what's the longest chain of unfinished tickets?
-
-    ### Epic health report
-    For each epic, one line:
-    - Epic name — status (active/pending) — X/Y stories contributing — health assessment
-    Flag any epic that's falling behind or has unaddressed concerns.
-
-    ### What's working
-    Things that are actually built, tested, deployed.
-
-    ### What's stale or wrong
-    Anything in OVERVIEW.md that doesn't match reality. Tickets marked in-progress
-    that have no work artifacts. Stories that claim progress but code doesn't exist.
-
-    ### Recommended next actions
-    Based on the DAG, what should be worked on next? Are there planning gaps —
-    new stories or tickets needed? Should any epic get a new story?
-
-    ## Phase 3: Update OVERVIEW.md
-
-    Update docs/active/OVERVIEW.md with accurate current state. Keep the existing
-    format. Be factual.
-
-    ## Phase 4: Interactive session
-
-    After the briefing and update, stay in the session. The user will want to:
-    - Create new tickets, stories, or epics
-    - Adjust priorities or dependencies
-    - Plan the next sprint of work
-    - Discuss architectural decisions
-
-    You have Edit access to create/modify files in docs/active/. Follow the existing
-    frontmatter conventions exactly:
-    - Epics: id (E-NNN), title (kebab-case), status (active/pending)
-    - Stories: id (S-NNN), title (kebab-case), status (open), epics ([E-NNN, ...])
-    - Tickets: id (T-NNN-NN), story (S-NNN), title (kebab-case), type (task/bug/spike),
-      status (open), priority (critical/high/medium/low), phase (ready), depends_on ([...])
-    - Filenames: {id}-{title}.md
-
-    Run `lisa validate` after any DAG changes to verify no cycles or missing deps.
-    EOF
-    )"
-
     exec claude \
       --allowedTools 'Read,Write,Glob,Grep,Bash(lisa status),Bash(lisa validate),Bash(just dev-status),Bash(just dev-log*),Bash(git log*),Bash(git diff*),Bash(git status*),Bash(mix test*),Edit' \
-      -- "$PROMPT"
+      -- "$(cat .just/prompts/status-agent.md)"
+
+# ---------- commit-agent ----------
+
+[private]
+_commit-agent:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    exec claude \
+      --allowedTools 'Read,Write,Glob,Grep,Bash(git status*),Bash(git diff*),Bash(git log*),Bash(git add *),Bash(git commit *),Bash(git push *),Bash(lisa status),Bash(lisa validate),Bash(mix test*),Bash(mix format*),Bash(mix credo*),Edit' \
+      -- "$(cat .just/prompts/commit-agent.md)"
 
 # ---------- setup ----------
 

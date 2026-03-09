@@ -41,6 +41,10 @@ overview:
 status-agent:
     @just _status-agent
 
+# Commit, test, push, and file bugs for failures
+commit-agent:
+    @just _commit-agent
+
 # Run the implementation agent swarm
 work:
     lisa loop

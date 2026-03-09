@@ -4,29 +4,32 @@
 
 ## Current state
 
-**Phase:** Foundation (S-001) complete. Surface (S-002) complete. Phoenix 1.8.5 + Ash ecosystem running. Landing page live at `/`.
+**Phase:** Foundation (S-001) complete. Landing page (S-002) complete. Accounts domain (S-004) complete. Scan page (S-005) complete. Booking form (S-003) nearly complete — 3/4 done. Content domain (S-006) in progress — 1/5 done, T-006-01 implementing.
 
-**What works:** Dev server on port 4000. Landing page renders with dark grayscale theme, Oswald/Source Sans 3 fonts, print-ready tear-off coupon layout. 11 tests passing. CI pipeline configured. Dockerfile built (278MB). Tailwind 4 + daisyUI themed.
+**What works:** Dev server healthy on port 4000. 86 tests passing. Ash resources live: Accounts domain (Company, User, Token with tenant provisioning), Operations domain (Job with state machine), Content domain (SiteConfig, Service, GalleryItem, Endorsement, Page). Landing page at `/` with dark grayscale theme + print stylesheet. Scan page LiveView at `/scan` with gallery. Booking LiveView at `/book`. QR code generation. CI pipeline. Dockerfile. Fly deploy configured.
 
-**What's next:** Two parallel fronts are unblocked:
-- **Infra chain:** T-001-05 (fly-deploy) → T-001-06 (mix-setup) — unlocks notifications, payments, address autocomplete
-- **Tenancy chain:** T-004-01 (company-user-resources) — unlocks booking, content, domain model work
-- **Surface chain:** T-002-02 (print-stylesheet) — unlocks scan page chain
+**What's next:** T-001-06 (mix-setup) done — service integration stories are unblocked:
+- **Content chain:** T-006-01 (content-resources) implementing → T-006-02 → T-006-03 → T-006-04
+- **Booking finish:** T-003-03 (photo-upload) in research → T-003-04 (browser-qa)
+- **Service integrations now unblocked:** T-007-01/02 (swoosh/SMS), T-008-01 (stripe), T-009-01 (places proxy)
 
 ## Active tickets
 
 | Ticket | Title | Phase | Agent notes |
 |--------|-------|-------|-------------|
-| T-001-05 | fly-deploy | research | Needs: fly.toml, Fly app, Neon Postgres, DATABASE_URL secret |
-| T-002-02 | print-stylesheet | design | White bg/black text print styles from React prototype |
+| T-006-01 | content-resources | implement | Content Ash domain resources being built |
+| T-003-03 | photo-upload | research | Photo upload for booking form |
 
 ## Ready to start (unblocked)
 
 | Ticket | Title | Blocked by (done) |
 |--------|-------|--------------------|
-| T-001-05 | fly-deploy | T-001-04 ✓ |
-| T-002-02 | print-stylesheet | T-002-01 ✓ |
-| T-004-01 | company-user-resources | T-002-03 ✓ |
+| T-007-01 | swoosh-setup | T-001-06 ✓ |
+| T-007-02 | sms-client | T-001-06 ✓ |
+| T-008-01 | stripe-setup | T-001-06 ✓ |
+| T-009-01 | places-proxy | T-001-06 ✓ |
+| T-006-02 | mdex-rendering | T-006-01 (in progress) |
+| T-003-04 | browser-qa | T-003-03 (in progress) |
 
 ## Recently completed
 
@@ -35,67 +38,81 @@
 | T-001-01 | scaffold-phoenix | Phoenix 1.8.5 + full Ash ecosystem. Haul.Cldr for ex_money. |
 | T-001-02 | version-pinning | mise.toml: Erlang 28, Elixir 1.19. CI env vars synced. |
 | T-001-03 | ci-pipeline | GH Actions: test (Postgres 16) + quality (format, credo, dialyzer). |
-| T-001-04 | dockerfile | Multi-stage Dockerfile, 278MB (Ash ecosystem bulk). migrate_and_start script. |
-| T-002-03 | tailwind-setup | Google Fonts imported. daisyUI remapped to grayscale dark theme. @theme block. |
-| T-002-01 | landing-page-markup | Four-section page at `/`. Server-rendered. Dark grayscale + print poster. 7 tests. |
+| T-001-04 | dockerfile | Multi-stage Dockerfile, 278MB. migrate_and_start script. |
+| T-001-05 | fly-deploy | fly.toml configured, health check at /healthz, scale-to-zero. |
+| T-001-06 | mix-setup | mix setup works end-to-end. Unblocks service integrations. |
+| T-002-03 | tailwind-setup | Google Fonts. daisyUI remapped to grayscale dark theme. |
+| T-002-01 | landing-page-markup | Four-section page at `/`. Server-rendered. Dark grayscale. |
+| T-002-02 | print-stylesheet | White bg/black text for print. Tear-off coupon strip. |
+| T-002-04 | browser-qa | Playwright-based QA for landing page passed. |
+| T-004-01 | company-user-resources | Accounts domain: Company (tenant root), User, Token. Tenant provisioning. |
+| T-003-01 | job-resource | Operations domain: Job with state machine (lead→scheduled→completed). |
+| T-003-02 | booking-liveview | Booking LiveView at `/book`. Creates Job in :lead state. |
+| T-005-01 | scan-page-layout | Scan page LiveView at `/scan`. Dark theme, gallery, CTA. |
+| T-005-02 | gallery-data | Gallery data model for before/after photos. |
+| T-005-03 | qr-generation | QR code generation for scan page URL. QrController. |
+| T-005-04 | browser-qa | Scan page Playwright QA passed. |
 
 ## Blockers & risks
 
-- **Dev server not responding to HTTP** — port 4000 is open (pid 14264, 10+ min uptime) but health check fails. May need restart.
-- **All completed work is uncommitted** — 6 tickets worth of code in working tree, nothing committed since `12e40ee`. Risk of data loss.
-- **Dockerfile image size** — 278MB vs 100MB target. Ash ecosystem is the cause. Acceptable for now but worth noting.
+- **All completed work is uncommitted** — 16 tickets worth of code in working tree, nothing committed since `12e40ee`. Serious data-loss risk.
+- **Dockerfile image size** — 278MB vs 100MB target. Ash ecosystem is the cause. Acceptable for now.
 
 ## Decisions made during implementation
 
-- **No LiveView for landing page** — server-rendered via PageController, not LiveView. Keeps it simple and fast.
+- **No LiveView for landing page** — server-rendered via PageController, not LiveView.
 - **Operator config via `config.exs`** — business name, phone, email, services list hardcoded as defaults, overridable at runtime via env vars.
 - **Haul.Cldr module added** — required by ex_money/ash_money. Not in original spec.
 - **daisyUI themes disabled, custom grayscale themes defined** — dark/light via `[data-theme]` attribute + localStorage toggle.
-- **Print layout: tear-off coupon strip** — 8 vertical coupons with phone number, designed for physical flyer use.
+- **Print layout: tear-off coupon strip** — 8 vertical coupons with phone number.
+- **Scan page uses LiveView** — ScanLive for dynamic gallery content.
+- **Booking uses LiveView** — BookingLive with real-time validation, creates Job in :lead state.
+- **Content domain resources defined** — SiteConfig, Service, GalleryItem, Endorsement, Page with Ash resources and Content.Loader.
 
 ## Cross-ticket notes
 
-- **Ash deps installed but unused** — ash 3.19, ash_postgres, ash_authentication, ash_state_machine, ash_oban, ash_double_entry, ash_money, ash_paper_trail, ash_archival all in mix.exs. No Ash resources defined yet. T-004-01 (company-user-resources) will be the first to use them.
-- **No database migrations yet** — Repo module exists but no schemas or migrations in `priv/repo/migrations/`.
-- **Test count: 11** — 7 page controller tests + 4 error handler tests. All passing.
-- **`lisa` command not available** — `just lisa` recipe doesn't exist. Ticket DAG must be tracked manually or via ticket file frontmatter.
-- **Browser QA tickets** (T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03) — all exist but are end-of-chain; none unblocked yet.
+- **Ash resources now live** — Accounts (Company, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
+- **Test count: 86** — substantial test coverage across accounts, operations, content, controllers.
+- **Browser QA tickets completed:** T-002-04 (landing page), T-005-04 (scan page) — both passed.
+- **Remaining browser QA:** T-003-04 (booking), T-006-05 (content pages), T-007-05 (notifications), T-008-04 (payments), T-009-03 (address autocomplete).
 
 ---
 
 ## Quick reference
 
-**DAG:** 36 tickets total. 6 done, 3 unblocked/ready, 27 blocked. Max 2 concurrent.
+**DAG:** 36 tickets total. 16 done, 2 in progress, 6 ready, 12 blocked. Max 2 concurrent.
 
 **Chains:**
 ```
-Infra:    T-001-01✓ → 02✓ → 03✓ → 04✓ → 05 → 06
-Surface:  T-001-01✓ → T-002-03✓ → T-002-01✓ → T-002-02 → T-005-01 → 02 → 03
-Tenancy:  T-002-03✓ → T-004-01 → T-003-01 → T-003-02 → T-003-03
-Content:  T-004-01 → T-006-01 → 02 → 03 → 04
-Notify:   T-001-06 → T-007-01,02 → 03 → 04
-Payments: T-001-06 → T-008-01 → 02, 03
-Address:  T-001-06 → T-009-01 → 02
+Infra:    T-001-01✓ → 02✓ → 03✓ → 04✓ → 05✓ → 06✓  (COMPLETE)
+Surface:  T-002-03✓ → T-002-01✓ → T-002-02✓ → T-002-04✓  (COMPLETE)
+Scan:     T-005-01✓ → 02✓ → 03✓ → 04✓  (COMPLETE)
+Tenancy:  T-004-01✓ → T-003-01✓ → T-003-02✓ → T-003-03* → T-003-04
+Content:  T-004-01✓ → T-006-01* → 02 → 03 → 04 → 05
+Notify:   T-001-06✓ → T-007-01,02 → 03 → 04 → 05
+Payments: T-001-06✓ → T-008-01 → 02, 03 → 04
+Address:  T-001-06✓ → T-009-01 → 02 → 03
 ```
+*in progress
 
 **Stories:**
-- S-001 Foundation — complete (all infra tickets through T-001-04 done)
-- S-002 Landing Page — complete (T-002-01, T-002-03 done; T-002-02 print-stylesheet next)
-- S-003 Booking Form — blocked on T-004-01 → T-003-01
-- S-004 Accounts Domain — next up (T-004-01 unblocked)
-- S-005 Scan Page — blocked on T-002-02
-- S-006 Content Domain — blocked on T-004-01
-- S-007 Notifications — blocked on T-001-06
-- S-008 Payments — blocked on T-001-06
-- S-009 Address Autocomplete — blocked on T-001-06
+- S-001 Foundation — COMPLETE (6/6)
+- S-002 Landing Page — COMPLETE (4/4)
+- S-003 Booking Form — 3/4 done (T-003-03 photo-upload in research)
+- S-004 Accounts Domain — COMPLETE (1/1)
+- S-005 Scan Page — COMPLETE (4/4)
+- S-006 Content Domain — 1/5 done (T-006-01 implementing)
+- S-007 Notifications — 0/5 (ready to start — T-007-01, T-007-02 unblocked)
+- S-008 Payments — 0/4 (ready to start — T-008-01 unblocked)
+- S-009 Address Autocomplete — 0/3 (ready to start — T-009-01 unblocked)
 
 **Epics (ongoing health):**
-- E-001 Dev environment — clone-to-running in 5 min
-- E-002 Deploy pipeline — every push to main deploys
-- E-003 Public surface — fast, accessible, print-ready
-- E-004 Domain model — Ash resources stay correct
-- E-005 Content system — schema-driven, seed-reproducible
-- E-006 First customer — can we hand this to a hauler this week?
-- E-007 Demo instance — live URL that sells the product
-- E-008 Data security — tenant isolation tested from day one
-- E-009 Service integrations — external APIs (Stripe, Twilio, Google Places)
+- E-001 Dev environment — GOOD (foundation complete, mix setup works)
+- E-002 Deploy pipeline — GOOD (fly-deploy done, CI working)
+- E-003 Public surface — GOOD (landing page, scan page, booking form all live)
+- E-004 Domain model — GOOD (Accounts + Operations domains built, tested)
+- E-005 Content system — IN PROGRESS (resources defined, T-006-01 implementing)
+- E-006 First customer — PROGRESSING (3 public pages live, booking creates leads, need notifications)
+- E-007 Demo instance — PARTIAL (pages live, content system not seeded yet)
+- E-008 Data security — PROGRESSING (tenant provisioning built, policies on resources)
+- E-009 Service integrations — READY (all three stories unblocked, none started)

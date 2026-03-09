@@ -68,7 +68,12 @@ _llm:
     - Postgres (Neon, serverless, schema-per-tenant)
     - Fly.io (scale-to-zero, single region per operator)
 
-    ## Key docs (read these first)
+    ## Status board
+    docs/active/OVERVIEW.md — READ FIRST, UPDATE ALWAYS.
+    Central info board: active tickets, blockers, decisions, cross-ticket notes.
+    Update it when you complete work, hit a blocker, or learn something others need.
+
+    ## Key docs
     - docs/knowledge/specification.md    — product spec, monorepo layout, deploy
     - docs/knowledge/content-system.md   — content domain design (Astro-equivalent)
     - docs/knowledge/mockup-reference.md — design tokens, typography, section layout

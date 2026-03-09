@@ -18,17 +18,32 @@ docs/knowledge/         # Specs, design decisions, reference docs
 
 ### Key Docs
 
+- `docs/active/OVERVIEW.md` — **Status board. Read first, update always.** Central information board for all agents.
 - `docs/knowledge/specification.md` — Full product spec, monorepo structure, deploy strategy
 - `docs/knowledge/content-system.md` — Content domain design (Astro-equivalent on Ash)
 - `docs/knowledge/mockup-reference.md` — Design tokens, typography, layout from prototype
 
 ---
 
-## Agent Context: `just llm`
+## Agent Communication
 
-Run `just llm` to get a concise briefing on the repo — stack, architecture, key files, conventions, and task management. **This is the inter-agent handoff mechanism.** When a new agent session starts (lisa ticket, manual claude invocation, or any LLM coder), `just llm` is the first thing to read.
+### `docs/active/OVERVIEW.md` — Status board
 
-**Keep `just llm` accurate.** If you change the architecture, add a new public route, shift conventions, or introduce a new domain, update the `_llm` recipe in `.just/system.just` to reflect it. The output should be a self-contained briefing that lets a fresh agent work productively without reading every file in the repo. Think of it as a living `README` optimized for LLM context windows — terse, structured, no prose.
+**Read this at the start of every session. Update it when you finish work.** This is how agents communicate with the developer and with each other. It tracks:
+
+- What's in progress and who's working on what
+- Recently completed tickets
+- Blockers and risks
+- Decisions made during implementation that aren't in the spec
+- Cross-ticket notes (things you learned that another agent needs to know)
+
+If you complete a ticket, move it from "Active" to "Recently completed." If you hit a blocker, log it. If you make a decision that affects other tickets, write it down. The developer checks this file to understand project state without reading every ticket.
+
+### `just llm` — Agent onboarding
+
+Run `just llm` for a concise repo briefing — stack, architecture, key files, conventions. **This is the inter-agent handoff mechanism.** When a new agent session starts (lisa ticket, manual claude invocation, or any LLM coder), `just llm` is the first thing to read.
+
+**Keep `just llm` accurate.** If you change the architecture, add a new public route, shift conventions, or introduce a new domain, update the `_llm` recipe in `.just/system.just` to reflect it. Terse, structured, no prose.
 
 ---
 

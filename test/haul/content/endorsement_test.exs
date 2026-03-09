@@ -4,7 +4,6 @@ defmodule Haul.Content.EndorsementTest do
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Accounts.Company
   alias Haul.Content.Endorsement
-  alias Haul.Operations.Job
 
   @valid_attrs %{
     customer_name: "John Smith",

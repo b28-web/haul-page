@@ -148,6 +148,8 @@ config :haul, :stripe_billing_webhook_secret, ""
 # AI / BAML — Sandbox for dev, Baml for prod (configured in runtime.exs)
 config :haul, :ai_adapter, Haul.AI.Sandbox
 config :haul, :chat_adapter, Haul.AI.Chat.Sandbox
+config :haul, :ai_session_cost_alert, 0.50
+config :haul, :ai_monthly_budget_alert, 100.0
 
 # Photo upload storage — :local for dev/test, :s3 for prod (Fly Tigris)
 config :haul, :storage, backend: :local

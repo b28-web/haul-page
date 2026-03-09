@@ -113,9 +113,10 @@ defmodule HaulWeb.ChatLive do
           <div class="md:hidden border-b border-border">
             <%= if @edit_mode? do %>
               <.preview_panel
+                panel_id="preview-panel-mobile"
                 provisioned_url={@provisioned_url}
                 edit_count={@edit_count}
-                max_edits={@max_edit_rounds}
+                max_edits={10}
                 finalized?={@finalized?}
               />
             <% else %>
@@ -242,9 +243,10 @@ defmodule HaulWeb.ChatLive do
       <div class="hidden md:block w-80 border-l border-border overflow-y-auto">
         <%= if @edit_mode? do %>
           <.preview_panel
+            panel_id="preview-panel-desktop"
             provisioned_url={@provisioned_url}
             edit_count={@edit_count}
-            max_edits={@max_edit_rounds}
+            max_edits={10}
             finalized?={@finalized?}
           />
         <% else %>
@@ -263,8 +265,10 @@ defmodule HaulWeb.ChatLive do
 
   # Preview panel — shown after provisioning in edit mode
   defp preview_panel(assigns) do
+    assigns = assign_new(assigns, :panel_id, fn -> "preview-panel" end)
+
     ~H"""
-    <div class="p-4 space-y-4" id="preview-panel" phx-hook="PreviewReload">
+    <div class="p-4 space-y-4" id={@panel_id} phx-hook="PreviewReload">
       <div>
         <h2 class="text-sm font-display uppercase tracking-wide text-foreground">Site Preview</h2>
         <p class="text-xs text-muted-foreground mt-1">
@@ -547,6 +551,21 @@ defmodule HaulWeb.ChatLive do
   end
 
   @impl true
+
+  def handle_info({:ai_usage, usage}, socket) do
+    if socket.assigns.conversation do
+      Haul.AI.CostTracker.record_call(%{
+        function_name: "chat",
+        model: usage.model,
+        input_tokens: usage.input_tokens,
+        output_tokens: usage.output_tokens,
+        conversation_id: socket.assigns.conversation.id
+      })
+    end
+
+    {:noreply, socket}
+  end
+
   def handle_info({:ai_chunk, text}, socket) do
     messages = append_to_last_assistant(socket.assigns.messages, text)
 
@@ -663,9 +682,9 @@ defmodule HaulWeb.ChatLive do
      socket
      |> assign(:provisioning?, false)
      |> assign(:provisioned_url, result.site_url)
-     |> assign(:edit_mode?, true)
-     |> assign(:tenant, result.tenant)
-     |> assign(:company, result.company)
+     |> assign(:edit_mode?, Map.has_key?(result, :tenant))
+     |> assign(:tenant, Map.get(result, :tenant))
+     |> assign(:company, Map.get(result, :company))
      |> assign(:show_profile?, true)
      |> assign(:messages, socket.assigns.messages ++ [preview_msg])
      |> push_event("scroll_to_bottom", %{})}

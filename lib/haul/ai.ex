@@ -12,9 +12,19 @@ defmodule Haul.AI do
   @doc """
   Call a BAML function by name with the given arguments.
   Delegates to the configured adapter.
+
+  Options:
+  - `:conversation_id` — UUID to link cost tracking to a conversation
   """
-  def call_function(function_name, args \\ %{}) do
-    adapter().call_function(function_name, args)
+  def call_function(function_name, args \\ %{}, opts \\ []) do
+    case adapter().call_function(function_name, args) do
+      {:ok, result} = success ->
+        Haul.AI.CostTracker.record_baml_call(function_name, args, result, opts)
+        success
+
+      error ->
+        error
+    end
   end
 
   defp adapter do

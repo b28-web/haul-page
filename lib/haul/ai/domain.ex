@@ -4,5 +4,6 @@ defmodule Haul.AI.Domain do
 
   resources do
     resource Haul.AI.Conversation
+    resource Haul.AI.CostEntry
   end
 end

@@ -75,6 +75,20 @@ defmodule HaulWeb.Telemetry do
           "The time the connection spent waiting before being checked out for the query"
       ),
 
+      # AI Cost Metrics
+      sum("haul.ai.call.estimated_cost_usd",
+        tags: [:function_name, :model],
+        description: "Estimated USD cost of AI calls"
+      ),
+      sum("haul.ai.call.input_tokens",
+        tags: [:function_name, :model],
+        description: "Total input tokens sent to AI models"
+      ),
+      sum("haul.ai.call.output_tokens",
+        tags: [:function_name, :model],
+        description: "Total output tokens received from AI models"
+      ),
+
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),

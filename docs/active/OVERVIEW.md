@@ -4,19 +4,23 @@
 
 ## Current state
 
-**Phase:** 35 of 35 stories complete. All tickets done.
+**Phase:** 35 stories, all tickets implemented. **31 test failures in uncommitted work** — S-033/S-034/S-035 changes (70 files, +1472/-2985 lines) not yet committed to git.
 
-**What works:** 940 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain + proxy path), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA, superadmin panel (auth + accounts list + account detail + impersonation), proxy tenant routing + browser QA, test timing telemetry. Dev infrastructure: centralized test factories, test tier conventions, pyramid reporter, compile-time adapters, supervised init tasks, let-it-crash error handling, native Postgres (no Docker), schema template cloning, process-local test state, shared tenant pool, LiveView event helpers, QA test dedup, pure logic extraction.
+**What works (committed, passing):** Full multi-tenant SaaS platform through S-032 (114 tickets). Landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain + proxy path), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA, superadmin panel (auth + accounts list + account detail + impersonation), proxy tenant routing + browser QA, test timing telemetry. Dev infrastructure: centralized test factories, test tier conventions, pyramid reporter, compile-time adapters, supervised init tasks, let-it-crash error handling, native Postgres (no Docker).
 
-**What's next:** No open tickets. All stories complete.
+**What's broken (uncommitted):** S-033/S-034/S-035 implemented but **942 tests, 31 failures**. Root causes: (1) `DBConnection.ConnectionError` — "tcp recv: closed" from concurrent tenant provisioning overwhelming pool; (2) `DBConnection.OwnershipError` — async tests spawn Oban workers that lose sandbox ownership. The async unlock (T-033-05) was too aggressive — needs pool_size increase or selective revert to sync.
+
+**What's next:** Fix the 31 test failures, then commit S-033/S-034/S-035.
 
 ## Active tickets
 
-None — all tickets complete.
+| Ticket | Title | Status | Notes |
+|--------|-------|--------|-------|
+| — | Fix test failures | **BLOCKER** | 31 failures from async unlock (T-033-05). DBConnection pool exhaustion + ownership errors. Must fix before committing S-033/S-034/S-035. |
 
 ## Ready to start (unblocked)
 
-None.
+None — all tickets implemented, pending test fix + commit.
 
 ## Recently completed
 
@@ -63,7 +67,8 @@ None.
 - **Dockerfile image size** — 278MB vs 100MB target. Ash ecosystem is the cause. Acceptable for now.
 - **Pending TODOs in user.ex** — password reset and magic link email implementations stubbed. Not blocking.
 - **baml_elixir pre-release** — pinned at 1.0.0-pre.25. Monitor for breaking changes.
-- **Async test suite** — T-033-05 async:true switch reverted to async:false due to DBConnection.OwnershipError in LiveView tests. Infrastructure is ready (process-local state, tenant pool) but full async needs further work on LiveView process allowlisting. Tests run at ~23s sync.
+- **31 test failures (uncommitted)** — T-033-05 async unlock causes DBConnection.ConnectionError (pool exhaustion during concurrent tenant provisioning) and DBConnection.OwnershipError (Oban workers lose sandbox ownership in async mode). Infrastructure modules created (schema_template.ex, tenant_pool.ex, live_helpers.ex) but async:true applied too broadly. Needs: pool_size increase in test config, or selective revert of async:true on tests that spawn workers.
+- **70 files uncommitted** — S-033/S-034/S-035 changes spanning test files, support modules, docs, and justfile. Cannot commit until failures are resolved.
 
 ## Decisions made during implementation
 
@@ -89,7 +94,7 @@ None.
 ## Cross-ticket notes
 
 - **Ash resources now live** — Accounts (Company with domain, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
-- **Test count: 940** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, isolation, 116 unit tests from domain logic extraction, 36 LiveView event helper unit tests, 15 extracted pure logic tests. QA dedup removed 75 duplicate tests, merged 35 unique ones.
+- **Test count: 942 (31 failing)** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, isolation, 116 unit tests from domain logic extraction, 36 LiveView event helper unit tests, 15 extracted pure logic tests. QA dedup removed 75 duplicate tests, merged 35 unique ones. Failures are from async unlock, not code bugs.
 - **All 15 browser QA tickets done** — T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03, T-012-05, T-013-06, T-014-03, T-015-04, T-016-04, T-017-03, T-019-06, T-020-05.
 - **Playwright screenshots gitignored** — walkthrough-*.png and work artifact PNGs excluded from git.
 - **Content seeding works** — `mix haul.seed` populates from priv/content/ directory. Multi-tenant: `mix haul.seed --operator customer-1`.
@@ -103,9 +108,9 @@ None.
 
 ## Quick reference
 
-**DAG:** 126 tickets. 126 done. 0 open.
+**DAG:** 126 tickets. All implemented. 70 files uncommitted (S-033/S-034/S-035), 31 test failures blocking commit.
 
-**Critical path:** T-033-01 → T-033-02/03/04 → T-033-05
+**Critical path:** Fix async test failures → commit S-033/S-034/S-035
 
 **Chains:**
 ```
@@ -225,5 +230,5 @@ S-035: T-035-01✓, T-035-02✓, T-035-04✓  (COMPLETE)
 - E-012 Dev tenant preview — GOOD (S-022 complete)
 - E-013 Developer agent experience — GOOD (S-023, S-024, S-025, S-034 complete)
 - E-014 Dev resource efficiency — GOOD (S-025, S-026, S-035 complete)
-- E-015 Test architecture — GOOD (S-027–S-029, S-033 complete — suite ~23s, async infra ready)
+- E-015 Test architecture — **NEEDS FIX** (S-027–S-029 complete, S-033 implemented but 31 test failures from async unlock)
 - E-016 Erlang idioms — GOOD (S-030, S-031, S-032 complete — let-it-crash, compile-env, supervised init)

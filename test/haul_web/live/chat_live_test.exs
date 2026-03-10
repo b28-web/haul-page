@@ -1,5 +1,5 @@
 defmodule HaulWeb.ChatLiveTest do
-  use HaulWeb.ConnCase, async: false
+  use HaulWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
 
@@ -10,6 +10,22 @@ defmodule HaulWeb.ChatLiveTest do
     ChatSandbox.clear_response()
     ChatSandbox.clear_error()
     :ok
+  end
+
+  # Send a chat message and wait for the streaming response to complete.
+  # Returns the rendered HTML after the response arrives.
+  defp send_message(view, text, sleep \\ 150) do
+    view |> form("form", %{text: text}) |> render_submit()
+    Process.sleep(sleep)
+    render(view)
+  end
+
+  # Mount the chat page, send one message, and return {view, html_after_response}.
+  defp chat_round_trip(conn, message, ai_response) do
+    ChatSandbox.set_response(ai_response)
+    {:ok, view, _html} = live(conn, "/start")
+    html = send_message(view, message, 200)
+    {view, html}
   end
 
   describe "mount" do
@@ -39,20 +55,9 @@ defmodule HaulWeb.ChatLiveTest do
 
   describe "send_message" do
     test "sends a user message and receives AI response", %{conn: conn} do
-      ChatSandbox.set_response("Great to meet you!")
-      {:ok, view, _html} = live(conn, "/start")
+      {_view, html} = chat_round_trip(conn, "Hello, I run a junk removal company", "Great to meet you!")
 
-      view
-      |> form("form", %{text: "Hello, I run a junk removal company"})
-      |> render_submit()
-
-      # Wait for streaming response to complete
-      Process.sleep(150)
-      html = render(view)
-
-      # User message appears
       assert html =~ "Hello, I run a junk removal company"
-      # AI response appears
       assert html =~ "Great to meet you!"
     end
 
@@ -80,17 +85,7 @@ defmodule HaulWeb.ChatLiveTest do
     end
 
     test "clears input after sending", %{conn: conn} do
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "Hello"})
-      |> render_submit()
-
-      # Wait for streaming to complete
-      Process.sleep(150)
-      html = render(view)
-
-      # Input should be cleared
+      {_view, html} = chat_round_trip(conn, "Hello", "Hi!")
       refute html =~ ~s(value="Hello")
     end
   end
@@ -101,23 +96,9 @@ defmodule HaulWeb.ChatLiveTest do
       {:ok, view, _html} = live(conn, "/start")
 
       max = Application.get_env(:haul, :max_chat_messages, 50)
+      for i <- 1..max, do: send_message(view, "Message #{i}", 50)
 
-      # Send max messages, waiting for each stream to complete
-      for i <- 1..max do
-        view
-        |> form("form", %{text: "Message #{i}"})
-        |> render_submit()
-
-        # Wait for streaming to complete before next message
-        Process.sleep(50)
-      end
-
-      # Next message should be rejected
-      html =
-        view
-        |> form("form", %{text: "One more"})
-        |> render_submit()
-
+      html = view |> form("form", %{text: "One more"}) |> render_submit()
       assert html =~ "Message limit reached"
     end
   end
@@ -136,19 +117,8 @@ defmodule HaulWeb.ChatLiveTest do
     end
 
     test "re-enables input after streaming completes", %{conn: conn} do
-      ChatSandbox.set_response("Hi!")
-      {:ok, view, _html} = live(conn, "/start")
+      {_view, html} = chat_round_trip(conn, "Hello", "Hi!")
 
-      view
-      |> form("form", %{text: "Hello"})
-      |> render_submit()
-
-      # Wait for streaming to complete
-      Process.sleep(150)
-      html = render(view)
-
-      # The text input should not be disabled after streaming completes
-      # (the button may still be disabled because input is empty)
       refute html =~
                ~s(<input type="text" name="text" value="" phx-change="update_input" placeholder="Type a message..." autocomplete="off" disabled="")
     end
@@ -156,18 +126,8 @@ defmodule HaulWeb.ChatLiveTest do
 
   describe "live extraction" do
     test "profile panel updates after extraction completes", %{conn: conn} do
-      ChatSandbox.set_response("Nice! Tell me more.")
-      {:ok, view, _html} = live(conn, "/start")
+      {_view, html} = chat_round_trip(conn, "Hi, I'm Mike from Junk & Handy", "Nice! Tell me more.")
 
-      view
-      |> form("form", %{text: "Hi, I'm Mike from Junk & Handy"})
-      |> render_submit()
-
-      # Wait for streaming + extraction debounce (800ms) + extraction task
-      Process.sleep(200)
-      html = render(view)
-
-      # Sandbox default returns "Junk & Handy" as business name
       assert html =~ "Junk &amp; Handy"
       assert html =~ "Mike Johnson"
       assert html =~ "(555) 123-4567"
@@ -175,65 +135,28 @@ defmodule HaulWeb.ChatLiveTest do
     end
 
     test "completeness indicator updates with extracted fields", %{conn: conn} do
-      ChatSandbox.set_response("Got it!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "We do junk removal in Portland"})
-      |> render_submit()
-
-      # Wait for extraction to complete
-      Process.sleep(200)
-      html = render(view)
-
-      # Sandbox default profile has all 7 fields filled
+      {_view, html} = chat_round_trip(conn, "We do junk removal in Portland", "Got it!")
       assert html =~ "7 of 7 fields collected"
     end
 
     test "services list renders in profile panel", %{conn: conn} do
-      ChatSandbox.set_response("Great!")
-      {:ok, view, _html} = live(conn, "/start")
+      {_view, html} = chat_round_trip(conn, "We offer junk removal and cleanouts", "Great!")
 
-      view
-      |> form("form", %{text: "We offer junk removal and cleanouts"})
-      |> render_submit()
-
-      Process.sleep(200)
-      html = render(view)
-
-      # Sandbox default includes these services
       assert html =~ "Junk Removal"
       assert html =~ "Yard Waste"
       assert html =~ "Garage Cleanouts"
     end
 
     test "differentiators render in profile panel", %{conn: conn} do
-      ChatSandbox.set_response("Awesome!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "We recycle 80% of what we haul"})
-      |> render_submit()
-
-      Process.sleep(200)
-      html = render(view)
+      {_view, html} = chat_round_trip(conn, "We recycle 80% of what we haul", "Awesome!")
 
       assert html =~ "Same-day service available"
       assert html =~ "Licensed and insured"
     end
 
     test "profile complete CTA appears when all required fields present", %{conn: conn} do
-      ChatSandbox.set_response("Perfect!")
-      {:ok, view, _html} = live(conn, "/start")
+      {_view, html} = chat_round_trip(conn, "I'm Mike, we're Junk & Handy, call us at 555-1234", "Perfect!")
 
-      view
-      |> form("form", %{text: "I'm Mike, we're Junk & Handy, call us at 555-1234"})
-      |> render_submit()
-
-      Process.sleep(200)
-      html = render(view)
-
-      # Sandbox returns complete profile — CTA should appear
       assert html =~ "Your profile is complete!"
       assert html =~ "Build my site"
     end
@@ -302,14 +225,9 @@ defmodule HaulWeb.ChatLiveTest do
       ChatSandbox.set_error("API error")
       {:ok, view, _html} = live(conn, "/start")
 
-      view
-      |> form("form", %{text: "Hello"})
-      |> render_submit()
-
-      # Wait for error to be received
+      view |> form("form", %{text: "Hello"}) |> render_submit()
       Process.sleep(100)
 
-      # The LiveView should have redirected
       flash = assert_redirect(view, "/app/signup")
       assert flash["error"] =~ "temporarily unavailable"
     end
@@ -317,19 +235,13 @@ defmodule HaulWeb.ChatLiveTest do
     test "stays on page for later message errors instead of redirecting", %{conn: conn} do
       ChatSandbox.set_response("Hi there!")
       {:ok, view, _html} = live(conn, "/start")
+      send_message(view, "Hello")
+      send_message(view, "More info")
 
-      # Send two messages so message_count > 1
-      view |> form("form", %{text: "Hello"}) |> render_submit()
-      Process.sleep(150)
-      view |> form("form", %{text: "More info"}) |> render_submit()
-      Process.sleep(150)
-
-      # Simulate AI error after multiple messages (message_count == 2)
       send(view.pid, {:ai_error, "API error"})
       Process.sleep(50)
       html = render(view)
 
-      # Should stay on page (not redirect) — page still shows chat UI
       assert html =~ "Get Started"
       assert html =~ "Type a message"
     end
@@ -337,16 +249,7 @@ defmodule HaulWeb.ChatLiveTest do
 
   describe "multi-turn conversation" do
     test "builds profile progressively across turns", %{conn: conn} do
-      ChatSandbox.set_response("Great! What services do you offer?")
-      {:ok, view, _html} = live(conn, "/start")
-
-      # Turn 1
-      view
-      |> form("form", %{text: "I run a junk removal business called Joe's Hauling in Portland"})
-      |> render_submit()
-
-      Process.sleep(200)
-      html = render(view)
+      {view, html} = chat_round_trip(conn, "I run a junk removal business called Joe's Hauling in Portland", "Great! What services do you offer?")
 
       assert html =~ "Joe&#39;s Hauling in Portland"
       assert html =~ "Great! What services do you offer?"
@@ -354,13 +257,7 @@ defmodule HaulWeb.ChatLiveTest do
 
       # Turn 2
       ChatSandbox.set_response("Sounds good! Anything else?")
-
-      view
-      |> form("form", %{text: "We do junk removal, yard waste, and garage cleanouts"})
-      |> render_submit()
-
-      Process.sleep(200)
-      html = render(view)
+      html = send_message(view, "We do junk removal, yard waste, and garage cleanouts", 200)
 
       assert html =~ "junk removal, yard waste"
       assert html =~ "Sounds good! Anything else?"
@@ -369,15 +266,7 @@ defmodule HaulWeb.ChatLiveTest do
 
   describe "CSS layout" do
     test "user messages are right-aligned, AI messages left-aligned", %{conn: conn} do
-      ChatSandbox.set_response("Hello!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "Hi there"})
-      |> render_submit()
-
-      Process.sleep(150)
-      html = render(view)
+      {_view, html} = chat_round_trip(conn, "Hi there", "Hello!")
 
       assert html =~ "justify-end"
       assert html =~ "bg-zinc-700"
@@ -406,16 +295,7 @@ defmodule HaulWeb.ChatLiveTest do
     end
 
     test "toggle button appears after extraction and toggles panel visibility", %{conn: conn} do
-      ChatSandbox.set_response("Nice!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "I'm Mike from Junk & Handy"})
-      |> render_submit()
-
-      Process.sleep(200)
-
-      html = render(view)
+      {view, html} = chat_round_trip(conn, "I'm Mike from Junk & Handy", "Nice!")
       assert html =~ "Hide Profile"
 
       html = render_click(view, "toggle_profile")
@@ -428,37 +308,17 @@ defmodule HaulWeb.ChatLiveTest do
 
   describe "provisioning flow" do
     test "Build my site triggers provisioning state", %{conn: conn} do
-      ChatSandbox.set_response("Ready!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "I'm Mike"})
-      |> render_submit()
-
-      Process.sleep(200)
-
+      {view, _html} = chat_round_trip(conn, "I'm Mike", "Ready!")
       html = render_click(view, "provision_site")
       assert html =~ "Building your site..."
     end
 
     test "provisioning_complete shows site URL", %{conn: conn} do
-      ChatSandbox.set_response("Ready!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "I'm Mike"})
-      |> render_submit()
-
-      Process.sleep(200)
-
+      {view, _html} = chat_round_trip(conn, "I'm Mike", "Ready!")
       render_click(view, "provision_site")
 
-      send(
-        view.pid,
-        {:provisioning_complete,
-         %{site_url: "https://test.example.com", company_name: "Junk & Handy", duration_ms: 15000}}
-      )
-
+      send(view.pid, {:provisioning_complete,
+        %{site_url: "https://test.example.com", company_name: "Junk & Handy", duration_ms: 15000}})
       Process.sleep(50)
       html = render(view)
 
@@ -468,15 +328,7 @@ defmodule HaulWeb.ChatLiveTest do
     end
 
     test "provisioning_failed shows error and allows retry", %{conn: conn} do
-      ChatSandbox.set_response("Ready!")
-      {:ok, view, _html} = live(conn, "/start")
-
-      view
-      |> form("form", %{text: "I'm Mike"})
-      |> render_submit()
-
-      Process.sleep(200)
-
+      {view, _html} = chat_round_trip(conn, "I'm Mike", "Ready!")
       render_click(view, "provision_site")
 
       send(view.pid, {:provisioning_failed, %{step: :create_company, reason: "slug taken"}})
@@ -495,17 +347,9 @@ defmodule HaulWeb.ChatLiveTest do
 
       conn1 = Plug.Test.init_test_session(conn, %{"chat_session_id" => session_id})
       {:ok, view, _html} = live(conn1, "/start")
+      send_message(view, "Hi, I'm starting a business")
 
-      view
-      |> form("form", %{text: "Hi, I'm starting a business"})
-      |> render_submit()
-
-      Process.sleep(150)
-
-      conn2 =
-        build_conn()
-        |> Plug.Test.init_test_session(%{"chat_session_id" => session_id})
-
+      conn2 = build_conn() |> Plug.Test.init_test_session(%{"chat_session_id" => session_id})
       {:ok, _view2, html2} = live(conn2, "/start")
 
       assert html2 =~ "Hello back!"

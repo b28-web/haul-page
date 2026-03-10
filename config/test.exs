@@ -70,6 +70,10 @@ config :haul, max_chat_messages: 10
 # Enable dev routes (proxy tenant, LiveDashboard) in test
 config :haul, dev_routes: true
 
+# Ash — disable internal async tasks (they lose sandbox ownership in tests)
+config :ash, :disable_async?, true
+config :ash, :missed_notifications, :ignore
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 

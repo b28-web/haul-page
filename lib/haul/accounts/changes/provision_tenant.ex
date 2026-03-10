@@ -7,15 +7,19 @@ defmodule Haul.Accounts.Changes.ProvisionTenant do
 
   @impl true
   def change(changeset, _opts, _context) do
-    Ash.Changeset.after_action(changeset, fn _changeset, company ->
-      schema = tenant_schema(company.slug)
+    if Application.get_env(:haul, :skip_tenant_provision) do
+      changeset
+    else
+      Ash.Changeset.after_action(changeset, fn _changeset, company ->
+        schema = tenant_schema(company.slug)
 
-      Ecto.Adapters.SQL.query!(Haul.Repo, "CREATE SCHEMA IF NOT EXISTS \"#{schema}\"")
+        Ecto.Adapters.SQL.query!(Haul.Repo, "CREATE SCHEMA IF NOT EXISTS \"#{schema}\"")
 
-      AshPostgres.MultiTenancy.migrate_tenant(schema, Haul.Repo)
+        AshPostgres.MultiTenancy.migrate_tenant(schema, Haul.Repo)
 
-      {:ok, company}
-    end)
+        {:ok, company}
+      end)
+    end
   end
 
   @doc "Derives the Postgres schema name from a company slug."

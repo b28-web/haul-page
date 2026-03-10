@@ -3,11 +3,6 @@ defmodule HaulWeb.App.LoginLiveTest do
 
   import Phoenix.LiveViewTest
 
-  setup do
-    on_exit(fn -> cleanup_tenants() end)
-    :ok
-  end
-
   describe "login page" do
     test "renders login form", %{conn: conn} do
       {:ok, _view, html} = live(conn, "/app/login")
@@ -19,6 +14,7 @@ defmodule HaulWeb.App.LoginLiveTest do
 
     test "shows error on invalid credentials", %{conn: conn} do
       ctx = create_authenticated_context()
+      on_exit(fn -> cleanup_tenant(ctx.tenant) end)
 
       # Put tenant in session so login can resolve it
       conn = Phoenix.ConnTest.init_test_session(conn, %{tenant: ctx.tenant})

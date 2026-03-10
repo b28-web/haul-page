@@ -29,7 +29,11 @@ defmodule Haul.DataCase do
 
   setup tags do
     Haul.DataCase.setup_sandbox(tags)
-    :ok
+
+    case Haul.DataCase.pool_context(tags) do
+      nil -> :ok
+      ctx -> {:ok, ctx}
+    end
   end
 
   @doc """
@@ -38,8 +42,22 @@ defmodule Haul.DataCase do
   def setup_sandbox(tags) do
     alias Ecto.Adapters.SQL.Sandbox
 
-    pid = Sandbox.start_owner!(Haul.Repo, shared: not tags[:async])
+    # Concurrency groups (async: true, group: :pool_a) share a sandbox
+    # connection within the group, like async: false does
+    shared = if tags[:test_group], do: true, else: not tags[:async]
+
+    pid = Sandbox.start_owner!(Haul.Repo, shared: shared)
     on_exit(fn -> Sandbox.stop_owner(pid) end)
+  end
+
+  @doc """
+  Returns the pool tenant context for a concurrency group, or nil.
+  """
+  def pool_context(tags) do
+    case tags[:test_group] do
+      nil -> nil
+      group -> Haul.Test.TenantPool.checkout(group)
+    end
   end
 
   @doc """

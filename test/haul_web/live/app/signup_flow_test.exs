@@ -13,7 +13,6 @@ defmodule HaulWeb.App.SignupFlowTest do
 
   setup do
     clear_rate_limits()
-    on_exit(fn -> cleanup_tenants() end)
     :ok
   end
 

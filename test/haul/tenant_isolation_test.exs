@@ -20,9 +20,11 @@ defmodule Haul.TenantIsolationTest do
   # ── Helpers ──────────────────────────────────────────────────────────
 
   defp create_tenant(name) do
+    unique_name = "#{name} #{System.unique_integer([:positive])}"
+
     {:ok, company} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: name})
+      |> Ash.Changeset.for_create(:create_company, %{name: unique_name})
       |> Ash.create()
 
     tenant = ProvisionTenant.tenant_schema(company.slug)
@@ -142,15 +144,8 @@ defmodule Haul.TenantIsolationTest do
     endorsement_b = create_endorsement(tenant_b, "Bob Fan")
 
     on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant_a}" CASCADE))
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant_b}" CASCADE))
     end)
 
     %{

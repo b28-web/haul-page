@@ -49,6 +49,14 @@ commit-agent:
 test-pyramid:
     @just _test-pyramid
 
+# Run only tests affected by recent source changes
+test-stale *args='':
+    @just _test-stale {{ args }}
+
+# Run tests for a specific file or file:line
+test-file FILE *args='':
+    @just _test-file {{ FILE }} {{ args }}
+
 # Run the implementation agent swarm
 work:
     lisa loop

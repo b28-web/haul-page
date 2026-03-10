@@ -5,7 +5,6 @@ defmodule HaulWeb.App.SignupLiveTest do
 
   setup do
     clear_rate_limits()
-    on_exit(fn -> cleanup_tenants() end)
     :ok
   end
 
@@ -49,13 +48,14 @@ defmodule HaulWeb.App.SignupLiveTest do
     end
 
     test "shows slug taken for existing company", %{conn: conn} do
-      _ctx = create_authenticated_context()
+      ctx = create_authenticated_context()
+      on_exit(fn -> cleanup_tenant(ctx.tenant) end)
 
       {:ok, view, _html} = live(conn, "/app/signup")
 
       html =
         view
-        |> form("form", signup: %{name: "Test Co"})
+        |> form("form", signup: %{name: ctx.company.name})
         |> render_change()
 
       assert html =~ "Taken"
@@ -119,6 +119,7 @@ defmodule HaulWeb.App.SignupLiveTest do
     end
 
     test "successful signup triggers form submission", %{conn: conn} do
+      on_exit(fn -> cleanup_tenant("tenant_signup-test-co") end)
       conn = conn_with_ip(conn)
       {:ok, view, _html} = live(conn, "/app/signup")
 
@@ -141,6 +142,10 @@ defmodule HaulWeb.App.SignupLiveTest do
     end
 
     test "rate limiting blocks excessive signups", %{conn: conn} do
+      on_exit(fn ->
+        for i <- 1..5, do: cleanup_tenant("tenant_rate-test-#{i}")
+      end)
+
       ip = "10.99.99.#{:rand.uniform(255)}"
       conn = conn_with_ip(conn, ip)
 

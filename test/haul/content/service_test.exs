@@ -8,21 +8,15 @@ defmodule Haul.Content.ServiceTest do
   setup do
     {:ok, company} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Service Test Co"})
+      |> Ash.Changeset.for_create(:create_company, %{
+        name: "Service Test Co #{System.unique_integer([:positive])}"
+      })
       |> Ash.create()
 
     tenant = ProvisionTenant.tenant_schema(company.slug)
 
     on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant}" CASCADE))
     end)
 
     %{tenant: tenant}

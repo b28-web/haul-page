@@ -3,11 +3,6 @@ defmodule HaulWeb.App.DashboardLiveTest do
 
   import Phoenix.LiveViewTest
 
-  setup do
-    on_exit(fn -> cleanup_tenants() end)
-    :ok
-  end
-
   describe "unauthenticated" do
     test "redirects to /app/login", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/app/login"}}} = live(conn, "/app")
@@ -18,6 +13,7 @@ defmodule HaulWeb.App.DashboardLiveTest do
     setup %{conn: conn} do
       ctx = create_authenticated_context(role: :owner)
       conn = log_in_user(conn, ctx)
+      on_exit(fn -> cleanup_tenant(ctx.tenant) end)
       %{conn: conn, ctx: ctx}
     end
 
@@ -55,6 +51,7 @@ defmodule HaulWeb.App.DashboardLiveTest do
     setup %{conn: conn} do
       ctx = create_authenticated_context(role: :dispatcher, email: "dispatcher@example.com")
       conn = log_in_user(conn, ctx)
+      on_exit(fn -> cleanup_tenant(ctx.tenant) end)
       %{conn: conn, ctx: ctx}
     end
 
@@ -70,6 +67,7 @@ defmodule HaulWeb.App.DashboardLiveTest do
     setup %{conn: conn} do
       ctx = create_authenticated_context(role: :crew, email: "crew@example.com")
       conn = log_in_user(conn, ctx)
+      on_exit(fn -> cleanup_tenant(ctx.tenant) end)
       %{conn: conn}
     end
 

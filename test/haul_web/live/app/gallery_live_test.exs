@@ -7,7 +7,7 @@ defmodule HaulWeb.App.GalleryLiveTest do
 
   setup do
     auth = create_authenticated_context()
-    on_exit(fn -> cleanup_tenants() end)
+    on_exit(fn -> cleanup_tenant(auth.tenant) end)
     auth
   end
 

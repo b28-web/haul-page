@@ -1,22 +1,6 @@
 defmodule Mix.Tasks.Haul.OnboardTest do
   use Haul.DataCase, async: false
 
-  setup do
-    on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
-    end)
-
-    :ok
-  end
-
   describe "non-interactive mode" do
     test "onboards with all CLI flags" do
       Mix.Tasks.Haul.Onboard.run([

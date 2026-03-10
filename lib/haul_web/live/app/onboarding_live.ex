@@ -400,7 +400,6 @@ defmodule HaulWeb.App.OnboardingLive do
   defp step_title(5), do: "Preview"
   defp step_title(6), do: "Go Live"
 
-
   defp load_site_config(tenant) do
     case Ash.read(SiteConfig, tenant: tenant) do
       {:ok, [config | _]} -> config

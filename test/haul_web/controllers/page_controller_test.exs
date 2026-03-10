@@ -1,36 +1,11 @@
 defmodule HaulWeb.PageControllerTest do
   use HaulWeb.ConnCase, async: false
 
-  alias Haul.Accounts.Changes.ProvisionTenant
-  alias Haul.Accounts.Company
-  alias Haul.Content.Seeder
-
   setup do
-    operator = Application.get_env(:haul, :operator)
+    %{tenant: tenant, operator: operator} = create_operator_context()
     operator_slug = operator[:slug] || "default"
 
-    {:ok, company} =
-      Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Junk & Handy", slug: operator_slug})
-      |> Ash.create()
-
-    tenant = ProvisionTenant.tenant_schema(company.slug)
-    Seeder.seed!(tenant)
-
-    on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
-    end)
-
-    # Use subdomain host so TenantResolver resolves operator (not platform marketing page)
-    %{operator: operator, tenant: tenant, host: "#{operator_slug}.localhost"}
+    %{conn: Phoenix.ConnTest.build_conn(), tenant: tenant, host: "#{operator_slug}.localhost"}
   end
 
   test "GET / returns 200 with landing page content from Ash", %{conn: conn, host: host} do

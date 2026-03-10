@@ -839,7 +839,6 @@ defmodule HaulWeb.ChatLive do
     assign(socket, :extraction_timer, timer_ref)
   end
 
-
   defp all_profile_fields do
     [:business_name, :owner_name, :phone, :email, :service_area, :services, :differentiators]
   end

@@ -3,16 +3,20 @@ defmodule HaulWeb.App.OnboardingLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Haul.Accounts.Changes.ProvisionTenant
-  alias Haul.Content.Seeder
+  setup_all do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Haul.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Haul.Repo, :auto)
+
+    ctx = Haul.Test.Factories.build_authenticated_context()
+    Haul.Content.Seeder.seed!(ctx.tenant)
+
+    Ecto.Adapters.SQL.Sandbox.checkin(Haul.Repo)
+
+    %{ctx: ctx}
+  end
 
   setup do
-    ctx = create_authenticated_context()
-    tenant = ProvisionTenant.tenant_schema(ctx.company.slug)
-    Seeder.seed!(tenant)
-
-    on_exit(fn -> cleanup_tenants() end)
-    %{ctx: ctx}
+    %{conn: Phoenix.ConnTest.build_conn()}
   end
 
   defp auth_conn(conn, ctx) do
@@ -154,6 +158,79 @@ defmodule HaulWeb.App.OnboardingLiveTest do
       # Verify onboarding_complete was set
       updated_company = Ash.get!(Haul.Accounts.Company, ctx.company.id)
       assert updated_company.onboarding_complete == true
+    end
+  end
+
+  describe "public pages after CLI onboarding" do
+    setup do
+      params = %{
+        name: "Test Hauling",
+        phone: "555-0199",
+        email: "test@example.com",
+        area: "Portland, OR"
+      }
+
+      {:ok, result} = Haul.Onboarding.run(params)
+
+      original_operator = Application.get_env(:haul, :operator)
+
+      Application.put_env(
+        :haul,
+        :operator,
+        Keyword.merge(original_operator || [], slug: result.company.slug)
+      )
+
+      on_exit(fn ->
+        Application.put_env(:haul, :operator, original_operator)
+      end)
+
+      %{onboarding_result: result}
+    end
+
+    test "landing page renders with onboarded content", %{conn: conn} do
+      conn = get(conn, ~p"/")
+      html = html_response(conn, 200)
+
+      assert html =~ "555-0199"
+      assert html =~ "test@example.com"
+      assert html =~ "Portland, OR"
+      assert html =~ "What We Do"
+    end
+
+    test "landing page displays default services from content pack", %{conn: conn} do
+      conn = get(conn, ~p"/")
+      html = html_response(conn, 200)
+
+      assert html =~ "Junk Removal"
+      assert html =~ "Cleanouts"
+    end
+
+    test "scan page renders gallery and endorsements", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/scan")
+
+      assert html =~ "555-0199"
+      assert html =~ "Our Work"
+      assert html =~ "What Customers Say"
+    end
+
+    test "booking page renders form", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/book")
+
+      assert html =~ "</form>"
+    end
+
+    test "default content is professional, not placeholder", %{onboarding_result: result} do
+      assert length(result.content.services) == 6
+      assert length(result.content.gallery_items) == 4
+      assert length(result.content.endorsements) == 3
+    end
+
+    test "site config updated with operator info", %{onboarding_result: result} do
+      [config] = Ash.read!(Haul.Content.SiteConfig, tenant: result.tenant)
+
+      assert config.phone == "555-0199"
+      assert config.email == "test@example.com"
+      assert config.service_area == "Portland, OR"
     end
   end
 end

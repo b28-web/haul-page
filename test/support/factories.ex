@@ -36,7 +36,9 @@ defmodule Haul.Test.Factories do
     name = attrs[:company_name] || attrs[:name] || "Test Co #{System.unique_integer([:positive])}"
 
     create_attrs = %{name: name}
-    create_attrs = if attrs[:slug], do: Map.put(create_attrs, :slug, attrs[:slug]), else: create_attrs
+
+    create_attrs =
+      if attrs[:slug], do: Map.put(create_attrs, :slug, attrs[:slug]), else: create_attrs
 
     {:ok, company} =
       Company
@@ -106,6 +108,24 @@ defmodule Haul.Test.Factories do
   end
 
   @doc """
+  Like `build_authenticated_context/1` but uses schema cloning instead of
+  running migrations. ~5-15ms vs ~231ms. Requires `SchemaTemplate.setup!/0`
+  to have run (done in test_helper.exs).
+
+  Accepts all options from `build_company/1` and `build_user/2`.
+  """
+  def build_authenticated_context_fast(attrs \\ %{}) do
+    Application.put_env(:haul, :skip_tenant_provision, true)
+    company = build_company(attrs)
+    Application.delete_env(:haul, :skip_tenant_provision)
+
+    tenant = Haul.Test.SchemaTemplate.clone!(company.slug)
+    %{user: user, token: token} = build_user(tenant, attrs)
+
+    %{company: company, tenant: tenant, user: user, token: token}
+  end
+
+  @doc """
   Creates a completed AdminUser and returns `%{admin, token}`.
   """
   def build_admin_session(_attrs \\ %{}) do
@@ -159,7 +179,10 @@ defmodule Haul.Test.Factories do
     }
 
     Service
-    |> Ash.Changeset.for_create(:add, Map.merge(defaults, attrs), tenant: tenant, authorize?: false)
+    |> Ash.Changeset.for_create(:add, Map.merge(defaults, attrs),
+      tenant: tenant,
+      authorize?: false
+    )
     |> Ash.create!()
   end
 
@@ -175,7 +198,10 @@ defmodule Haul.Test.Factories do
     }
 
     GalleryItem
-    |> Ash.Changeset.for_create(:add, Map.merge(defaults, attrs), tenant: tenant, authorize?: false)
+    |> Ash.Changeset.for_create(:add, Map.merge(defaults, attrs),
+      tenant: tenant,
+      authorize?: false
+    )
     |> Ash.create!()
   end
 
@@ -191,7 +217,10 @@ defmodule Haul.Test.Factories do
     }
 
     Endorsement
-    |> Ash.Changeset.for_create(:add, Map.merge(defaults, attrs), tenant: tenant, authorize?: false)
+    |> Ash.Changeset.for_create(:add, Map.merge(defaults, attrs),
+      tenant: tenant,
+      authorize?: false
+    )
     |> Ash.create!()
   end
 
@@ -205,7 +234,10 @@ defmodule Haul.Test.Factories do
     }
 
     SiteConfig
-    |> Ash.Changeset.for_create(:create_default, Map.merge(defaults, attrs), tenant: tenant, authorize?: false)
+    |> Ash.Changeset.for_create(:create_default, Map.merge(defaults, attrs),
+      tenant: tenant,
+      authorize?: false
+    )
     |> Ash.create!()
   end
 
@@ -222,7 +254,10 @@ defmodule Haul.Test.Factories do
     }
 
     Page
-    |> Ash.Changeset.for_create(:draft, Map.merge(defaults, attrs), tenant: tenant, authorize?: false)
+    |> Ash.Changeset.for_create(:draft, Map.merge(defaults, attrs),
+      tenant: tenant,
+      authorize?: false
+    )
     |> Ash.create!()
   end
 
@@ -248,6 +283,40 @@ defmodule Haul.Test.Factories do
   end
 
   @doc """
+  Creates the operator company + tenant + seeds content once (called from test_helper.exs).
+  All tests that need the operator tenant look it up via `operator_context/0` instead of
+  creating their own, enabling async: true without slug collisions.
+  """
+  def ensure_operator_tenant! do
+    operator = Application.get_env(:haul, :operator)
+    slug = operator[:slug] || "default"
+    name = operator[:business_name] || "Junk & Handy"
+
+    {:ok, company} =
+      Company
+      |> Ash.Changeset.for_create(:create_company, %{name: name, slug: slug})
+      |> Ash.create()
+
+    tenant = ProvisionTenant.tenant_schema(company.slug)
+    Haul.Content.Seeder.seed!(tenant)
+
+    Application.put_env(:haul, :test_operator_context, %{
+      company: company,
+      tenant: tenant,
+      operator: operator
+    })
+  end
+
+  @doc """
+  Returns the pre-created operator context from test_helper.exs.
+  Use this in tests that need the operator company/tenant.
+  """
+  def operator_context do
+    Application.get_env(:haul, :test_operator_context) ||
+      raise "operator_context not available — ensure_operator_tenant!/0 must run in test_helper.exs"
+  end
+
+  @doc """
   Drops all tenant schemas except the shared test tenant.
   Uses `query` (not `query!`) to tolerate concurrent cleanup deadlocks.
   """
@@ -257,6 +326,7 @@ defmodule Haul.Test.Factories do
       SELECT schema_name FROM information_schema.schemata
       WHERE schema_name LIKE 'tenant_%'
         AND schema_name != 'tenant_shared-test-co'
+        AND schema_name NOT LIKE 'tenant___pool_%'
       """)
 
     for [schema] <- result.rows do

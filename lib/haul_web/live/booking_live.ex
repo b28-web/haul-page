@@ -75,7 +75,6 @@ defmodule HaulWeb.BookingLive do
     |> assign(:form, to_form(ash_form, as: "form"))
   end
 
-
   defp upload_photos(socket) do
     tenant = socket.assigns.tenant
 
@@ -91,7 +90,6 @@ defmodule HaulWeb.BookingLive do
     end)
     |> Enum.reject(&is_nil/1)
   end
-
 
   @impl true
   def render(assigns) do

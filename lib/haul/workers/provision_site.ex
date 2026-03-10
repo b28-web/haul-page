@@ -76,5 +76,4 @@ defmodule Haul.Workers.ProvisionSite do
       message
     )
   end
-
 end

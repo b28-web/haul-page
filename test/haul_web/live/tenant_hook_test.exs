@@ -7,31 +7,7 @@ defmodule HaulWeb.TenantHookTest do
   alias Haul.Accounts.Company
 
   setup do
-    operator = Application.get_env(:haul, :operator)
-    operator_slug = operator[:slug] || "default"
-
-    {:ok, company} =
-      Company
-      |> Ash.Changeset.for_create(:create_company, %{
-        name: "Junk & Handy",
-        slug: operator_slug
-      })
-      |> Ash.create()
-
-    tenant = ProvisionTenant.tenant_schema(company.slug)
-
-    on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
-    end)
-
+    %{company: company, tenant: tenant, operator: operator} = create_operator_context()
     %{company: company, tenant: tenant, operator: operator}
   end
 

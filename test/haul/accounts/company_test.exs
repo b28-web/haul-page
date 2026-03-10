@@ -4,23 +4,6 @@ defmodule Haul.Accounts.CompanyTest do
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Accounts.Company
 
-  setup do
-    on_exit(fn ->
-      # Clean up any tenant schemas created during tests
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
-    end)
-
-    :ok
-  end
-
   describe "create_company" do
     test "creates a company with valid attributes" do
       assert {:ok, company} =

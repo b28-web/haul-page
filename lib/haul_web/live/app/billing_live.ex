@@ -3,7 +3,8 @@ defmodule HaulWeb.App.BillingLive do
 
   alias Haul.Billing
 
-  import Haul.Formatting, only: [plan_rank: 1, plan_name: 1, format_price: 1, days_until_downgrade: 1]
+  import Haul.Formatting,
+    only: [plan_rank: 1, plan_name: 1, format_price: 1, days_until_downgrade: 1]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -344,5 +345,4 @@ defmodule HaulWeb.App.BillingLive do
   defp billing_url do
     HaulWeb.Endpoint.url() <> "/app/settings/billing"
   end
-
 end

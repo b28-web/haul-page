@@ -3,67 +3,43 @@ defmodule HaulWeb.Admin.AccountsLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Haul.Admin.AdminUser
-  alias Haul.Accounts.Company
+  require Ash.Query
 
-  @admin_email "accounts-test@admin.com"
-  @admin_password "SuperSecure123!"
+  @company_names ["Alpha Hauling", "Beta Junk Removal"]
 
-  defp setup_admin(_context) do
-    raw_token = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
-    token_hash = :crypto.hash(:sha256, raw_token) |> Base.encode16(case: :lower)
+  setup_all do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Haul.Repo)
+    Ecto.Adapters.SQL.Sandbox.mode(Haul.Repo, :auto)
 
-    {:ok, admin} =
-      AdminUser
-      |> Ash.Changeset.for_create(
-        :create_bootstrap,
-        %{email: @admin_email, setup_token_hash_value: token_hash},
-        authorize?: false
-      )
-      |> Ash.create()
+    # Clean up stale data from prior runs (targeted — only this file's companies)
+    for name <- @company_names do
+      slug = name |> String.downcase() |> String.replace(~r/[^a-z0-9]+/, "-")
+      Ecto.Adapters.SQL.query(Haul.Repo, "DROP SCHEMA IF EXISTS \"tenant_#{slug}\" CASCADE")
+      Ecto.Adapters.SQL.query(Haul.Repo, "DELETE FROM companies WHERE name = $1", [name])
+    end
 
-    hashed = Bcrypt.hash_pwd_salt(@admin_password)
+    # Clean stale admin_users from previous runs (setup_all + :auto commits permanently)
+    Ecto.Adapters.SQL.query(Haul.Repo, "DELETE FROM admin_users")
 
-    {:ok, _admin} =
-      admin
-      |> Ash.Changeset.for_update(:complete_setup, %{hashed_password: hashed}, authorize?: false)
-      |> Ash.update()
+    %{admin: _admin, token: admin_token} = Haul.Test.Factories.build_admin_session()
 
-    {:ok, completed_admin} =
-      AdminUser
-      |> Ash.Query.for_read(
-        :sign_in_with_password,
-        %{email: @admin_email, password: @admin_password}
-      )
-      |> Ash.read_one()
+    company1 = Haul.Test.Factories.build_company(%{name: "Alpha Hauling"})
+    company2 = Haul.Test.Factories.build_company(%{name: "Beta Junk Removal"})
 
-    token = completed_admin.__metadata__.token
-    %{admin_token: token}
+    Ecto.Adapters.SQL.Sandbox.checkin(Haul.Repo)
+
+    %{admin_token: admin_token, company1: company1, company2: company2}
+  end
+
+  setup do
+    %{conn: Phoenix.ConnTest.build_conn()}
   end
 
   defp admin_conn(conn, %{admin_token: token}) do
     conn |> init_test_session(%{_admin_user_token: token})
   end
 
-  defp create_companies(_context) do
-    {:ok, company1} =
-      Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Alpha Hauling"})
-      |> Ash.create()
-
-    {:ok, company2} =
-      Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Beta Junk Removal"})
-      |> Ash.create()
-
-    %{company1: company1, company2: company2}
-  end
-
-  require Ash.Query
-
   describe "accounts list" do
-    setup [:setup_admin, :create_companies]
-
     test "renders accounts table", %{conn: conn} = ctx do
       {:ok, _lv, html} = live(admin_conn(conn, ctx), ~p"/admin/accounts")
 
@@ -137,7 +113,7 @@ defmodule HaulWeb.Admin.AccountsLiveTest do
     end
 
     test "tenant user cannot access accounts list", %{conn: conn} do
-      auth = create_authenticated_context()
+      auth = Haul.Test.Factories.build_authenticated_context()
 
       conn =
         conn

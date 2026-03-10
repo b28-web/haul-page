@@ -118,7 +118,6 @@ defmodule HaulWeb.PaymentLive do
      |> assign(:error_message, error_message)}
   end
 
-
   @impl true
   def render(assigns) do
     ~H"""

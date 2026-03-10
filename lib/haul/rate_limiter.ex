@@ -1,6 +1,10 @@
 defmodule Haul.RateLimiter do
   @moduledoc """
   ETS-based rate limiter. Tracks request counts per key within sliding windows.
+
+  In test mode, keys are prefixed with the owning test process PID (resolved via
+  the `$callers` ancestry chain) so each test has isolated rate limit state.
+  This enables `async: true` for test files that exercise rate-limited endpoints.
   """
   use GenServer
 
@@ -18,11 +22,12 @@ defmodule Haul.RateLimiter do
   """
   @spec check_rate(term(), pos_integer(), pos_integer()) :: :ok | {:error, :rate_limited}
   def check_rate(key, limit, window_seconds) do
+    ek = effective_key(key)
     now = System.system_time(:second)
     window_start = now - window_seconds
 
     # Clean old entries for this key and count recent ones
-    entries = :ets.lookup(@table, key)
+    entries = :ets.lookup(@table, ek)
 
     recent =
       entries
@@ -32,7 +37,7 @@ defmodule Haul.RateLimiter do
     if length(recent) >= limit do
       {:error, :rate_limited}
     else
-      :ets.insert(@table, {key, now})
+      :ets.insert(@table, {ek, now})
       :ok
     end
   end
@@ -60,5 +65,18 @@ defmodule Haul.RateLimiter do
 
   defp schedule_cleanup do
     Process.send_after(self(), :cleanup, @cleanup_interval)
+  end
+
+  if Mix.env() == :test do
+    defp effective_key(key), do: {find_owner_pid(), key}
+
+    defp find_owner_pid do
+      case Process.get(:"$callers", []) do
+        [] -> self()
+        [test_pid | _] -> test_pid
+      end
+    end
+  else
+    defp effective_key(key), do: key
   end
 end

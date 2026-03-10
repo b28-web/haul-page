@@ -32,12 +32,16 @@ defmodule Haul.Accounts.SecurityTest do
   setup do
     {:ok, company_a} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Company A"})
+      |> Ash.Changeset.for_create(:create_company, %{
+        name: "Company A #{System.unique_integer([:positive])}"
+      })
       |> Ash.create()
 
     {:ok, company_b} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Company B"})
+      |> Ash.Changeset.for_create(:create_company, %{
+        name: "Company B #{System.unique_integer([:positive])}"
+      })
       |> Ash.create()
 
     tenant_a = ProvisionTenant.tenant_schema(company_a.slug)
@@ -54,15 +58,8 @@ defmodule Haul.Accounts.SecurityTest do
       |> set_role(:owner, tenant_b)
 
     on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant_a}" CASCADE))
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant_b}" CASCADE))
     end)
 
     %{

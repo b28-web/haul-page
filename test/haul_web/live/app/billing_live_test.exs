@@ -4,7 +4,6 @@ defmodule HaulWeb.App.BillingLiveTest do
   import Phoenix.LiveViewTest
 
   setup do
-    on_exit(fn -> cleanup_tenants() end)
     :ok
   end
 
@@ -73,7 +72,7 @@ defmodule HaulWeb.App.BillingLiveTest do
 
   describe "upgrade flow" do
     test "upgrade from starter triggers checkout redirect", %{conn: conn} do
-      {conn, _ctx} = authenticated_conn(conn)
+      {conn, ctx} = authenticated_conn(conn)
 
       {:ok, view, _html} = live(conn, "/app/settings/billing")
 
@@ -82,7 +81,7 @@ defmodule HaulWeb.App.BillingLiveTest do
       render_click(view, "select_plan", %{"plan" => "pro"})
 
       # Verify the company got a stripe_customer_id (side effect of ensure_customer)
-      company = Ash.read_one!(Haul.Accounts.Company)
+      company = Ash.get!(Haul.Accounts.Company, ctx.company.id)
       assert company.stripe_customer_id != nil
       assert String.starts_with?(company.stripe_customer_id, "cus_sandbox_")
     end
@@ -221,6 +220,83 @@ defmodule HaulWeb.App.BillingLiveTest do
       {:ok, _view, html} = live(conn, "/app/settings/billing?session_id=cs_test_123")
 
       assert html =~ "plan has been updated successfully"
+    end
+  end
+
+  describe "feature gate cross-verification" do
+    test "Starter plan: domain settings shows upgrade prompt", %{conn: conn} do
+      {conn, _ctx} = authenticated_conn(conn)
+
+      {:ok, _view, html} = live(conn, "/app/settings/domain")
+
+      assert html =~ "Upgrade Plan"
+      assert html =~ "Custom domains are available on the Pro plan"
+      refute html =~ "Add Custom Domain"
+    end
+
+    test "Pro plan: domain settings shows custom domain form", %{conn: conn} do
+      ctx = create_authenticated_context()
+
+      _company =
+        set_company_plan(ctx.company, %{
+          subscription_plan: :pro,
+          stripe_customer_id: "cus_sandbox_123",
+          stripe_subscription_id: "sub_sandbox_123"
+        })
+
+      conn = log_in_user(conn, ctx)
+
+      {:ok, _view, html} = live(conn, "/app/settings/domain")
+
+      assert html =~ "Add Custom Domain"
+      refute html =~ "Upgrade Plan"
+    end
+
+    test "after downgrade to Starter, domain settings shows upgrade prompt", %{conn: conn} do
+      ctx = create_authenticated_context()
+
+      _company =
+        set_company_plan(ctx.company, %{
+          subscription_plan: :pro,
+          stripe_customer_id: "cus_sandbox_123",
+          stripe_subscription_id: "sub_sandbox_123"
+        })
+
+      conn = log_in_user(conn, ctx)
+
+      {:ok, view, _html} = live(conn, "/app/settings/billing")
+
+      # Downgrade
+      render_click(view, "select_plan", %{"plan" => "starter"})
+      render_click(view, "confirm_downgrade")
+
+      # Check domain settings now shows upgrade prompt
+      {:ok, _view, html} = live(conn, "/app/settings/domain")
+
+      assert html =~ "Upgrade Plan"
+      refute html =~ "Add Custom Domain"
+    end
+  end
+
+  describe "dunning alerts" do
+    test "shows payment issue warning when dunning_started_at is set", %{conn: conn} do
+      ctx = create_authenticated_context()
+
+      _company =
+        set_company_plan(ctx.company, %{
+          subscription_plan: :pro,
+          stripe_customer_id: "cus_sandbox_123",
+          stripe_subscription_id: "sub_sandbox_123",
+          dunning_started_at: DateTime.utc_now()
+        })
+
+      conn = log_in_user(conn, ctx)
+
+      {:ok, _view, html} = live(conn, "/app/settings/billing")
+
+      assert html =~ "Payment issue"
+      assert html =~ "payment failed"
+      assert html =~ "days"
     end
   end
 

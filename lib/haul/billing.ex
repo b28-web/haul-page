@@ -121,5 +121,4 @@ defmodule Haul.Billing do
   def feature_label(feature) when is_atom(feature) do
     Map.get(@feature_labels, feature, to_string(feature))
   end
-
 end

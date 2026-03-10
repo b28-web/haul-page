@@ -52,7 +52,9 @@ defmodule HaulWeb.Admin.AccountDetailLiveTest do
   defp create_company_with_user(_context) do
     {:ok, company} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Detail Test Co"})
+      |> Ash.Changeset.for_create(:create_company, %{
+        name: "Detail Test Co #{System.unique_integer([:positive])}"
+      })
       |> Ash.create()
 
     tenant = ProvisionTenant.tenant_schema(company.slug)
@@ -70,6 +72,8 @@ defmodule HaulWeb.Admin.AccountDetailLiveTest do
         authorize?: false
       )
       |> Ash.create()
+
+    on_exit(fn -> cleanup_tenant(tenant) end)
 
     %{company: company, tenant: tenant, user: user}
   end
@@ -130,6 +134,7 @@ defmodule HaulWeb.Admin.AccountDetailLiveTest do
 
     test "tenant user cannot access detail view", %{conn: conn} do
       auth = create_authenticated_context()
+      on_exit(fn -> cleanup_tenant(auth.tenant) end)
 
       conn =
         conn

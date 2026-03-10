@@ -159,7 +159,6 @@ defmodule HaulWeb.App.EndorsementsLive do
     assign(socket, :endorsements, Enum.sort_by(endorsements, & &1.sort_order))
   end
 
-
   @impl true
   def render(assigns) do
     ~H"""

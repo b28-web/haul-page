@@ -63,5 +63,4 @@ defmodule Haul.AI.Extractor do
         error
     end
   end
-
 end

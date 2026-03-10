@@ -334,4 +334,182 @@ defmodule HaulWeb.ChatLiveTest do
       assert html =~ "Type a message"
     end
   end
+
+  describe "multi-turn conversation" do
+    test "builds profile progressively across turns", %{conn: conn} do
+      ChatSandbox.set_response("Great! What services do you offer?")
+      {:ok, view, _html} = live(conn, "/start")
+
+      # Turn 1
+      view
+      |> form("form", %{text: "I run a junk removal business called Joe's Hauling in Portland"})
+      |> render_submit()
+
+      Process.sleep(200)
+      html = render(view)
+
+      assert html =~ "Joe&#39;s Hauling in Portland"
+      assert html =~ "Great! What services do you offer?"
+      assert html =~ "7 of 7 fields collected"
+
+      # Turn 2
+      ChatSandbox.set_response("Sounds good! Anything else?")
+
+      view
+      |> form("form", %{text: "We do junk removal, yard waste, and garage cleanouts"})
+      |> render_submit()
+
+      Process.sleep(200)
+      html = render(view)
+
+      assert html =~ "junk removal, yard waste"
+      assert html =~ "Sounds good! Anything else?"
+    end
+  end
+
+  describe "CSS layout" do
+    test "user messages are right-aligned, AI messages left-aligned", %{conn: conn} do
+      ChatSandbox.set_response("Hello!")
+      {:ok, view, _html} = live(conn, "/start")
+
+      view
+      |> form("form", %{text: "Hi there"})
+      |> render_submit()
+
+      Process.sleep(150)
+      html = render(view)
+
+      assert html =~ "justify-end"
+      assert html =~ "bg-zinc-700"
+      assert html =~ "justify-start"
+      assert html =~ "bg-card"
+    end
+
+    test "typing indicator has animated dots", %{conn: conn} do
+      {:ok, view, _html} = live(conn, "/start")
+
+      html =
+        view
+        |> form("form", %{text: "Hello"})
+        |> render_submit()
+
+      assert html =~ "animate-bounce"
+    end
+  end
+
+  describe "mobile profile toggle" do
+    test "toggle button not visible before profile exists", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/start")
+
+      refute html =~ "View Profile"
+      refute html =~ "Hide Profile"
+    end
+
+    test "toggle button appears after extraction and toggles panel visibility", %{conn: conn} do
+      ChatSandbox.set_response("Nice!")
+      {:ok, view, _html} = live(conn, "/start")
+
+      view
+      |> form("form", %{text: "I'm Mike from Junk & Handy"})
+      |> render_submit()
+
+      Process.sleep(200)
+
+      html = render(view)
+      assert html =~ "Hide Profile"
+
+      html = render_click(view, "toggle_profile")
+      assert html =~ "View Profile"
+
+      html = render_click(view, "toggle_profile")
+      assert html =~ "Hide Profile"
+    end
+  end
+
+  describe "provisioning flow" do
+    test "Build my site triggers provisioning state", %{conn: conn} do
+      ChatSandbox.set_response("Ready!")
+      {:ok, view, _html} = live(conn, "/start")
+
+      view
+      |> form("form", %{text: "I'm Mike"})
+      |> render_submit()
+
+      Process.sleep(200)
+
+      html = render_click(view, "provision_site")
+      assert html =~ "Building your site..."
+    end
+
+    test "provisioning_complete shows site URL", %{conn: conn} do
+      ChatSandbox.set_response("Ready!")
+      {:ok, view, _html} = live(conn, "/start")
+
+      view
+      |> form("form", %{text: "I'm Mike"})
+      |> render_submit()
+
+      Process.sleep(200)
+
+      render_click(view, "provision_site")
+
+      send(
+        view.pid,
+        {:provisioning_complete,
+         %{site_url: "https://test.example.com", company_name: "Junk & Handy", duration_ms: 15000}}
+      )
+
+      Process.sleep(50)
+      html = render(view)
+
+      assert html =~ "Your site is live!"
+      assert html =~ "View your site"
+      assert html =~ "https://test.example.com"
+    end
+
+    test "provisioning_failed shows error and allows retry", %{conn: conn} do
+      ChatSandbox.set_response("Ready!")
+      {:ok, view, _html} = live(conn, "/start")
+
+      view
+      |> form("form", %{text: "I'm Mike"})
+      |> render_submit()
+
+      Process.sleep(200)
+
+      render_click(view, "provision_site")
+
+      send(view.pid, {:provisioning_failed, %{step: :create_company, reason: "slug taken"}})
+      Process.sleep(50)
+      html = render(view)
+
+      assert html =~ "Something went wrong building your site"
+      assert html =~ "Build my site"
+    end
+  end
+
+  describe "conversation persistence" do
+    test "conversation is found when reconnecting with same session_id", %{conn: conn} do
+      ChatSandbox.set_response("Hello back!")
+      session_id = Ecto.UUID.generate()
+
+      conn1 = Plug.Test.init_test_session(conn, %{"chat_session_id" => session_id})
+      {:ok, view, _html} = live(conn1, "/start")
+
+      view
+      |> form("form", %{text: "Hi, I'm starting a business"})
+      |> render_submit()
+
+      Process.sleep(150)
+
+      conn2 =
+        build_conn()
+        |> Plug.Test.init_test_session(%{"chat_session_id" => session_id})
+
+      {:ok, _view2, html2} = live(conn2, "/start")
+
+      assert html2 =~ "Hello back!"
+      assert html2 =~ "Get Started"
+    end
+  end
 end

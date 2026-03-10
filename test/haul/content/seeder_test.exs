@@ -9,21 +9,15 @@ defmodule Haul.Content.SeederTest do
   setup do
     {:ok, company} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Seed Test Co"})
+      |> Ash.Changeset.for_create(:create_company, %{
+        name: "Seed Test Co #{System.unique_integer([:positive])}"
+      })
       |> Ash.create()
 
     tenant = ProvisionTenant.tenant_schema(company.slug)
 
     on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant}" CASCADE))
     end)
 
     %{tenant: tenant}
@@ -138,33 +132,6 @@ defmodule Haul.Content.SeederTest do
       # Record counts unchanged
       assert length(Ash.read!(Service, tenant: tenant)) == 4
       assert length(Ash.read!(Endorsement, tenant: tenant)) == 3
-    end
-  end
-
-  describe "parse_frontmatter!/1" do
-    test "splits YAML frontmatter from markdown body" do
-      content = """
-      ---
-      slug: test
-      title: Test Page
-      ---
-
-      # Hello
-
-      Body content here.
-      """
-
-      {frontmatter, body} = Seeder.parse_frontmatter!(content)
-      assert frontmatter["slug"] == "test"
-      assert frontmatter["title"] == "Test Page"
-      assert body =~ "# Hello"
-      assert body =~ "Body content here."
-    end
-
-    test "raises on missing frontmatter" do
-      assert_raise RuntimeError, ~r/Invalid frontmatter/, fn ->
-        Seeder.parse_frontmatter!("no frontmatter here")
-      end
     end
   end
 end

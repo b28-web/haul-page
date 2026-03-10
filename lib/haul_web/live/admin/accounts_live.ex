@@ -31,7 +31,10 @@ defmodule HaulWeb.Admin.AccountsLive do
   @impl true
   def handle_event("search", %{"search" => term}, socket) do
     filtered = AccountHelpers.filter_companies(socket.assigns.companies, term)
-    sorted = AccountHelpers.sort_companies(filtered, socket.assigns.sort_by, socket.assigns.sort_dir)
+
+    sorted =
+      AccountHelpers.sort_companies(filtered, socket.assigns.sort_by, socket.assigns.sort_dir)
+
     {:noreply, assign(socket, search: term, filtered_companies: sorted)}
   end
 

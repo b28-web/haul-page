@@ -33,7 +33,12 @@ defmodule HaulWeb.ConnCase do
 
   setup tags do
     Haul.DataCase.setup_sandbox(tags)
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    base = %{conn: Phoenix.ConnTest.build_conn()}
+
+    case Haul.DataCase.pool_context(tags) do
+      nil -> {:ok, base}
+      ctx -> {:ok, Map.merge(base, ctx)}
+    end
   end
 
   @doc """
@@ -46,7 +51,9 @@ defmodule HaulWeb.ConnCase do
 
     {:ok, company} =
       Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Test Co"})
+      |> Ash.Changeset.for_create(:create_company, %{
+        name: "Test Co #{System.unique_integer([:positive])}"
+      })
       |> Ash.create()
 
     tenant = ProvisionTenant.tenant_schema(company.slug)
@@ -135,16 +142,35 @@ defmodule HaulWeb.ConnCase do
   end
 
   @doc """
+  Returns the pre-created operator context (company + tenant + operator config).
+  The operator company is created once in test_helper.exs and persists for the
+  entire test run. Safe for async: true — no DDL, no slug collisions.
+  """
+  def create_operator_context do
+    Haul.Test.Factories.operator_context()
+  end
+
+  @doc """
   Clear rate limiter ETS entries to prevent cross-test interference.
   """
   def clear_rate_limits do
     if :ets.whereis(Haul.RateLimiter) != :undefined do
-      :ets.delete_all_objects(Haul.RateLimiter)
+      :ets.match_delete(Haul.RateLimiter, {{self(), :_}, :_})
     end
   end
 
   @doc """
+  Drop a specific tenant schema. Use this instead of cleanup_tenants/0 in async tests
+  to avoid interfering with concurrent test schemas.
+  """
+  def cleanup_tenant(tenant) when is_binary(tenant) do
+    Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant}" CASCADE))
+  end
+
+  @doc """
   Cleanup helper for tenant schemas created during tests.
+  WARNING: Drops ALL tenant schemas — not safe for async: true tests.
+  Prefer cleanup_tenant/1 for async-safe scoped cleanup.
   """
   def cleanup_tenants do
     {:ok, result} =

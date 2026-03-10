@@ -267,7 +267,7 @@ _llm:
     - Dark theme (pure grayscale, hue 0, saturation 0%). --radius: 0rem (sharp edges)
     - Print: @media print flips to white bg, Oswald 42pt/22pt, tear-off strip at bottom
     - Operator config via runtime env vars (OPERATOR_NAME, OPERATOR_PHONE, etc.)
-    - Test targeting: CLAUDE.md § "Test Targeting" maps source→test files. Run targeted tests during implement, full suite before review.
+    - Test targeting: `mix test --stale` (default during implement) — only runs tests whose source deps changed. Full suite (`mix test`) before review. If you changed config/*.exs or mix.exs, run full suite. See CLAUDE.md § "Test Targeting".
     - Test tiers: Tier 1 (ExUnit.Case, async: true, pure functions) > Tier 2 (DataCase, Ash+DB) > Tier 3 (ConnCase, HTTP/LiveView). Default to lowest viable. See docs/knowledge/test-architecture.md.
 
     ## CI guardrails
@@ -316,7 +316,7 @@ _status-agent:
     #!/usr/bin/env bash
     set -euo pipefail
     exec claude \
-      --allowedTools 'Read,Write,Glob,Grep,Bash(lisa status),Bash(lisa validate),Bash(just dev-status),Bash(just dev-log*),Bash(git log*),Bash(git diff*),Bash(git status*),Bash(mix test*),Edit' \
+      --dangerously-skip-permissions \
       -- "$(cat .just/prompts/status-agent.md)"
 
 # ---------- commit-agent ----------
@@ -361,6 +361,14 @@ _setup:
 [private]
 _test *args='':
     mix test {{ args }}
+
+[private]
+_test-stale *args='':
+    mix test --stale {{ args }}
+
+[private]
+_test-file FILE *args='':
+    mix test {{ FILE }} {{ args }}
 
 # ---------- quality ----------
 

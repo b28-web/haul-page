@@ -38,5 +38,4 @@ defmodule HaulWeb.PageController do
     |> assign(:url, HaulWeb.Endpoint.url())
     |> render(:home)
   end
-
 end

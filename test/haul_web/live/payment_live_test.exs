@@ -3,20 +3,10 @@ defmodule HaulWeb.PaymentLiveTest do
 
   import Phoenix.LiveViewTest
 
-  alias Haul.Accounts.Changes.ProvisionTenant
-  alias Haul.Accounts.Company
   alias Haul.Operations.Job
 
   setup do
-    operator = Application.get_env(:haul, :operator)
-    operator_slug = operator[:slug] || "default"
-
-    {:ok, company} =
-      Company
-      |> Ash.Changeset.for_create(:create_company, %{name: "Junk & Handy", slug: operator_slug})
-      |> Ash.create()
-
-    tenant = ProvisionTenant.tenant_schema(company.slug)
+    %{tenant: tenant} = create_operator_context()
 
     {:ok, job} =
       Job
@@ -28,18 +18,6 @@ defmodule HaulWeb.PaymentLiveTest do
         item_description: "Old couch and two chairs"
       })
       |> Ash.create(tenant: tenant)
-
-    on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
-    end)
 
     %{tenant: tenant, job: job}
   end

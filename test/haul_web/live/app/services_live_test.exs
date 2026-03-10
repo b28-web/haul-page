@@ -6,11 +6,6 @@ defmodule HaulWeb.App.ServicesLiveTest do
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Content.Service
 
-  setup do
-    on_exit(fn -> cleanup_tenants() end)
-    :ok
-  end
-
   describe "unauthenticated" do
     test "redirects to /app/login", %{conn: conn} do
       assert {:error, {:redirect, %{to: "/app/login"}}} = live(conn, "/app/content/services")
@@ -22,6 +17,7 @@ defmodule HaulWeb.App.ServicesLiveTest do
       ctx = create_authenticated_context(role: :owner)
       conn = log_in_user(conn, ctx)
       tenant = ProvisionTenant.tenant_schema(ctx.company.slug)
+      on_exit(fn -> cleanup_tenant(tenant) end)
       %{conn: conn, ctx: ctx, tenant: tenant}
     end
 

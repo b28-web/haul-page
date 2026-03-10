@@ -7,32 +7,20 @@ defmodule Haul.AI.ProvisionerTest do
   alias Haul.AI.Provisioner
   alias Haul.Content.{Service, SiteConfig}
 
-  @profile %OperatorProfile{
-    business_name: "Provision Test Co",
-    owner_name: "Test Owner",
-    phone: "555-9999",
-    email: "provision@example.com",
-    service_area: "Test City, TC",
-    tagline: "We test it all!",
-    years_in_business: 5,
-    services: [
-      %ServiceOffering{name: "Junk Removal", description: nil, category: :junk_removal},
-      %ServiceOffering{name: "Yard Waste", description: nil, category: :yard_waste}
-    ],
-    differentiators: ["Fast", "Reliable"]
-  }
-
   setup do
-    on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
+    unique = System.unique_integer([:positive])
+    biz_name = "Provision Test Co #{unique}"
 
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
+    slug =
+      biz_name
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9]+/, "-")
+      |> String.trim("-")
+
+    tenant = "tenant_#{slug}"
+
+    on_exit(fn ->
+      Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "#{tenant}" CASCADE))
     end)
 
     # Create a conversation
@@ -41,16 +29,36 @@ defmodule Haul.AI.ProvisionerTest do
       |> Ash.Changeset.for_create(:start, %{session_id: Ecto.UUID.generate()})
       |> Ash.create()
 
-    %{conversation: conversation}
+    profile = %OperatorProfile{
+      business_name: biz_name,
+      owner_name: "Test Owner",
+      phone: "555-9999",
+      email: "provision-#{unique}@example.com",
+      service_area: "Test City, TC",
+      tagline: "We test it all!",
+      years_in_business: 5,
+      services: [
+        %ServiceOffering{name: "Junk Removal", description: nil, category: :junk_removal},
+        %ServiceOffering{name: "Yard Waste", description: nil, category: :yard_waste}
+      ],
+      differentiators: ["Fast", "Reliable"]
+    }
+
+    %{conversation: conversation, profile: profile, slug: slug, tenant: tenant}
   end
 
   describe "from_profile/2" do
-    test "completes full pipeline successfully", %{conversation: conv} do
-      assert {:ok, result} = Provisioner.from_profile(@profile, conv.id)
+    test "completes full pipeline successfully", %{
+      conversation: conv,
+      profile: profile,
+      slug: slug,
+      tenant: tenant
+    } do
+      assert {:ok, result} = Provisioner.from_profile(profile, conv.id)
 
-      assert result.company.name == "Provision Test Co"
-      assert result.site_url =~ "provision-test-co"
-      assert result.tenant == "tenant_provision-test-co"
+      assert result.company.name == profile.business_name
+      assert result.site_url =~ slug
+      assert result.tenant == tenant
       assert is_integer(result.duration_ms)
       assert result.duration_ms >= 0
 
@@ -62,8 +70,8 @@ defmodule Haul.AI.ProvisionerTest do
       assert is_binary(result.generated_content.meta_description)
     end
 
-    test "conversation is linked to company on success", %{conversation: conv} do
-      assert {:ok, result} = Provisioner.from_profile(@profile, conv.id)
+    test "conversation is linked to company on success", %{conversation: conv, profile: profile} do
+      assert {:ok, result} = Provisioner.from_profile(profile, conv.id)
 
       # Reload conversation
       {:ok, updated} = Ash.get(Conversation, conv.id)
@@ -71,13 +79,13 @@ defmodule Haul.AI.ProvisionerTest do
       assert updated.company_id == result.company.id
     end
 
-    test "site config is updated with generated content", %{conversation: conv} do
-      assert {:ok, result} = Provisioner.from_profile(@profile, conv.id)
+    test "site config is updated with generated content", %{conversation: conv, profile: profile} do
+      assert {:ok, result} = Provisioner.from_profile(profile, conv.id)
 
       [config] = Ash.read!(SiteConfig, tenant: result.tenant)
-      assert config.business_name == "Provision Test Co"
+      assert config.business_name == profile.business_name
       assert config.phone == "555-9999"
-      assert config.email == "provision@example.com"
+      assert config.email == profile.email
       assert config.service_area == "Test City, TC"
       # Generated meta description should be set
       assert is_binary(config.meta_description)
@@ -86,8 +94,8 @@ defmodule Haul.AI.ProvisionerTest do
       assert is_binary(config.tagline)
     end
 
-    test "services have generated descriptions", %{conversation: conv} do
-      assert {:ok, result} = Provisioner.from_profile(@profile, conv.id)
+    test "services have generated descriptions", %{conversation: conv, profile: profile} do
+      assert {:ok, result} = Provisioner.from_profile(profile, conv.id)
 
       services = Ash.read!(Service, tenant: result.tenant)
       assert length(services) > 0
@@ -125,8 +133,8 @@ defmodule Haul.AI.ProvisionerTest do
       assert updated.status == :failed
     end
 
-    test "idempotent — running twice doesn't crash", %{conversation: conv} do
-      assert {:ok, first} = Provisioner.from_profile(@profile, conv.id)
+    test "idempotent — running twice doesn't crash", %{conversation: conv, profile: profile} do
+      assert {:ok, first} = Provisioner.from_profile(profile, conv.id)
 
       # Create a new conversation for second run (first is already completed/linked)
       {:ok, conv2} =
@@ -134,7 +142,7 @@ defmodule Haul.AI.ProvisionerTest do
         |> Ash.Changeset.for_create(:start, %{session_id: Ecto.UUID.generate()})
         |> Ash.create()
 
-      assert {:ok, second} = Provisioner.from_profile(@profile, conv2.id)
+      assert {:ok, second} = Provisioner.from_profile(profile, conv2.id)
 
       # Same company (found by slug)
       assert first.company.id == second.company.id

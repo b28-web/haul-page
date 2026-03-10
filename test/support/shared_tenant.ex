@@ -39,8 +39,11 @@ defmodule Haul.Test.SharedTenant do
   """
   def get! do
     case Application.get_env(:haul, @app_key) do
-      nil -> raise "Shared test tenant not provisioned. Ensure test_helper.exs calls SharedTenant.provision!()"
-      ctx -> ctx
+      nil ->
+        raise "Shared test tenant not provisioned. Ensure test_helper.exs calls SharedTenant.provision!()"
+
+      ctx ->
+        ctx
     end
   end
 

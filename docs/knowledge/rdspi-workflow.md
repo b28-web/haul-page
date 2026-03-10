@@ -38,7 +38,7 @@ Artifact: `docs/active/work/{ticket-id}/plan.md`
 
 Execute the plan. Track progress in `progress.md`. Commit incrementally.
 
-Follow the plan step by step. After each meaningful unit of work, commit. Run targeted tests after each change (see CLAUDE.md § Test Targeting for the source→test mapping). Update `progress.md` with what has been completed, what remains, and any deviations from the plan. If the plan needs adjustment, document the deviation and rationale before proceeding.
+Follow the plan step by step. After each meaningful unit of work, commit. After each change, run `mix test --stale` (not `mix test`) — it only re-runs tests whose source dependencies changed (~5–15s vs ~97s full suite). For targeted verification, also run tests for the specific domain you changed (see CLAUDE.md § Test Targeting for the source→test mapping). Save `mix test` (full suite) for the Review phase. Update `progress.md` with what has been completed, what remains, and any deviations from the plan. If the plan needs adjustment, document the deviation and rationale before proceeding.
 
 Artifact: `docs/active/work/{ticket-id}/progress.md`
 

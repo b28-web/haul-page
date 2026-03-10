@@ -30,15 +30,7 @@ defmodule HaulWeb.PreviewEditTest do
     ChatSandbox.clear_error()
 
     on_exit(fn ->
-      {:ok, res} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
-
-      for [schema] <- res.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
-      end
+      cleanup_tenant("tenant_preview-test-co")
     end)
 
     :ok
@@ -289,6 +281,176 @@ defmodule HaulWeb.PreviewEditTest do
       html = render(view)
 
       assert html =~ "not sure what to change"
+    end
+  end
+
+  describe "pre-provision state" do
+    test "chat UI renders and accepts messages before provisioning", %{conn: conn} do
+      ChatSandbox.set_response("Welcome! Tell me about your business.")
+      {:ok, view, html} = live(conn, "/start")
+
+      assert html =~ "Get Started"
+      assert html =~ "Type a message..."
+
+      view
+      |> form("form", %{text: "I run Preview Test Co in Test City"})
+      |> render_submit()
+
+      Process.sleep(200)
+      html = render(view)
+
+      assert html =~ "Preview Test Co"
+      assert html =~ "Welcome! Tell me about your business."
+    end
+
+    test "shows building message during provisioning", %{conn: conn} do
+      ChatSandbox.set_response("Got it!")
+      {:ok, view, _html} = live(conn, "/start")
+
+      send(view.pid, {:extraction_result, {:ok, @profile}})
+      Process.sleep(50)
+
+      html = render_click(view, "provision_site")
+      assert html =~ "Building your site"
+    end
+  end
+
+  describe "edit instructions" do
+    test "provisioning_complete message shows edit instructions", %{conn: conn} do
+      {view, _result} = enter_edit_mode(conn)
+      html = render(view)
+
+      assert html =~ "take a look"
+      assert html =~ "Request changes"
+    end
+  end
+
+  describe "multiple edits" do
+    test "multiple edits increment counter correctly", %{conn: conn} do
+      {view, _result} = enter_edit_mode(conn)
+
+      view
+      |> form("form", %{text: "Change phone to 555-1111"})
+      |> render_submit()
+
+      Process.sleep(50)
+
+      view
+      |> form("form", %{text: "Change phone to 555-2222"})
+      |> render_submit()
+
+      Process.sleep(50)
+      html = render(view)
+
+      assert html =~ "2 of 10 edits used"
+    end
+  end
+
+  describe "tenant page verification" do
+    test "tenant landing page renders with provisioned content", %{conn: conn} do
+      {_view, result} = enter_edit_mode(conn)
+
+      original_operator = Application.get_env(:haul, :operator)
+
+      Application.put_env(
+        :haul,
+        :operator,
+        Keyword.merge(original_operator || [], slug: result.company.slug)
+      )
+
+      on_exit(fn ->
+        Application.put_env(:haul, :operator, original_operator)
+      end)
+
+      tenant_conn = get(build_conn(), ~p"/")
+      html = html_response(tenant_conn, 200)
+
+      assert html =~ "555-0000"
+      assert html =~ "preview@example.com"
+      assert html =~ "Test City"
+      assert html =~ "What We Do"
+    end
+
+    test "tenant scan page renders after provisioning", %{conn: conn} do
+      {_view, result} = enter_edit_mode(conn)
+
+      original_operator = Application.get_env(:haul, :operator)
+
+      Application.put_env(
+        :haul,
+        :operator,
+        Keyword.merge(original_operator || [], slug: result.company.slug)
+      )
+
+      on_exit(fn ->
+        Application.put_env(:haul, :operator, original_operator)
+      end)
+
+      {:ok, _view, html} = live(build_conn(), "/scan")
+      assert html =~ "Scan"
+    end
+
+    test "tenant booking form renders after provisioning", %{conn: conn} do
+      {_view, result} = enter_edit_mode(conn)
+
+      original_operator = Application.get_env(:haul, :operator)
+
+      Application.put_env(
+        :haul,
+        :operator,
+        Keyword.merge(original_operator || [], slug: result.company.slug)
+      )
+
+      on_exit(fn ->
+        Application.put_env(:haul, :operator, original_operator)
+      end)
+
+      {:ok, _view, html} = live(build_conn(), "/book")
+      assert html =~ "Book"
+    end
+  end
+
+  describe "edit persistence" do
+    test "edited content appears on tenant landing page", %{conn: conn} do
+      {view, result} = enter_edit_mode(conn)
+
+      view
+      |> form("form", %{text: "Change phone to 555-999-4321"})
+      |> render_submit()
+
+      Process.sleep(100)
+
+      original_operator = Application.get_env(:haul, :operator)
+
+      Application.put_env(
+        :haul,
+        :operator,
+        Keyword.merge(original_operator || [], slug: result.company.slug)
+      )
+
+      on_exit(fn ->
+        Application.put_env(:haul, :operator, original_operator)
+      end)
+
+      tenant_conn = get(build_conn(), ~p"/")
+      html = html_response(tenant_conn, 200)
+
+      assert html =~ "555-999-4321"
+    end
+  end
+
+  describe "mobile preview toggle" do
+    test "mobile preview toggle shows and hides preview panel", %{conn: conn} do
+      {view, _result} = enter_edit_mode(conn)
+
+      html = render(view)
+      assert html =~ "Hide Preview"
+
+      html = render_click(view, "toggle_profile")
+      assert html =~ "Show Preview"
+
+      html = render_click(view, "toggle_profile")
+      assert html =~ "Hide Preview"
     end
   end
 end

@@ -4,11 +4,11 @@
 
 ## Current state
 
-**Phase:** 32 of 32 stories complete. All stories done.
+**Phase:** 35 of 35 stories complete. All tickets done.
 
-**What works:** 975 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain + proxy path), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA, superadmin panel (auth + accounts list + account detail + impersonation), proxy tenant routing + browser QA, test timing telemetry. Dev infrastructure: centralized test factories, test tier conventions, pyramid reporter, compile-time adapters, supervised init tasks, let-it-crash error handling, native Postgres (no Docker).
+**What works:** 940 tests passing, 0 failures. Full multi-tenant SaaS platform: landing page, scan page, booking form with photo upload + autocomplete, content-driven pages, notifications (email + SMS), Stripe payments + subscriptions + billing webhooks, tenant routing (subdomain + custom domain + proxy path), LiveView tenant propagation, tenant isolation, admin panel (site config, services, gallery, endorsements), self-service signup, onboarding wizard, marketing landing, CLI onboarding (`mix haul.onboard`), default content packs, custom domain settings + cert provisioning, BAML extraction pipeline, chat LiveView with live extraction, conversation persistence, onboarding agent prompt, preview/edit flow, AI cost tracking, content generation QA, superadmin panel (auth + accounts list + account detail + impersonation), proxy tenant routing + browser QA, test timing telemetry. Dev infrastructure: centralized test factories, test tier conventions, pyramid reporter, compile-time adapters, supervised init tasks, let-it-crash error handling, native Postgres (no Docker), schema template cloning, process-local test state, shared tenant pool, LiveView event helpers, QA test dedup, pure logic extraction.
 
-**What's next:** All stories complete. No remaining tickets. DAG is empty.
+**What's next:** No open tickets. All stories complete.
 
 ## Active tickets
 
@@ -54,13 +54,16 @@ None.
 | T-030-01..03 | Let It Crash (S-030) | Error audit, 3 rescues narrowed, 4 worker returns fixed for Oban retry |
 | T-031-01..02 | Adapters at Boot (S-031) | 7 modules to compile_env, adapter switching verified + documented |
 | T-032-01..02 | Supervised Startup (S-032) | Init tasks under supervision, tree review (no structural change needed) |
+| T-033-01..05 | Mock-First Tests (S-033) | Audit, extract pure logic (15 unit tests), mock service layer, dedup QA (110→35 merged, 75 removed), async infrastructure |
+| T-034-01..03 | Agent Test Workflow (S-034) | Stale test default, setup_all quick wins, test targeting recipes |
+| T-035-01..04 | Test Infrastructure (S-035) | Schema template cloning (3x faster), process-local ETS/ChatSandbox, shared tenant pool, LiveView event helpers (36 unit tests) |
 
 ## Blockers & risks
 
 - **Dockerfile image size** — 278MB vs 100MB target. Ash ecosystem is the cause. Acceptable for now.
 - **Pending TODOs in user.ex** — password reset and magic link email implementations stubbed. Not blocking.
 - **baml_elixir pre-release** — pinned at 1.0.0-pre.25. Monitor for breaking changes.
-- **Uncommitted work** — S-025 through S-032 changes (20 tickets, ~40 files) are implemented but not yet committed to git.
+- **Async test suite** — T-033-05 async:true switch reverted to async:false due to DBConnection.OwnershipError in LiveView tests. Infrastructure is ready (process-local state, tenant pool) but full async needs further work on LiveView process allowlisting. Tests run at ~23s sync.
 
 ## Decisions made during implementation
 
@@ -86,7 +89,7 @@ None.
 ## Cross-ticket notes
 
 - **Ash resources now live** — Accounts (Company with domain, User, Token), Operations (Job), Content (SiteConfig, Service, GalleryItem, Endorsement, Page). Schema-per-tenant via AshPostgres :context strategy.
-- **Test count: 975** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, isolation, plus 116 new unit tests from domain logic extraction.
+- **Test count: 940** — comprehensive coverage across all domains, controllers, LiveViews, workers, integrations, tenancy, isolation, 116 unit tests from domain logic extraction, 36 LiveView event helper unit tests, 15 extracted pure logic tests. QA dedup removed 75 duplicate tests, merged 35 unique ones.
 - **All 15 browser QA tickets done** — T-002-04, T-003-04, T-005-04, T-006-05, T-007-05, T-008-04, T-009-03, T-012-05, T-013-06, T-014-03, T-015-04, T-016-04, T-017-03, T-019-06, T-020-05.
 - **Playwright screenshots gitignored** — walkthrough-*.png and work artifact PNGs excluded from git.
 - **Content seeding works** — `mix haul.seed` populates from priv/content/ directory. Multi-tenant: `mix haul.seed --operator customer-1`.
@@ -100,9 +103,9 @@ None.
 
 ## Quick reference
 
-**DAG:** 114 tickets. 114 done. All complete.
+**DAG:** 126 tickets. 126 done. 0 open.
 
-**Critical path:** None — all tickets done.
+**Critical path:** T-033-01 → T-033-02/03/04 → T-033-05
 
 **Chains:**
 ```
@@ -158,6 +161,16 @@ S-029: T-029-01✓ → T-029-02✓  (COMPLETE)
 S-030: T-030-01✓ → T-030-02✓, T-030-03✓  (COMPLETE)
 S-031: T-031-01✓ → T-031-02✓  (COMPLETE)
 S-032: T-032-01✓ → T-032-02✓  (COMPLETE)
+
+--- Mock-First Tests (S-033) ---
+S-033: T-033-01✓ → T-033-02✓, T-033-03✓, T-033-04✓ → T-033-05✓  (COMPLETE)
+
+--- Agent Test Workflow (S-034) ---
+S-034: T-034-01✓, T-034-02✓, T-034-03✓  (COMPLETE)
+
+--- Test Infrastructure (S-035) ---
+S-035: T-035-01✓, T-035-02✓, T-035-04✓  (COMPLETE)
+       T-035-03✓  (COMPLETE)
 ```
 
 **Stories:**
@@ -193,6 +206,9 @@ S-032: T-032-01✓ → T-032-02✓  (COMPLETE)
 - S-030 Let It Crash — COMPLETE (3/3)
 - S-031 Adapters at Boot — COMPLETE (2/2)
 - S-032 Supervised Startup — COMPLETE (2/2)
+- S-033 Mock-First Test Refactor — COMPLETE (5/5)
+- S-034 Agent Test Workflow — COMPLETE (3/3)
+- S-035 Test Infrastructure — COMPLETE (4/4)
 
 **Epics (ongoing health):**
 - E-001 Dev environment — GOOD (S-001, S-026 complete)
@@ -207,7 +223,7 @@ S-032: T-032-01✓ → T-032-02✓  (COMPLETE)
 - E-010 SaaS platform — GOOD (all contributing stories complete)
 - E-011 AI onboarding — GOOD (all contributing stories complete)
 - E-012 Dev tenant preview — GOOD (S-022 complete)
-- E-013 Developer agent experience — GOOD (S-023, S-024, S-025 complete)
-- E-014 Dev resource efficiency — GOOD (S-025, S-026 complete — suite 88s→27s, Docker removed)
-- E-015 Test architecture — GOOD (S-027, S-028, S-029 complete — factories, extraction, conventions)
+- E-013 Developer agent experience — GOOD (S-023, S-024, S-025, S-034 complete)
+- E-014 Dev resource efficiency — GOOD (S-025, S-026, S-035 complete)
+- E-015 Test architecture — GOOD (S-027–S-029, S-033 complete — suite ~23s, async infra ready)
 - E-016 Erlang idioms — GOOD (S-030, S-031, S-032 complete — let-it-crash, compile-env, supervised init)

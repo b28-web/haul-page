@@ -4,12 +4,12 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   import Phoenix.LiveViewTest
 
   setup do
-    on_exit(fn -> cleanup_tenants() end)
-    :ok
+    ctx = create_authenticated_context()
+    on_exit(fn -> cleanup_tenant(ctx.tenant) end)
+    %{auth_ctx: ctx}
   end
 
-  defp authenticated_conn(conn, ctx \\ nil) do
-    ctx = ctx || create_authenticated_context()
+  defp authenticated_conn(conn, ctx) do
     conn = log_in_user(conn, ctx)
     {conn, ctx}
   end
@@ -24,8 +24,8 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   end
 
   describe "domain settings page" do
-    test "renders page for authenticated user", %{conn: conn} do
-      {conn, _ctx} = authenticated_conn(conn)
+    test "renders page for authenticated user", %{conn: conn, auth_ctx: auth_ctx} do
+      {conn, _ctx} = authenticated_conn(conn, auth_ctx)
 
       {:ok, _view, html} = live(conn, "/app/settings/domain")
 
@@ -33,8 +33,8 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "Current Address"
     end
 
-    test "shows subdomain address", %{conn: conn} do
-      {conn, _ctx} = authenticated_conn(conn)
+    test "shows subdomain address", %{conn: conn, auth_ctx: auth_ctx} do
+      {conn, _ctx} = authenticated_conn(conn, auth_ctx)
 
       {:ok, _view, html} = live(conn, "/app/settings/domain")
 
@@ -47,8 +47,8 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   end
 
   describe "feature gating" do
-    test "shows upgrade prompt for starter plan", %{conn: conn} do
-      {conn, _ctx} = authenticated_conn(conn)
+    test "shows upgrade prompt for starter plan", %{conn: conn, auth_ctx: auth_ctx} do
+      {conn, _ctx} = authenticated_conn(conn, auth_ctx)
 
       {:ok, _view, html} = live(conn, "/app/settings/domain")
 
@@ -56,8 +56,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "Pro plan and above"
     end
 
-    test "shows add domain form for pro plan", %{conn: conn} do
-      ctx = create_authenticated_context()
+    test "shows add domain form for pro plan", %{conn: conn, auth_ctx: ctx} do
       _company = set_company_attrs(ctx.company, %{subscription_plan: :pro})
       conn = log_in_user(conn, ctx)
 
@@ -67,8 +66,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       refute html =~ "Upgrade Plan"
     end
 
-    test "shows add domain form for business plan", %{conn: conn} do
-      ctx = create_authenticated_context()
+    test "shows add domain form for business plan", %{conn: conn, auth_ctx: ctx} do
       _company = set_company_attrs(ctx.company, %{subscription_plan: :business})
       conn = log_in_user(conn, ctx)
 
@@ -79,8 +77,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   end
 
   describe "add domain" do
-    test "validates domain format on change", %{conn: conn} do
-      ctx = create_authenticated_context()
+    test "validates domain format on change", %{conn: conn, auth_ctx: ctx} do
       _company = set_company_attrs(ctx.company, %{subscription_plan: :pro})
       conn = log_in_user(conn, ctx)
 
@@ -91,8 +88,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "valid domain"
     end
 
-    test "saves valid domain", %{conn: conn} do
-      ctx = create_authenticated_context()
+    test "saves valid domain", %{conn: conn, auth_ctx: ctx} do
       _company = set_company_attrs(ctx.company, %{subscription_plan: :pro})
       conn = log_in_user(conn, ctx)
 
@@ -105,8 +101,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "CNAME"
     end
 
-    test "normalizes domain input on save", %{conn: conn} do
-      ctx = create_authenticated_context()
+    test "normalizes domain input on save", %{conn: conn, auth_ctx: ctx} do
       _company = set_company_attrs(ctx.company, %{subscription_plan: :pro})
       conn = log_in_user(conn, ctx)
 
@@ -118,8 +113,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "Pending Verification"
     end
 
-    test "rejects invalid domain on save", %{conn: conn} do
-      ctx = create_authenticated_context()
+    test "rejects invalid domain on save", %{conn: conn, auth_ctx: ctx} do
       _company = set_company_attrs(ctx.company, %{subscription_plan: :pro})
       conn = log_in_user(conn, ctx)
 
@@ -133,9 +127,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   end
 
   describe "pending verification state" do
-    test "shows CNAME instructions for pending domain", %{conn: conn} do
-      ctx = create_authenticated_context()
-
+    test "shows CNAME instructions for pending domain", %{conn: conn, auth_ctx: ctx} do
       _company =
         set_company_attrs(ctx.company, %{
           subscription_plan: :pro,
@@ -153,9 +145,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "Verify DNS"
     end
 
-    test "shows verify button", %{conn: conn} do
-      ctx = create_authenticated_context()
-
+    test "shows verify button", %{conn: conn, auth_ctx: ctx} do
       _company =
         set_company_attrs(ctx.company, %{
           subscription_plan: :pro,
@@ -172,9 +162,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   end
 
   describe "remove domain" do
-    test "shows confirmation modal", %{conn: conn} do
-      ctx = create_authenticated_context()
-
+    test "shows confirmation modal", %{conn: conn, auth_ctx: ctx} do
       _company =
         set_company_attrs(ctx.company, %{
           subscription_plan: :pro,
@@ -192,9 +180,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "www.example.com"
     end
 
-    test "removes domain on confirm", %{conn: conn} do
-      ctx = create_authenticated_context()
-
+    test "removes domain on confirm", %{conn: conn, auth_ctx: ctx} do
       _company =
         set_company_attrs(ctx.company, %{
           subscription_plan: :pro,
@@ -213,14 +199,12 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
       assert html =~ "Custom domain removed"
 
       # Verify domain cleared in DB
-      company = Ash.read_one!(Haul.Accounts.Company)
-      assert company.domain == nil
-      assert company.domain_status == nil
+      {:ok, updated_company} = Ash.get(Haul.Accounts.Company, ctx.company.id)
+      assert updated_company.domain == nil
+      assert updated_company.domain_status == nil
     end
 
-    test "cancels remove dismisses modal", %{conn: conn} do
-      ctx = create_authenticated_context()
-
+    test "cancels remove dismisses modal", %{conn: conn, auth_ctx: ctx} do
       _company =
         set_company_attrs(ctx.company, %{
           subscription_plan: :pro,
@@ -240,9 +224,7 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
   end
 
   describe "active domain state" do
-    test "shows active domain with green badge", %{conn: conn} do
-      ctx = create_authenticated_context()
-
+    test "shows active domain with green badge", %{conn: conn, auth_ctx: ctx} do
       _company =
         set_company_attrs(ctx.company, %{
           subscription_plan: :pro,
@@ -256,6 +238,34 @@ defmodule HaulWeb.App.DomainSettingsLiveTest do
 
       assert html =~ "Custom Domain Active"
       assert html =~ "www.example.com"
+      assert html =~ "verified"
+    end
+  end
+
+  describe "PubSub status updates" do
+    test "domain_status_changed updates UI to active", %{conn: conn, auth_ctx: ctx} do
+      company =
+        set_company_attrs(ctx.company, %{
+          subscription_plan: :pro,
+          domain: "custom.example.com",
+          domain_status: :provisioning
+        })
+
+      conn = log_in_user(conn, ctx)
+
+      {:ok, view, html} = live(conn, "/app/settings/domain")
+      assert html =~ "Setting up SSL"
+
+      # Simulate cert provisioning completing
+      {:ok, _updated} =
+        company
+        |> Ash.Changeset.for_update(:update_company, %{domain_status: :active})
+        |> Ash.update()
+
+      send(view.pid, {:domain_status_changed, :active})
+
+      html = render(view)
+      assert html =~ "Custom Domain Active"
       assert html =~ "verified"
     end
   end

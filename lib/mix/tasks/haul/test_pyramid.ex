@@ -67,6 +67,7 @@ defmodule Mix.Tasks.Haul.TestPyramid do
       Enum.map(lines, fn {tier, tests, files, pct} ->
         label = tier_label(tier)
         bar = bar(pct)
+
         "  #{String.pad_trailing(label, 22)} #{pad_num(tests)} tests in #{pad_num(files)} files   (#{String.pad_leading("#{pct}", 2)}%)  #{bar}"
       end)
 

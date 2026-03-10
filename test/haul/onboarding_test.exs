@@ -5,27 +5,24 @@ defmodule Haul.OnboardingTest do
   alias Haul.Content.SiteConfig
 
   setup do
-    on_exit(fn ->
-      {:ok, result} =
-        Ecto.Adapters.SQL.query(Haul.Repo, """
-        SELECT schema_name FROM information_schema.schemata
-        WHERE schema_name LIKE 'tenant_%'
-        """)
+    unique = System.unique_integer([:positive])
 
-      for [schema] <- result.rows do
-        Ecto.Adapters.SQL.query!(Haul.Repo, "DROP SCHEMA \"#{schema}\" CASCADE")
+    on_exit(fn ->
+      # Clean up any tenant schemas created during this test
+      for slug <- ["joe-s-hauling-#{unique}", "minimal-co-#{unique}", "test-hauling-#{unique}"] do
+        Ecto.Adapters.SQL.query(Haul.Repo, ~s(DROP SCHEMA IF EXISTS "tenant_#{slug}" CASCADE))
       end
     end)
 
-    :ok
+    %{unique: unique}
   end
 
-  defp valid_params(overrides \\ %{}) do
+  defp valid_params(unique, overrides \\ %{}) do
     Map.merge(
       %{
-        name: "Joe's Hauling",
+        name: "Joe's Hauling #{unique}",
         phone: "555-1234",
-        email: "joe@example.com",
+        email: "joe-#{unique}@example.com",
         area: "Seattle, WA"
       },
       overrides
@@ -33,16 +30,17 @@ defmodule Haul.OnboardingTest do
   end
 
   describe "run/1" do
-    test "onboards a new operator end-to-end" do
-      assert {:ok, result} = Haul.Onboarding.run(valid_params())
+    test "onboards a new operator end-to-end", %{unique: unique} do
+      params = valid_params(unique)
+      assert {:ok, result} = Haul.Onboarding.run(params)
 
       # Company created
-      assert result.company.name == "Joe's Hauling"
-      assert result.company.slug == "joe-s-hauling"
+      assert result.company.name == "Joe's Hauling #{unique}"
+      assert result.company.slug == "joe-s-hauling-#{unique}"
       assert result.existing_company == false
 
       # Tenant schema matches
-      assert result.tenant == "tenant_joe-s-hauling"
+      assert result.tenant == "tenant_joe-s-hauling-#{unique}"
 
       # Content seeded from defaults pack
       assert is_map(result.content)
@@ -51,18 +49,18 @@ defmodule Haul.OnboardingTest do
       assert length(result.content.endorsements) == 3
 
       # Owner user created
-      assert to_string(result.user.email) == "joe@example.com"
+      assert to_string(result.user.email) == "joe-#{unique}@example.com"
       assert result.user.role == :owner
 
       # SiteConfig updated with operator info
       [config] = Ash.read!(SiteConfig, tenant: result.tenant)
       assert config.phone == "555-1234"
-      assert config.email == "joe@example.com"
+      assert config.email == "joe-#{unique}@example.com"
       assert config.service_area == "Seattle, WA"
     end
 
-    test "idempotent — re-run updates instead of duplicating" do
-      params = valid_params()
+    test "idempotent — re-run updates instead of duplicating", %{unique: unique} do
+      params = valid_params(unique)
 
       assert {:ok, first} = Haul.Onboarding.run(params)
       assert {:ok, second} = Haul.Onboarding.run(params)
@@ -76,20 +74,22 @@ defmodule Haul.OnboardingTest do
 
       # Only one company with this slug
       companies = Ash.read!(Company)
-      assert length(Enum.filter(companies, &(&1.slug == "joe-s-hauling"))) == 1
+      assert length(Enum.filter(companies, &(&1.slug == "joe-s-hauling-#{unique}"))) == 1
 
       # Only one user in tenant
       users = Ash.read!(User, tenant: second.tenant, authorize?: false)
-      assert length(Enum.filter(users, &(to_string(&1.email) == "joe@example.com"))) == 1
+
+      assert length(Enum.filter(users, &(to_string(&1.email) == "joe-#{unique}@example.com"))) ==
+               1
     end
 
-    test "updates company name on re-run with same slug" do
-      assert {:ok, first} = Haul.Onboarding.run(valid_params())
-      assert first.company.name == "Joe's Hauling"
+    test "updates company name on re-run with same slug", %{unique: unique} do
+      assert {:ok, first} = Haul.Onboarding.run(valid_params(unique))
+      assert first.company.name == "Joe's Hauling #{unique}"
 
       # Re-run with slightly different name that produces the same slug
       assert {:ok, second} =
-               Haul.Onboarding.run(valid_params(%{name: "Joe's  Hauling"}))
+               Haul.Onboarding.run(valid_params(unique, %{name: "Joe's  Hauling #{unique}"}))
 
       assert second.company.id == first.company.id
       assert second.existing_company == true
@@ -115,38 +115,12 @@ defmodule Haul.OnboardingTest do
                Haul.Onboarding.run(%{name: "Test Co", email: ""})
     end
 
-    test "works with minimal params (no phone or area)" do
-      params = %{name: "Minimal Co", email: "min@example.com"}
+    test "works with minimal params (no phone or area)", %{unique: unique} do
+      params = %{name: "Minimal Co #{unique}", email: "min-#{unique}@example.com"}
 
       assert {:ok, result} = Haul.Onboarding.run(params)
-      assert result.company.slug == "minimal-co"
-      assert to_string(result.user.email) == "min@example.com"
-    end
-  end
-
-  describe "derive_slug/1" do
-    test "lowercases and hyphenates" do
-      assert Haul.Onboarding.derive_slug("Joe's Hauling") == "joe-s-hauling"
-    end
-
-    test "handles special characters" do
-      assert Haul.Onboarding.derive_slug("A & B Junk Co.") == "a-b-junk-co"
-    end
-
-    test "trims leading/trailing hyphens" do
-      assert Haul.Onboarding.derive_slug("  Test Co  ") == "test-co"
-    end
-
-    test "collapses multiple separators" do
-      assert Haul.Onboarding.derive_slug("foo---bar") == "foo-bar"
-    end
-  end
-
-  describe "site_url/1" do
-    test "constructs URL with base domain" do
-      url = Haul.Onboarding.site_url("test-co")
-      assert url =~ "test-co."
-      assert url =~ "https://"
+      assert result.company.slug == "minimal-co-#{unique}"
+      assert to_string(result.user.email) == "min-#{unique}@example.com"
     end
   end
 end

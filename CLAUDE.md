@@ -92,12 +92,20 @@ The core loop: `just status-agent` (plan) → `just work` (execute) → `just ov
 
 ## Test Targeting
 
-Run **targeted tests** during implementation, **full suite** before review.
+Use `mix test --stale` during implementation (default), **full suite** (`mix test`) before review.
+
+`--stale` uses compile-time module tracing to run only tests whose source dependencies changed. Typical run: 5–15s vs ~97s full suite.
 
 ### Quick reference
 
 ```bash
-# Single file
+# Default during implementation — only changed deps (recommended)
+mix test --stale
+
+# Combine with other flags
+mix test --stale --max-failures 3
+
+# Single file (when you need a specific test)
 mix test test/haul/billing_test.exs
 
 # Directory (all files under it)
@@ -158,7 +166,8 @@ Default to the lowest viable tier. Unit > Resource > Integration. See `docs/know
 
 ### Rules
 
-1. **During implement:** run targeted tests after each meaningful change
+1. **During implement:** run `mix test --stale` after each meaningful change
 2. **Before review:** run `mix test` (full suite) and note the result in review.md
-3. Targeted runs for a typical ticket scope should complete in **under 15 seconds**
-4. **Default to the lowest viable tier.** Unit > Resource > Integration.
+3. **If you changed `config/*.exs` or `mix.exs`:** run `mix test` (full suite) — `--stale` doesn't detect config changes
+4. `--stale` runs should complete in **under 15 seconds** for a typical ticket scope
+5. **Default to the lowest viable tier.** Unit > Resource > Integration.

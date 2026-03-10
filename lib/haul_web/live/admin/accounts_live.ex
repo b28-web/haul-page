@@ -2,7 +2,11 @@ defmodule HaulWeb.Admin.AccountsLive do
   use HaulWeb, :live_view
 
   alias Haul.Accounts.Company
+  alias Haul.Admin.AccountHelpers
   alias Haul.Content.SiteConfig
+
+  import Haul.Admin.AccountHelpers, only: [sort_indicator: 3]
+  import Haul.Formatting, only: [plan_badge_class: 1]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -26,8 +30,8 @@ defmodule HaulWeb.Admin.AccountsLive do
 
   @impl true
   def handle_event("search", %{"search" => term}, socket) do
-    filtered = filter_companies(socket.assigns.companies, term)
-    sorted = sort_companies(filtered, socket.assigns.sort_by, socket.assigns.sort_dir)
+    filtered = AccountHelpers.filter_companies(socket.assigns.companies, term)
+    sorted = AccountHelpers.sort_companies(filtered, socket.assigns.sort_by, socket.assigns.sort_dir)
     {:noreply, assign(socket, search: term, filtered_companies: sorted)}
   end
 
@@ -40,12 +44,12 @@ defmodule HaulWeb.Admin.AccountsLive do
 
     dir =
       if socket.assigns.sort_by == field do
-        toggle_dir(socket.assigns.sort_dir)
+        AccountHelpers.toggle_dir(socket.assigns.sort_dir)
       else
         :asc
       end
 
-    sorted = sort_companies(socket.assigns.filtered_companies, field, dir)
+    sorted = AccountHelpers.sort_companies(socket.assigns.filtered_companies, field, dir)
     {:noreply, assign(socket, sort_by: field, sort_dir: dir, filtered_companies: sorted)}
   end
 
@@ -173,49 +177,6 @@ defmodule HaulWeb.Admin.AccountsLive do
     </div>
     """
   end
-
-  defp filter_companies(companies, ""), do: companies
-
-  defp filter_companies(companies, term) do
-    term = String.downcase(term)
-
-    Enum.filter(companies, fn c ->
-      String.contains?(String.downcase(c.slug), term) ||
-        String.contains?(String.downcase(c.name), term)
-    end)
-  end
-
-  defp sort_companies(companies, :name, dir) do
-    Enum.sort_by(companies, &String.downcase(&1.name), dir)
-  end
-
-  defp sort_companies(companies, :slug, dir) do
-    Enum.sort_by(companies, &String.downcase(&1.slug), dir)
-  end
-
-  defp sort_companies(companies, :inserted_at, dir) do
-    Enum.sort_by(companies, & &1.inserted_at, {dir, DateTime})
-  end
-
-  defp sort_companies(companies, _field, _dir), do: companies
-
-  defp toggle_dir(:asc), do: :desc
-  defp toggle_dir(:desc), do: :asc
-
-  defp sort_indicator(field, field, :asc), do: "↑"
-  defp sort_indicator(field, field, :desc), do: "↓"
-  defp sort_indicator(_field, _sort_by, _dir), do: ""
-
-  defp plan_badge_class(:starter), do: "rounded px-2 py-0.5 text-xs bg-zinc-700 text-zinc-300"
-  defp plan_badge_class(:pro), do: "rounded px-2 py-0.5 text-xs bg-blue-900 text-blue-300"
-
-  defp plan_badge_class(:business),
-    do: "rounded px-2 py-0.5 text-xs bg-purple-900 text-purple-300"
-
-  defp plan_badge_class(:dedicated),
-    do: "rounded px-2 py-0.5 text-xs bg-amber-900 text-amber-300"
-
-  defp plan_badge_class(_), do: "rounded px-2 py-0.5 text-xs bg-zinc-700 text-zinc-300"
 
   defp list_tenant_schemas do
     case Ecto.Adapters.SQL.query(Haul.Repo, """

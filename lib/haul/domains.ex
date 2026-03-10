@@ -77,11 +77,9 @@ defmodule Haul.Domains do
 
   # -- Certificate adapter dispatch --
 
-  def add_cert(domain), do: cert_adapter().add_cert(domain)
-  def check_cert(domain), do: cert_adapter().check_cert(domain)
-  def remove_cert(domain), do: cert_adapter().remove_cert(domain)
+  @cert_adapter Application.compile_env(:haul, :cert_adapter, Haul.Domains.Sandbox)
 
-  defp cert_adapter do
-    Application.get_env(:haul, :cert_adapter, Haul.Domains.Sandbox)
-  end
+  def add_cert(domain), do: @cert_adapter.add_cert(domain)
+  def check_cert(domain), do: @cert_adapter.check_cert(domain)
+  def remove_cert(domain), do: @cert_adapter.remove_cert(domain)
 end

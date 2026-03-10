@@ -43,23 +43,6 @@ defmodule Haul.AI.Prompt do
     ArgumentError -> Path.join(File.cwd!(), "priv/prompts")
   end
 
-  defp strip_frontmatter(content) do
-    case Regex.run(~r/\A---\n.*?\n---\n(.*)\z/s, content) do
-      [_, body] -> String.trim(body)
-      nil -> String.trim(content)
-    end
-  end
-
-  defp parse_version(content) do
-    case Regex.run(~r/\A---\n(.*?)\n---/s, content) do
-      [_, frontmatter] ->
-        case Regex.run(~r/version:\s*(.+)/, frontmatter) do
-          [_, version] -> {:ok, String.trim(version)}
-          nil -> {:error, :no_version}
-        end
-
-      nil ->
-        {:error, :no_frontmatter}
-    end
-  end
+  defp strip_frontmatter(content), do: Haul.Content.Markdown.strip_frontmatter(content)
+  defp parse_version(content), do: Haul.Content.Markdown.parse_version(content)
 end

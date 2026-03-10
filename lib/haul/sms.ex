@@ -11,6 +11,8 @@ defmodule Haul.SMS do
   @callback send_sms(to :: String.t(), body :: String.t(), opts :: keyword()) ::
               {:ok, map()} | {:error, term()}
 
+  @adapter Application.compile_env(:haul, :sms_adapter, Haul.SMS.Sandbox)
+
   @doc """
   Send an SMS message. Delegates to the configured adapter.
 
@@ -18,7 +20,6 @@ defmodule Haul.SMS do
   - `:from` — override the default "from" number
   """
   def send_sms(to, body, opts \\ []) do
-    adapter = Application.get_env(:haul, :sms_adapter, Haul.SMS.Sandbox)
-    adapter.send_sms(to, body, opts)
+    @adapter.send_sms(to, body, opts)
   end
 end

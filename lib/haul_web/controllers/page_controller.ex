@@ -3,6 +3,8 @@ defmodule HaulWeb.PageController do
 
   alias HaulWeb.ContentHelpers
 
+  import HaulWeb.Helpers, only: [get_field: 2]
+
   def home(conn, _params) do
     if conn.assigns[:is_platform_host] do
       marketing(conn)
@@ -37,6 +39,4 @@ defmodule HaulWeb.PageController do
     |> render(:home)
   end
 
-  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
-  defp get_field(map, field) when is_map(map), do: map[field]
 end

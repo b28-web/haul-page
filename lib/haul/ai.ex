@@ -9,6 +9,8 @@ defmodule Haul.AI do
   @callback call_function(function_name :: String.t(), args :: map()) ::
               {:ok, map()} | {:error, any()}
 
+  @adapter Application.compile_env(:haul, :ai_adapter, Haul.AI.Sandbox)
+
   @doc """
   Call a BAML function by name with the given arguments.
   Delegates to the configured adapter.
@@ -17,7 +19,7 @@ defmodule Haul.AI do
   - `:conversation_id` — UUID to link cost tracking to a conversation
   """
   def call_function(function_name, args \\ %{}, opts \\ []) do
-    case adapter().call_function(function_name, args) do
+    case @adapter.call_function(function_name, args) do
       {:ok, result} = success ->
         Haul.AI.CostTracker.record_baml_call(function_name, args, result, opts)
         success
@@ -25,9 +27,5 @@ defmodule Haul.AI do
       error ->
         error
     end
-  end
-
-  defp adapter do
-    Application.get_env(:haul, :ai_adapter, Haul.AI.Sandbox)
   end
 end

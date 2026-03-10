@@ -13,10 +13,10 @@ defmodule Haul.Workers.CleanupConversations do
   def perform(%Oban.Job{}) do
     cutoff = DateTime.add(DateTime.utc_now(), -@stale_days, :day)
 
-    mark_stale_as_abandoned(cutoff)
-    delete_old_abandoned(cutoff)
-
-    :ok
+    with :ok <- mark_stale_as_abandoned(cutoff),
+         :ok <- delete_old_abandoned(cutoff) do
+      :ok
+    end
   end
 
   defp mark_stale_as_abandoned(cutoff) do
@@ -37,8 +37,11 @@ defmodule Haul.Workers.CleanupConversations do
           end
         end)
 
+        :ok
+
       {:error, reason} ->
         Logger.warning("Failed to query stale conversations: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 
@@ -57,8 +60,11 @@ defmodule Haul.Workers.CleanupConversations do
 
         if count > 0, do: Logger.info("Cleaned up #{count} abandoned conversations")
 
+        :ok
+
       {:error, reason} ->
         Logger.warning("Failed to query abandoned conversations: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 end

@@ -4,6 +4,9 @@ defmodule HaulWeb.PaymentLive do
   alias Haul.Operations.Job
   alias HaulWeb.ContentHelpers
 
+  import HaulWeb.Helpers, only: [get_field: 2]
+  import Haul.Formatting, only: [format_amount: 1]
+
   @impl true
   def mount(%{"job_id" => job_id}, _session, socket) do
     tenant = socket.assigns.tenant
@@ -115,14 +118,6 @@ defmodule HaulWeb.PaymentLive do
      |> assign(:error_message, error_message)}
   end
 
-  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
-  defp get_field(map, field) when is_map(map), do: map[field]
-
-  defp format_amount(cents) do
-    dollars = div(cents, 100)
-    remaining = rem(cents, 100)
-    "$#{dollars}.#{String.pad_leading(Integer.to_string(remaining), 2, "0")}"
-  end
 
   @impl true
   def render(assigns) do

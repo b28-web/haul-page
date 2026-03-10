@@ -172,15 +172,7 @@ defmodule Haul.Content.Seeder do
   Parses YAML frontmatter from a markdown file content string.
   Returns {frontmatter_map, body_string}.
   """
-  def parse_frontmatter!(content) do
-    case Regex.run(~r/\A---\n(.+?)\n---\n(.*)\z/s, content) do
-      [_, yaml, body] ->
-        {YamlElixir.read_from_string!(yaml), String.trim(body)}
-
-      nil ->
-        raise "Invalid frontmatter format — expected ---\\n...\\n---\\n"
-    end
-  end
+  defdelegate parse_frontmatter!(content), to: Haul.Content.Markdown
 
   defp default_content_root do
     :haul

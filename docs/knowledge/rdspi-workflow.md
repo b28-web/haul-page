@@ -46,7 +46,7 @@ Artifact: `docs/active/work/{ticket-id}/progress.md`
 
 Self-assess the completed work. Produce `review.md` (~200 lines).
 
-Run the full test suite (`mix test`) and note the result. Summarize what changed: files created, modified, or deleted. Evaluate test coverage and flag gaps. Surface open concerns, TODOs, or known limitations. Flag critical issues that need human attention. This is the handoff document — what a human reviewer needs to understand the work without reading every diff.
+Run the full test suite (`mix test`) and note the result. Summarize what changed: files created, modified, or deleted. Evaluate test coverage and flag gaps. Verify new tests are at the lowest viable tier (Unit > Resource > Integration). Surface open concerns, TODOs, or known limitations. Flag critical issues that need human attention. This is the handoff document — what a human reviewer needs to understand the work without reading every diff.
 
 Artifact: `docs/active/work/{ticket-id}/review.md`
 

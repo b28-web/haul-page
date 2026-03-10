@@ -46,7 +46,7 @@ defmodule Haul.Workers.ProvisionCert do
 
       {:error, reason} ->
         Logger.warning("Cert removal failed for #{domain}: #{inspect(reason)}")
-        :ok
+        {:error, reason}
     end
   end
 

@@ -6,6 +6,7 @@ defmodule HaulWeb.ChatLive do
   alias Haul.AI.EditApplier
   alias Haul.AI.EditClassifier
   alias Haul.AI.Extractor
+  alias Haul.AI.Message, as: AIMessage
   alias Haul.AI.OperatorProfile
   alias Haul.AI.Prompt
   alias Haul.RateLimiter
@@ -166,7 +167,7 @@ defmodule HaulWeb.ChatLive do
             <% end %>
 
             <%!-- Typing indicator --%>
-            <%= if @streaming? and not has_assistant_content?(@messages) do %>
+            <%= if @streaming? and not AIMessage.has_assistant_content?(@messages) do %>
               <div class="flex justify-start">
                 <div class="bg-card border border-border rounded-2xl rounded-bl-sm px-4 py-3">
                   <div class="flex space-x-1.5">
@@ -570,7 +571,7 @@ defmodule HaulWeb.ChatLive do
   end
 
   def handle_info({:ai_chunk, text}, socket) do
-    messages = append_to_last_assistant(socket.assigns.messages, text)
+    messages = AIMessage.append_to_last_assistant(socket.assigns.messages, text)
 
     {:noreply,
      socket
@@ -628,7 +629,7 @@ defmodule HaulWeb.ChatLive do
     if user_messages == [] do
       {:noreply, assign(socket, :extraction_timer, nil)}
     else
-      transcript = build_transcript(messages)
+      transcript = AIMessage.build_transcript(messages)
 
       {:ok, task_pid} =
         Task.start(fn ->
@@ -838,30 +839,6 @@ defmodule HaulWeb.ChatLive do
     assign(socket, :extraction_timer, timer_ref)
   end
 
-  defp build_transcript(messages) do
-    messages
-    |> Enum.reject(&(&1.content == ""))
-    |> Enum.map(fn msg -> "#{msg.role}: #{msg.content}" end)
-    |> Enum.join("\n")
-  end
-
-  defp append_to_last_assistant(messages, text) do
-    case List.last(messages) do
-      %{role: :assistant} = msg ->
-        updated = %{msg | content: msg.content <> text}
-        List.replace_at(messages, -1, updated)
-
-      _ ->
-        messages
-    end
-  end
-
-  defp has_assistant_content?(messages) do
-    case List.last(messages) do
-      %{role: :assistant, content: content} when content != "" -> true
-      _ -> false
-    end
-  end
 
   defp all_profile_fields do
     [:business_name, :owner_name, :phone, :email, :service_area, :services, :differentiators]
@@ -885,17 +862,7 @@ defmodule HaulWeb.ChatLive do
     end
   end
 
-  defp restore_messages(db_messages) when is_list(db_messages) do
-    Enum.map(db_messages, fn msg ->
-      %{
-        id: Ecto.UUID.generate(),
-        role: String.to_existing_atom(msg["role"]),
-        content: msg["content"] || ""
-      }
-    end)
-  end
-
-  defp restore_messages(_), do: []
+  defp restore_messages(db_messages), do: AIMessage.restore_messages(db_messages)
 
   defp persist_message(nil, _message), do: :ok
 
@@ -923,12 +890,5 @@ defmodule HaulWeb.ChatLive do
     end
   end
 
-  defp deep_to_map(%{__struct__: _} = struct) do
-    struct
-    |> Map.from_struct()
-    |> Map.new(fn {k, v} -> {k, deep_to_map(v)} end)
-  end
-
-  defp deep_to_map(list) when is_list(list), do: Enum.map(list, &deep_to_map/1)
-  defp deep_to_map(value), do: value
+  defp deep_to_map(value), do: AIMessage.deep_to_map(value)
 end

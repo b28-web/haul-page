@@ -15,8 +15,11 @@ defmodule Haul.Workers.SendBookingSMS do
         SMS.send_sms(operator[:phone], body)
         :ok
 
-      {:error, _} ->
+      {:error, %Ash.Error.Invalid{errors: [%Ash.Error.Query.NotFound{}]}} ->
         :ok
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 end

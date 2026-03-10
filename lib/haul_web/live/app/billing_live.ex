@@ -3,7 +3,7 @@ defmodule HaulWeb.App.BillingLive do
 
   alias Haul.Billing
 
-  @plan_ranks %{starter: 0, pro: 1, business: 2, dedicated: 3}
+  import Haul.Formatting, only: [plan_rank: 1, plan_name: 1, format_price: 1, days_until_downgrade: 1]
 
   @impl true
   def mount(_params, _session, socket) do
@@ -334,13 +334,6 @@ defmodule HaulWeb.App.BillingLive do
     |> Ash.update()
   end
 
-  defp plan_rank(plan), do: Map.get(@plan_ranks, plan, 0)
-  defp plan_name(:starter), do: "Starter"
-  defp plan_name(:pro), do: "Pro"
-  defp plan_name(:business), do: "Business"
-  defp plan_name(:dedicated), do: "Dedicated"
-  defp plan_name(_), do: "Unknown"
-
   defp plan_price(plan) do
     case Enum.find(Billing.plans(), &(&1.id == plan)) do
       %{price_cents: cents} -> cents
@@ -348,20 +341,8 @@ defmodule HaulWeb.App.BillingLive do
     end
   end
 
-  defp format_price(0), do: "Free"
-
-  defp format_price(cents) when is_integer(cents) do
-    dollars = div(cents, 100)
-    "$#{dollars}/mo"
-  end
-
   defp billing_url do
     HaulWeb.Endpoint.url() <> "/app/settings/billing"
   end
 
-  defp days_until_downgrade(dunning_started_at) do
-    grace_days = 7
-    elapsed = DateTime.diff(DateTime.utc_now(), dunning_started_at, :day)
-    max(grace_days - elapsed, 0)
-  end
 end

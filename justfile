@@ -45,6 +45,10 @@ status-agent:
 commit-agent:
     @just _commit-agent
 
+# Report the test pyramid shape (tier distribution)
+test-pyramid:
+    @just _test-pyramid
+
 # Run the implementation agent swarm
 work:
     lisa loop

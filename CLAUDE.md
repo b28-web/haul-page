@@ -146,8 +146,19 @@ Run these when your change touches shared infrastructure:
 | `test/haul/rate_limiter_test.exs` | Rate limiting, plug pipeline |
 | `test/haul_web/live/tenant_hook_test.exs` | LiveView session, tenant propagation |
 
+### Test tiers
+
+| Tier | Test case | What it tests | Speed |
+|------|-----------|---------------|-------|
+| 1 — Unit | `ExUnit.Case, async: true` | Pure functions, no DB | <100ms |
+| 2 — Resource | `Haul.DataCase, async: false` | Ash actions + DB | 100ms–1s |
+| 3 — Integration | `HaulWeb.ConnCase, async: false` | HTTP/LiveView + full stack | 500ms–3s |
+
+Default to the lowest viable tier. Unit > Resource > Integration. See `docs/knowledge/test-architecture.md` for decision tree and examples.
+
 ### Rules
 
 1. **During implement:** run targeted tests after each meaningful change
 2. **Before review:** run `mix test` (full suite) and note the result in review.md
 3. Targeted runs for a typical ticket scope should complete in **under 15 seconds**
+4. **Default to the lowest viable tier.** Unit > Resource > Integration.

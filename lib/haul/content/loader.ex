@@ -16,8 +16,16 @@ defmodule Haul.Content.Loader do
 
     :persistent_term.put({__MODULE__, :gallery_items}, gallery)
     :persistent_term.put({__MODULE__, :endorsements}, endorsements)
+    :persistent_term.put({__MODULE__, :loaded}, true)
 
     :ok
+  end
+
+  @doc """
+  Returns true if content has been successfully loaded into persistent_term.
+  """
+  def loaded? do
+    :persistent_term.get({__MODULE__, :loaded}, false)
   end
 
   @doc """

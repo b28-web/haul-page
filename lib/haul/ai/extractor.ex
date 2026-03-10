@@ -21,7 +21,7 @@ defmodule Haul.AI.Extractor do
         success
 
       {:error, _reason} = error ->
-        if transient?(error) do
+        if Haul.AI.ErrorClassifier.transient?(error) do
           do_extract(transcript)
         else
           error
@@ -64,9 +64,4 @@ defmodule Haul.AI.Extractor do
     end
   end
 
-  defp transient?({:error, :timeout}), do: true
-  defp transient?({:error, :rate_limited}), do: true
-  defp transient?({:error, :econnrefused}), do: true
-  defp transient?({:error, %{status: status}}) when status in [429, 500, 502, 503], do: true
-  defp transient?(_), do: false
 end

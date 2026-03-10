@@ -10,6 +10,7 @@ defmodule Haul.Workers.ProvisionSite do
 
   alias Haul.AI.OperatorProfile
   alias Haul.AI.Provisioner
+  alias Haul.Workers.ProfileSerializer
 
   require Logger
 
@@ -20,7 +21,7 @@ defmodule Haul.Workers.ProvisionSite do
     %{
       "conversation_id" => conversation_id,
       "session_id" => session_id,
-      "profile" => serialize_profile(profile)
+      "profile" => ProfileSerializer.serialize(profile)
     }
     |> new()
     |> Oban.insert()
@@ -34,7 +35,7 @@ defmodule Haul.Workers.ProvisionSite do
           "profile" => profile_map
         }
       }) do
-    profile = deserialize_profile(profile_map)
+    profile = ProfileSerializer.deserialize(profile_map)
 
     case Provisioner.from_profile(profile, conv_id) do
       {:ok, result} ->
@@ -76,54 +77,4 @@ defmodule Haul.Workers.ProvisionSite do
     )
   end
 
-  defp serialize_profile(%OperatorProfile{} = profile) do
-    %{
-      "business_name" => profile.business_name,
-      "owner_name" => profile.owner_name,
-      "phone" => profile.phone,
-      "email" => profile.email,
-      "service_area" => profile.service_area,
-      "tagline" => profile.tagline,
-      "years_in_business" => profile.years_in_business,
-      "services" =>
-        Enum.map(profile.services, fn svc ->
-          %{
-            "name" => svc.name,
-            "description" => svc.description,
-            "category" => to_string(svc.category)
-          }
-        end),
-      "differentiators" => profile.differentiators
-    }
-  end
-
-  defp deserialize_profile(map) do
-    %OperatorProfile{
-      business_name: map["business_name"],
-      owner_name: map["owner_name"],
-      phone: map["phone"],
-      email: map["email"],
-      service_area: map["service_area"],
-      tagline: map["tagline"],
-      years_in_business: map["years_in_business"],
-      services:
-        Enum.map(map["services"] || [], fn svc ->
-          %OperatorProfile.ServiceOffering{
-            name: svc["name"],
-            description: svc["description"],
-            category: safe_atom(svc["category"])
-          }
-        end),
-      differentiators: map["differentiators"] || []
-    }
-  end
-
-  defp safe_atom(nil), do: :other
-  defp safe_atom(val) when is_atom(val), do: val
-
-  defp safe_atom(val) when is_binary(val) do
-    String.to_existing_atom(val)
-  rescue
-    ArgumentError -> :other
-  end
 end

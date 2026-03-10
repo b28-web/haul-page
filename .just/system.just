@@ -268,6 +268,7 @@ _llm:
     - Print: @media print flips to white bg, Oswald 42pt/22pt, tear-off strip at bottom
     - Operator config via runtime env vars (OPERATOR_NAME, OPERATOR_PHONE, etc.)
     - Test targeting: CLAUDE.md § "Test Targeting" maps source→test files. Run targeted tests during implement, full suite before review.
+    - Test tiers: Tier 1 (ExUnit.Case, async: true, pure functions) > Tier 2 (DataCase, Ash+DB) > Tier 3 (ConnCase, HTTP/LiveView). Default to lowest viable. See docs/knowledge/test-architecture.md.
 
     ## CI guardrails
     - Pre-commit hook: blocks debug statements, hardcoded secrets, .env files
@@ -376,6 +377,12 @@ _quality:
 
     echo ":: dialyzer"
     mix dialyzer
+
+# ---------- test-pyramid ----------
+
+[private]
+_test-pyramid:
+    mix haul.test_pyramid
 
 # ---------- clean ----------
 

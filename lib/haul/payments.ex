@@ -26,30 +26,28 @@ defmodule Haul.Payments do
               secret :: String.t()
             ) :: {:ok, map()} | {:error, term()}
 
+  @adapter Application.compile_env(:haul, :payments_adapter, Haul.Payments.Sandbox)
+
   @doc """
   Create a Stripe PaymentIntent. Delegates to the configured adapter.
 
   Params must include `:amount` (integer cents) and `:currency` (e.g. "usd").
   """
   def create_payment_intent(params) do
-    adapter().create_payment_intent(params)
+    @adapter.create_payment_intent(params)
   end
 
   @doc """
   Retrieve a PaymentIntent by ID to verify its status server-side.
   """
   def retrieve_payment_intent(id) do
-    adapter().retrieve_payment_intent(id)
+    @adapter.retrieve_payment_intent(id)
   end
 
   @doc """
   Verify a Stripe webhook signature and parse the event payload.
   """
   def verify_webhook_signature(payload, signature, secret) do
-    adapter().verify_webhook_signature(payload, signature, secret)
-  end
-
-  defp adapter do
-    Application.get_env(:haul, :payments_adapter, Haul.Payments.Sandbox)
+    @adapter.verify_webhook_signature(payload, signature, secret)
   end
 end

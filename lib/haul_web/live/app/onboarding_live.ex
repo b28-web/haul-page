@@ -5,6 +5,8 @@ defmodule HaulWeb.App.OnboardingLive do
   alias Haul.Content.{Service, SiteConfig}
   alias Haul.{Onboarding, Storage}
 
+  import HaulWeb.Helpers, only: [friendly_upload_error: 1]
+
   @max_file_size 5_000_000
   @steps 1..6
 
@@ -312,7 +314,7 @@ defmodule HaulWeb.App.OnboardingLive do
         </div>
 
         <%= for err <- upload_errors(@uploads.logo, entry) do %>
-          <p class="text-red-500 text-sm">{upload_error_to_string(err)}</p>
+          <p class="text-red-500 text-sm">{friendly_upload_error(err)}</p>
         <% end %>
       <% end %>
     </form>
@@ -398,10 +400,6 @@ defmodule HaulWeb.App.OnboardingLive do
   defp step_title(5), do: "Preview"
   defp step_title(6), do: "Go Live"
 
-  defp upload_error_to_string(:too_large), do: "File is too large (max 5MB)"
-  defp upload_error_to_string(:not_accepted), do: "Invalid file type"
-  defp upload_error_to_string(:too_many_files), do: "Only one file allowed"
-  defp upload_error_to_string(err), do: "Upload error: #{inspect(err)}"
 
   defp load_site_config(tenant) do
     case Ash.read(SiteConfig, tenant: tenant) do

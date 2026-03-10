@@ -26,23 +26,25 @@ defmodule Haul.Billing do
   @callback update_subscription(subscription_id :: String.t(), params :: map()) ::
               {:ok, map()} | {:error, term()}
 
+  @adapter Application.compile_env(:haul, :billing_adapter, Haul.Billing.Sandbox)
+
   # -- Adapter dispatch --
 
-  def create_customer(company), do: adapter().create_customer(company)
+  def create_customer(company), do: @adapter.create_customer(company)
 
   def create_subscription(customer_id, price_id),
-    do: adapter().create_subscription(customer_id, price_id)
+    do: @adapter.create_subscription(customer_id, price_id)
 
   def cancel_subscription(subscription_id),
-    do: adapter().cancel_subscription(subscription_id)
+    do: @adapter.cancel_subscription(subscription_id)
 
-  def create_checkout_session(params), do: adapter().create_checkout_session(params)
+  def create_checkout_session(params), do: @adapter.create_checkout_session(params)
 
   def create_portal_session(customer_id, return_url),
-    do: adapter().create_portal_session(customer_id, return_url)
+    do: @adapter.create_portal_session(customer_id, return_url)
 
   def update_subscription(subscription_id, params),
-    do: adapter().update_subscription(subscription_id, params)
+    do: @adapter.update_subscription(subscription_id, params)
 
   # -- Feature gates (pure functions, no adapter) --
 
@@ -120,7 +122,4 @@ defmodule Haul.Billing do
     Map.get(@feature_labels, feature, to_string(feature))
   end
 
-  defp adapter do
-    Application.get_env(:haul, :billing_adapter, Haul.Billing.Sandbox)
-  end
 end

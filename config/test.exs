@@ -43,6 +43,13 @@ config :haul, :ai_adapter, Haul.AI.Sandbox
 
 # Places — use sandbox adapter in test (no Google API calls)
 config :haul, :places_adapter, Haul.Places.Sandbox
+
+# Chat — use sandbox adapter in test (no Anthropic API calls)
+config :haul, :chat_adapter, Haul.AI.Chat.Sandbox
+
+# Domains — use sandbox adapter in test (no Fly API calls)
+config :haul, :cert_adapter, Haul.Domains.Sandbox
+
 config :stripity_stripe, api_key: "sk_test_fake"
 
 # Oban — manual testing mode (jobs don't run automatically)

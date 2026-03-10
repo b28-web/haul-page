@@ -66,15 +66,13 @@ if System.get_env("STORAGE_BUCKET") do
     host: tigris_endpoint
 end
 
-# Google Places — autocomplete proxy (optional, only if env var is set)
+# Google Places — API key for autocomplete proxy
 if places_key = System.get_env("GOOGLE_PLACES_API_KEY") do
-  config :haul, :places_adapter, Haul.Places.Google
   config :haul, :google_places_api_key, places_key
 end
 
-# Fly.io certificate provisioning — enable when API token is set
+# Fly.io certificate provisioning — API token and app name
 if fly_token = System.get_env("FLY_API_TOKEN") do
-  config :haul, :cert_adapter, Haul.Domains.FlyApi
   config :haul, :fly_api_token, fly_token
 
   config :haul,
@@ -83,14 +81,9 @@ if fly_token = System.get_env("FLY_API_TOKEN") do
            raise("FLY_APP_NAME is required when FLY_API_TOKEN is set")
 end
 
-# AI / BAML — store API key for all envs, but only switch adapter outside test
+# AI / BAML — store API key; adapter selection is in compile-time config
 if anthropic_key = System.get_env("ANTHROPIC_API_KEY") do
   config :haul, :anthropic_api_key, anthropic_key
-
-  if config_env() != :test do
-    config :haul, :ai_adapter, Haul.AI.Baml
-    config :haul, :chat_adapter, Haul.AI.Chat.Anthropic
-  end
 else
   # In production without an API key, disable chat so /start redirects to /signup
   if config_env() == :prod do
@@ -180,9 +173,8 @@ if config_env() == :prod do
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
 
-  # Payments — Stripe (optional, only if env vars are set)
+  # Payments — Stripe keys and secrets (adapter selection is in prod.exs)
   if stripe_key = System.get_env("STRIPE_SECRET_KEY") do
-    config :haul, :payments_adapter, Haul.Payments.Stripe
     config :stripity_stripe, api_key: stripe_key
 
     if pk = System.get_env("STRIPE_PUBLISHABLE_KEY") do
@@ -202,9 +194,6 @@ if config_env() == :prod do
       config :haul, :stripe_billing_webhook_secret, billing_webhook_secret
     end
 
-    # Billing adapter — use Stripe when Stripe keys are present
-    config :haul, :billing_adapter, Haul.Billing.Stripe
-
     if price_pro = System.get_env("STRIPE_PRICE_PRO") do
       config :haul, :stripe_price_pro, price_pro
     end
@@ -218,10 +207,8 @@ if config_env() == :prod do
     end
   end
 
-  # SMS — Twilio (optional, only if env vars are set)
+  # SMS — Twilio credentials (adapter selection is in prod.exs)
   if twilio_sid = System.get_env("TWILIO_ACCOUNT_SID") do
-    config :haul, :sms_adapter, Haul.SMS.Twilio
-
     config :haul, :twilio,
       account_sid: twilio_sid,
       auth_token:

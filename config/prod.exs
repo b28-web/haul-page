@@ -28,5 +28,15 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
+# Production adapters — resolved at compile time via Application.compile_env.
+# API keys and secrets are still loaded at runtime in config/runtime.exs.
+config :haul, :ai_adapter, Haul.AI.Baml
+config :haul, :chat_adapter, Haul.AI.Chat.Anthropic
+config :haul, :payments_adapter, Haul.Payments.Stripe
+config :haul, :billing_adapter, Haul.Billing.Stripe
+config :haul, :sms_adapter, Haul.SMS.Twilio
+config :haul, :places_adapter, Haul.Places.Google
+config :haul, :cert_adapter, Haul.Domains.FlyApi
+
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.

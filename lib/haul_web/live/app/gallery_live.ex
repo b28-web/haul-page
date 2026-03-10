@@ -3,7 +3,9 @@ defmodule HaulWeb.App.GalleryLive do
 
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Content.GalleryItem
-  alias Haul.Storage
+  alias Haul.{Sortable, Storage}
+
+  import HaulWeb.Helpers, only: [friendly_upload_error: 1]
 
   @max_file_size 5_000_000
 
@@ -147,7 +149,7 @@ defmodule HaulWeb.App.GalleryLive do
         params
         |> Map.put("before_image_url", Storage.public_url(before_url))
         |> Map.put("after_image_url", Storage.public_url(after_url))
-        |> Map.put("sort_order", next_sort_order(socket.assigns.items))
+        |> Map.put("sort_order", Sortable.next_sort_order(socket.assigns.items))
 
       case AshPhoenix.Form.submit(socket.assigns.ash_form, params: params) do
         {:ok, _item} ->
@@ -224,30 +226,25 @@ defmodule HaulWeb.App.GalleryLive do
 
   defp reorder(socket, id, direction) do
     items = socket.assigns.items
-    idx = Enum.find_index(items, &(&1.id == id))
 
-    swap_idx =
-      case direction do
-        :up -> idx - 1
-        :down -> idx + 1
-      end
+    case Sortable.find_swap_index(items, id, direction) do
+      {:ok, idx, swap_idx} ->
+        item = Enum.at(items, idx)
+        swap = Enum.at(items, swap_idx)
+        tenant = socket.assigns.tenant
 
-    if idx && swap_idx >= 0 && swap_idx < length(items) do
-      item = Enum.at(items, idx)
-      swap = Enum.at(items, swap_idx)
-      tenant = socket.assigns.tenant
+        item
+        |> Ash.Changeset.for_update(:reorder, %{sort_order: swap.sort_order}, tenant: tenant)
+        |> Ash.update!()
 
-      item
-      |> Ash.Changeset.for_update(:reorder, %{sort_order: swap.sort_order}, tenant: tenant)
-      |> Ash.update!()
+        swap
+        |> Ash.Changeset.for_update(:reorder, %{sort_order: item.sort_order}, tenant: tenant)
+        |> Ash.update!()
 
-      swap
-      |> Ash.Changeset.for_update(:reorder, %{sort_order: item.sort_order}, tenant: tenant)
-      |> Ash.update!()
+        {:noreply, assign(socket, :items, load_items(tenant))}
 
-      {:noreply, assign(socket, :items, load_items(tenant))}
-    else
-      {:noreply, socket}
+      :error ->
+        {:noreply, socket}
     end
   end
 
@@ -258,13 +255,6 @@ defmodule HaulWeb.App.GalleryLive do
     end
   end
 
-  defp next_sort_order([]), do: 0
-  defp next_sort_order(items), do: (items |> Enum.map(& &1.sort_order) |> Enum.max()) + 1
-
-  defp friendly_error(:too_large), do: "File is too large (max 5MB)"
-  defp friendly_error(:not_accepted), do: "File type not supported (JPEG, PNG, WebP only)"
-  defp friendly_error(:too_many_files), do: "Only one file allowed"
-  defp friendly_error(err), do: to_string(err)
 
   @impl true
   def render(assigns) do
@@ -445,13 +435,13 @@ defmodule HaulWeb.App.GalleryLive do
                     <.live_file_input upload={@uploads.before_image} class="hidden" />
                   </label>
                   <%= for entry <- @uploads.before_image.entries, err <- upload_errors(@uploads.before_image, entry) do %>
-                    <p class="text-xs text-error mt-1">{friendly_error(err)}</p>
+                    <p class="text-xs text-error mt-1">{friendly_upload_error(err)}</p>
                   <% end %>
                   <p
                     :for={err <- upload_errors(@uploads.before_image)}
                     class="text-xs text-error mt-1"
                   >
-                    {friendly_error(err)}
+                    {friendly_upload_error(err)}
                   </p>
                 </div>
 
@@ -478,10 +468,10 @@ defmodule HaulWeb.App.GalleryLive do
                     <.live_file_input upload={@uploads.after_image} class="hidden" />
                   </label>
                   <%= for entry <- @uploads.after_image.entries, err <- upload_errors(@uploads.after_image, entry) do %>
-                    <p class="text-xs text-error mt-1">{friendly_error(err)}</p>
+                    <p class="text-xs text-error mt-1">{friendly_upload_error(err)}</p>
                   <% end %>
                   <p :for={err <- upload_errors(@uploads.after_image)} class="text-xs text-error mt-1">
-                    {friendly_error(err)}
+                    {friendly_upload_error(err)}
                   </p>
                 </div>
               </div>

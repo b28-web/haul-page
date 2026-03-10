@@ -3,6 +3,9 @@ defmodule HaulWeb.App.EndorsementsLive do
 
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Content.Endorsement
+  alias Haul.Sortable
+
+  import Haul.Formatting, only: [source_label: 1, star_display: 1]
 
   @source_options [
     {"", nil},
@@ -126,35 +129,29 @@ defmodule HaulWeb.App.EndorsementsLive do
   end
 
   def handle_event("move_up", %{"id" => id}, socket) do
-    endorsements = socket.assigns.endorsements
-    index = Enum.find_index(endorsements, &(&1.id == id))
-
-    if index && index > 0 do
-      swap_sort_order(endorsements, index, index - 1)
-      {:noreply, load_endorsements(socket)}
-    else
-      {:noreply, socket}
-    end
+    reorder_endorsement(socket, id, :up)
   end
 
   def handle_event("move_down", %{"id" => id}, socket) do
-    endorsements = socket.assigns.endorsements
-    index = Enum.find_index(endorsements, &(&1.id == id))
-
-    if index && index < length(endorsements) - 1 do
-      swap_sort_order(endorsements, index, index + 1)
-      {:noreply, load_endorsements(socket)}
-    else
-      {:noreply, socket}
-    end
+    reorder_endorsement(socket, id, :down)
   end
 
-  defp swap_sort_order(endorsements, idx_a, idx_b) do
-    a = Enum.at(endorsements, idx_a)
-    b = Enum.at(endorsements, idx_b)
+  defp reorder_endorsement(socket, id, direction) do
+    endorsements = socket.assigns.endorsements
 
-    a |> Ash.Changeset.for_update(:edit, %{sort_order: b.sort_order}) |> Ash.update!()
-    b |> Ash.Changeset.for_update(:edit, %{sort_order: a.sort_order}) |> Ash.update!()
+    case Sortable.find_swap_index(endorsements, id, direction) do
+      {:ok, idx_a, idx_b} ->
+        a = Enum.at(endorsements, idx_a)
+        b = Enum.at(endorsements, idx_b)
+
+        a |> Ash.Changeset.for_update(:edit, %{sort_order: b.sort_order}) |> Ash.update!()
+        b |> Ash.Changeset.for_update(:edit, %{sort_order: a.sort_order}) |> Ash.update!()
+
+        {:noreply, load_endorsements(socket)}
+
+      :error ->
+        {:noreply, socket}
+    end
   end
 
   defp load_endorsements(socket) do
@@ -162,17 +159,6 @@ defmodule HaulWeb.App.EndorsementsLive do
     assign(socket, :endorsements, Enum.sort_by(endorsements, & &1.sort_order))
   end
 
-  defp source_label(nil), do: nil
-  defp source_label(:google), do: "Google"
-  defp source_label(:yelp), do: "Yelp"
-  defp source_label(:direct), do: "Direct"
-  defp source_label(:facebook), do: "Facebook"
-
-  defp star_display(nil), do: nil
-
-  defp star_display(rating) do
-    String.duplicate("★", rating) <> String.duplicate("☆", 5 - rating)
-  end
 
   @impl true
   def render(assigns) do

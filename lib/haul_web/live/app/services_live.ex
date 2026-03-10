@@ -3,6 +3,7 @@ defmodule HaulWeb.App.ServicesLive do
 
   alias Haul.Accounts.Changes.ProvisionTenant
   alias Haul.Content.Service
+  alias Haul.Sortable
 
   @icon_options [
     {"Truck", "hero-truck"},
@@ -145,35 +146,29 @@ defmodule HaulWeb.App.ServicesLive do
   end
 
   def handle_event("move_up", %{"id" => id}, socket) do
-    services = socket.assigns.services
-    index = Enum.find_index(services, &(&1.id == id))
-
-    if index && index > 0 do
-      swap_sort_order(services, index, index - 1)
-      {:noreply, load_services(socket)}
-    else
-      {:noreply, socket}
-    end
+    reorder_service(socket, id, :up)
   end
 
   def handle_event("move_down", %{"id" => id}, socket) do
-    services = socket.assigns.services
-    index = Enum.find_index(services, &(&1.id == id))
-
-    if index && index < length(services) - 1 do
-      swap_sort_order(services, index, index + 1)
-      {:noreply, load_services(socket)}
-    else
-      {:noreply, socket}
-    end
+    reorder_service(socket, id, :down)
   end
 
-  defp swap_sort_order(services, idx_a, idx_b) do
-    a = Enum.at(services, idx_a)
-    b = Enum.at(services, idx_b)
+  defp reorder_service(socket, id, direction) do
+    services = socket.assigns.services
 
-    a |> Ash.Changeset.for_update(:edit, %{sort_order: b.sort_order}) |> Ash.update!()
-    b |> Ash.Changeset.for_update(:edit, %{sort_order: a.sort_order}) |> Ash.update!()
+    case Sortable.find_swap_index(services, id, direction) do
+      {:ok, idx_a, idx_b} ->
+        a = Enum.at(services, idx_a)
+        b = Enum.at(services, idx_b)
+
+        a |> Ash.Changeset.for_update(:edit, %{sort_order: b.sort_order}) |> Ash.update!()
+        b |> Ash.Changeset.for_update(:edit, %{sort_order: a.sort_order}) |> Ash.update!()
+
+        {:noreply, load_services(socket)}
+
+      :error ->
+        {:noreply, socket}
+    end
   end
 
   defp load_services(socket) do

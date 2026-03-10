@@ -83,9 +83,7 @@ defmodule Haul.Content.Page do
             changeset
 
           body ->
-            html =
-              MDEx.to_html!(body, extension: [table: true, footnotes: true, strikethrough: true])
-
+            html = Haul.Content.Markdown.render_html(body)
             Ash.Changeset.force_change_attribute(changeset, :body_html, html)
         end
       end
@@ -101,9 +99,7 @@ defmodule Haul.Content.Page do
             changeset
 
           body ->
-            html =
-              MDEx.to_html!(body, extension: [table: true, footnotes: true, strikethrough: true])
-
+            html = Haul.Content.Markdown.render_html(body)
             Ash.Changeset.force_change_attribute(changeset, :body_html, html)
         end
       end

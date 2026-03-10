@@ -5,6 +5,8 @@ defmodule HaulWeb.BookingLive do
   alias Haul.Storage
   alias HaulWeb.ContentHelpers
 
+  import HaulWeb.Helpers, only: [get_field: 2, friendly_upload_error: 1, merge_preferred_dates: 1]
+
   @max_photos 5
   @max_file_size 10_000_000
 
@@ -73,16 +75,6 @@ defmodule HaulWeb.BookingLive do
     |> assign(:form, to_form(ash_form, as: "form"))
   end
 
-  defp merge_preferred_dates(params) do
-    dates =
-      ["preferred_date_1", "preferred_date_2", "preferred_date_3"]
-      |> Enum.map(&Map.get(params, &1, ""))
-      |> Enum.reject(&(&1 == "" || is_nil(&1)))
-
-    params
-    |> Map.put("preferred_dates", dates)
-    |> Map.drop(["preferred_date_1", "preferred_date_2", "preferred_date_3"])
-  end
 
   defp upload_photos(socket) do
     tenant = socket.assigns.tenant
@@ -100,13 +92,6 @@ defmodule HaulWeb.BookingLive do
     |> Enum.reject(&is_nil/1)
   end
 
-  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
-  defp get_field(map, field) when is_map(map), do: map[field]
-
-  defp friendly_error(:too_large), do: "File is too large (max 10MB)"
-  defp friendly_error(:too_many_files), do: "Too many files (max #{@max_photos})"
-  defp friendly_error(:not_accepted), do: "File type not supported"
-  defp friendly_error(err), do: to_string(err)
 
   @impl true
   def render(assigns) do
@@ -270,13 +255,13 @@ defmodule HaulWeb.BookingLive do
                     :for={err <- upload_errors(@uploads.photos, entry)}
                     class="text-xs text-error mt-1"
                   >
-                    {friendly_error(err)}
+                    {friendly_upload_error(err)}
                   </p>
                 </div>
               </div>
 
               <p :for={err <- upload_errors(@uploads.photos)} class="text-sm text-error mt-2">
-                {friendly_error(err)}
+                {friendly_upload_error(err)}
               </p>
             </div>
 

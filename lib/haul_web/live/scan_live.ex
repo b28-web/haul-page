@@ -3,6 +3,8 @@ defmodule HaulWeb.ScanLive do
 
   alias HaulWeb.ContentHelpers
 
+  import HaulWeb.Helpers, only: [get_field: 2]
+
   @impl true
   def mount(_params, _session, socket) do
     tenant = socket.assigns.tenant
@@ -17,9 +19,6 @@ defmodule HaulWeb.ScanLive do
      |> assign(:gallery_items, ContentHelpers.load_gallery_items(tenant))
      |> assign(:endorsements, ContentHelpers.load_endorsements(tenant))}
   end
-
-  defp get_field(%{__struct__: _} = struct, field), do: Map.get(struct, field)
-  defp get_field(map, field) when is_map(map), do: map[field]
 
   @impl true
   def render(assigns) do

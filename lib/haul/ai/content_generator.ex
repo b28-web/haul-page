@@ -140,19 +140,13 @@ defmodule Haul.AI.ContentGenerator do
         success
 
       {:error, _reason} = error ->
-        if transient?(error) do
+        if Haul.AI.ErrorClassifier.transient?(error) do
           Haul.AI.call_function(function_name, args)
         else
           error
         end
     end
   end
-
-  defp transient?({:error, :timeout}), do: true
-  defp transient?({:error, :rate_limited}), do: true
-  defp transient?({:error, :econnrefused}), do: true
-  defp transient?({:error, %{status: status}}) when status in [429, 500, 502, 503], do: true
-  defp transient?(_), do: false
 
   defp log_completion(function_name, profile) do
     Logger.info(

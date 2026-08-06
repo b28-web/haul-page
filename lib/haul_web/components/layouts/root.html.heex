@@ -14,20 +14,24 @@
     </script>
     <script>
       (() => {
+        const mq = window.matchMedia("(prefers-color-scheme: light)");
+        const applySystem = () => {
+          document.documentElement.setAttribute("data-theme", mq.matches ? "light" : "dark");
+        };
         const setTheme = (theme) => {
           if (theme === "system") {
             localStorage.removeItem("phx:theme");
-            document.documentElement.removeAttribute("data-theme");
+            applySystem();
           } else {
             localStorage.setItem("phx:theme", theme);
             document.documentElement.setAttribute("data-theme", theme);
           }
         };
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
-        }
+        mq.addEventListener("change", () => {
+          if (!localStorage.getItem("phx:theme")) applySystem();
+        });
+        setTheme(localStorage.getItem("phx:theme") || "system");
         window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-        
         window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
       })();
     </script>

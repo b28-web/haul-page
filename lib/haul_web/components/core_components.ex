@@ -447,6 +447,12 @@ defmodule HaulWeb.CoreComponents do
     """
   end
 
+  def icon(%{name: "fa-" <> _} = assigns) do
+    ~H"""
+    <i class={["fa-solid", @name, @class]} />
+    """
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

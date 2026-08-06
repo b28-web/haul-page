@@ -109,8 +109,12 @@ defmodule Haul.Onboarding do
 
   @doc "Returns the live site URL for a given slug."
   def site_url(slug) do
-    base_domain = Application.get_env(:haul, :base_domain, "haulpage.com")
-    "https://#{slug}.#{base_domain}"
+    if Application.get_env(:haul, :dev_routes) do
+      "#{HaulWeb.Endpoint.url()}/proxy/#{slug}"
+    else
+      base_domain = Application.get_env(:haul, :base_domain, "haulpage.com")
+      "https://#{slug}.#{base_domain}"
+    end
   end
 
   defp validate_required(params, key) do

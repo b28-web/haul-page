@@ -64,6 +64,30 @@ defmodule HaulWeb.ContentHelpers do
     end
   end
 
+  def load_featured_gallery_items(tenant) do
+    case Ash.read(GalleryItem, tenant: tenant) do
+      {:ok, items} ->
+        items
+        |> Enum.filter(&(&1.active && &1.featured))
+        |> Enum.sort_by(& &1.sort_order)
+
+      _ ->
+        []
+    end
+  end
+
+  def load_featured_endorsements(tenant) do
+    case Ash.read(Endorsement, tenant: tenant) do
+      {:ok, endorsements} ->
+        endorsements
+        |> Enum.filter(&(&1.active && &1.featured))
+        |> Enum.sort_by(& &1.sort_order)
+
+      _ ->
+        []
+    end
+  end
+
   defp fallback_site_config do
     operator = Application.get_env(:haul, :operator, [])
 

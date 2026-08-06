@@ -1,0 +1,96 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lisa status:*)",
+      "WebSearch",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(just dev-status:*)",
+      "Bash(just dev:*)",
+      "Bash(just dev-log:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_close",
+      "Bash(xargs ls:*)",
+      "Bash(just llm:*)",
+      "Bash(lisa validate:*)",
+      "Bash(just:*)",
+      "Bash(mise ls:*)",
+      "Bash(mise exec:*)",
+      "Bash(git add:*)",
+      "Bash(head:*)",
+      "Bash(for f in docs/active/stories/*.md)",
+      "Bash(do echo \"=== $f ===\")",
+      "Read(//Volumes/ext1/swe/repos/haul-page/**)",
+      "Bash(done)",
+      "Bash(for f in docs/active/epics/*.md)",
+      "Bash(ls:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(git reset:*)",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_run_code",
+      "WebFetch(domain:hex.pm)",
+      "WebFetch(domain:docs.boundaryml.com)",
+      "WebFetch(domain:deepwiki.com)",
+      "WebFetch(domain:hexdocs.pm)",
+      "Bash(mise current:*)",
+      "Bash(for d in docs/active/work/T-007-04 docs/active/work/T-008-02)",
+      "Bash(do echo \"=== $d ===\")",
+      "Bash(git:*)",
+      "Bash(mix:*)",
+      "Bash(lisa:*)",
+      "Bash(du:*)",
+      "Bash(docker exec:*)",
+      "Bash(fi)",
+      "Bash(mix test:*)",
+      "WebFetch(domain:elixirforum.com)",
+      "WebFetch(domain:eahanson.com)",
+      "WebFetch(domain:andrealeopardi.com)",
+      "WebFetch(domain:wiki.postgresql.org)",
+      "WebFetch(domain:dockyard.com)",
+      "WebFetch(domain:ftes.de)",
+      "WebFetch(domain:nimblehq.co)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(elixir:*)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -x .lisa/hooks/on-stop.sh && .lisa/hooks/on-stop.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -x .lisa/hooks/on-clear.sh && .lisa/hooks/on-clear.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "test -x .lisa/hooks/on-idle.sh && .lisa/hooks/on-idle.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

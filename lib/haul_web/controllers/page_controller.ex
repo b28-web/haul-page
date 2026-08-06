@@ -24,6 +24,8 @@ defmodule HaulWeb.PageController do
     tenant = conn.assigns[:tenant] || ContentHelpers.resolve_tenant()
     site_config = ContentHelpers.load_site_config(tenant)
     services = ContentHelpers.load_services(tenant)
+    gallery_items = ContentHelpers.load_featured_gallery_items(tenant)
+    endorsements = ContentHelpers.load_featured_endorsements(tenant)
 
     conn
     |> put_layout(false)
@@ -35,6 +37,8 @@ defmodule HaulWeb.PageController do
     |> assign(:service_area, get_field(site_config, :service_area))
     |> assign(:coupon_text, get_field(site_config, :coupon_text) || "10% OFF")
     |> assign(:services, services)
+    |> assign(:gallery_items, gallery_items)
+    |> assign(:endorsements, endorsements)
     |> assign(:url, HaulWeb.Endpoint.url())
     |> render(:home)
   end

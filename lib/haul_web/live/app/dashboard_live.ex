@@ -35,6 +35,15 @@ defmodule HaulWeb.App.DashboardLive do
             {@site_url}
           </a>.
         </p>
+        <p :if={@site_url} class="text-muted-foreground">
+          <a
+            href={"#{@site_url}?print=1"}
+            target="_blank"
+            class="inline-flex items-center gap-1.5 underline hover:text-foreground"
+          >
+            <.icon name="hero-printer" class="size-4" /> Print site as poster
+          </a>
+        </p>
       </div>
     </div>
     """
@@ -43,11 +52,9 @@ defmodule HaulWeb.App.DashboardLive do
   defp site_url(nil), do: nil
 
   defp site_url(company) do
-    base_domain = Application.get_env(:haul, :base_domain, "localhost")
-
     cond do
       company.domain -> "https://#{company.domain}"
-      company.slug -> "https://#{company.slug}.#{base_domain}"
+      company.slug -> Haul.Onboarding.site_url(company.slug)
       true -> nil
     end
   end

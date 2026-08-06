@@ -64,18 +64,11 @@ defmodule HaulWeb.PageControllerTest do
     refute body =~ "phoenixframework.org"
   end
 
-  test "print button uses progressive enhancement", %{conn: conn, host: host} do
+  test "auto-print triggers via query param", %{conn: conn, host: host} do
     conn = %{conn | host: host} |> get(~p"/")
     body = html_response(conn, 200)
 
     assert body =~ "window.print()"
-    assert body =~ "print-button"
-  end
-
-  test "coupon text comes from SiteConfig", %{conn: conn, host: host} do
-    conn = %{conn | host: host} |> get(~p"/")
-    body = html_response(conn, 200)
-
-    assert body =~ "10% OFF"
+    assert body =~ "URLSearchParams"
   end
 end

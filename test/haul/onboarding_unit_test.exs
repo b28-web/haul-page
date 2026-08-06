@@ -20,10 +20,9 @@ defmodule Haul.OnboardingUnitTest do
   end
 
   describe "site_url/1" do
-    test "constructs URL with base domain" do
+    test "constructs proxy URL in dev mode" do
       url = Haul.Onboarding.site_url("test-co")
-      assert url =~ "test-co."
-      assert url =~ "https://"
+      assert url =~ "/proxy/test-co"
     end
   end
 end

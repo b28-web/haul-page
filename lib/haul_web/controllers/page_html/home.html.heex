@@ -29,6 +29,14 @@
       </a>
     </div>
 
+    <a
+      href={HaulWeb.ProxyHelpers.tenant_path(assigns, "/book")}
+      class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors mb-6"
+    >
+      <.icon name="hero-calendar-days" class="size-5" />
+      Book a Pickup
+    </a>
+
     <div class="flex items-center justify-center gap-6 text-sm text-muted-foreground">
       <a
         href={"mailto:#{@email}"}
@@ -59,6 +67,55 @@
     </div>
   </section>
 
+  <%!-- Featured Gallery --%>
+  <section :if={@gallery_items != []} class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
+      Our Work
+    </h2>
+
+    <div class="space-y-8">
+      <div :for={item <- @gallery_items} class="border border-border p-4">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <p class="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">
+              Before
+            </p>
+            <div class="aspect-[4/3] bg-card flex items-center justify-center">
+              <img
+                src={item.before_image_url}
+                alt={"Before: #{item.caption}"}
+                class="w-full h-full object-cover"
+                loading="lazy"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+              />
+              <div class="hidden items-center justify-center w-full h-full text-muted-foreground text-sm">
+                <.icon name="hero-photo" class="size-8" />
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-1">
+              After
+            </p>
+            <div class="aspect-[4/3] bg-card flex items-center justify-center">
+              <img
+                src={item.after_image_url}
+                alt={"After: #{item.caption}"}
+                class="w-full h-full object-cover"
+                loading="lazy"
+                onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+              />
+              <div class="hidden items-center justify-center w-full h-full text-muted-foreground text-sm">
+                <.icon name="hero-photo" class="size-8" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <p :if={item.caption} class="text-sm text-muted-foreground mt-3">{item.caption}</p>
+      </div>
+    </div>
+  </section>
+
   <%!-- Why Hire Us --%>
   <section class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
     <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
@@ -75,6 +132,36 @@
     </div>
   </section>
 
+  <%!-- Featured Endorsements --%>
+  <section :if={@endorsements != []} class="px-4 py-12 md:py-16 max-w-4xl mx-auto">
+    <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">
+      What Customers Say
+    </h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div :for={endorsement <- @endorsements} class="border border-border p-6">
+        <div :if={endorsement.star_rating} class="flex gap-0.5 mb-3">
+          <.icon
+            :for={_i <- 1..endorsement.star_rating}
+            name="hero-star-solid"
+            class="size-4 text-foreground"
+          />
+          <.icon
+            :for={_i <- 1..(5 - endorsement.star_rating)//1}
+            name="hero-star"
+            class="size-4 text-muted-foreground"
+          />
+        </div>
+        <p class="text-base leading-relaxed mb-3">
+          &ldquo;{endorsement.quote_text}&rdquo;
+        </p>
+        <p class="text-sm text-muted-foreground">
+          — {endorsement.customer_name}
+        </p>
+      </div>
+    </div>
+  </section>
+
   <%!-- Footer CTA --%>
   <footer class="px-4 py-16 md:py-24 text-center max-w-4xl mx-auto">
     <h2 class="text-3xl md:text-4xl font-bold mb-4">
@@ -82,70 +169,35 @@
     </h2>
 
     <p class="text-lg text-muted-foreground mb-8">
-      Call now for a free, no-obligation estimate.
+      Book online or call for a free, no-obligation estimate.
     </p>
 
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 print:hidden">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a
+        href={HaulWeb.ProxyHelpers.tenant_path(assigns, "/book")}
+        class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
+      >
+        <.icon name="hero-calendar-days" class="size-5" />
+        Book a Pickup
+      </a>
+
       <a
         href={"tel:#{String.replace(@phone, ~r/[^\d+]/, "")}"}
-        class="inline-flex items-center gap-2 bg-foreground text-background px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-muted-foreground transition-colors"
+        class="inline-flex items-center gap-2 border border-foreground text-foreground px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-foreground hover:text-background transition-colors"
       >
         <.icon name="hero-phone" class="size-5" />
         {@phone}
       </a>
-
-      <button
-        onclick="window.print()"
-        class="hidden inline-flex items-center gap-2 border border-foreground text-foreground px-8 py-3 text-lg font-bold font-display uppercase tracking-wider hover:bg-foreground hover:text-background transition-colors cursor-pointer"
-        id="print-button"
-      >
-        Print as Poster
-      </button>
     </div>
 
-    <p class="text-sm text-muted-foreground print:hidden">
+    <p class="text-sm text-muted-foreground mt-6">
       {@business_name} · {@service_area}
     </p>
-
-    <%!-- Print-only: show URL and phone for printed poster --%>
-    <p class="hidden print:block text-sm mt-4">
-      {@url} · {@phone}
-    </p>
-
-    <%!-- Tear-off strip — visible only in print --%>
-    <div class="hidden print:block mt-8 border-t-2 border-dashed border-black pt-2">
-      <p class="text-xs text-center mb-2" style="font-family: 'Source Sans 3', sans-serif;">
-        ✂ Cut along the dotted line
-      </p>
-      <div class="flex">
-        <%= for _i <- 1..8 do %>
-          <div
-            class="flex-1 border-r border-dashed border-black last:border-r-0 py-2 flex flex-col items-center justify-center"
-            style="writing-mode: vertical-rl; text-orientation: mixed;"
-          >
-            <span
-              class="text-[8px] font-bold uppercase"
-              style="font-family: 'Oswald', sans-serif;"
-            >
-              {@business_name}
-            </span>
-            <span
-              class="text-[15px] font-bold uppercase my-1"
-              style="font-family: 'Oswald', sans-serif;"
-            >
-              {@coupon_text}
-            </span>
-            <span class="text-[8px]" style="font-family: 'Source Sans 3', sans-serif;">
-              {@phone}
-            </span>
-          </div>
-        <% end %>
-      </div>
-    </div>
   </footer>
 </main>
 
-<%!-- Progressive enhancement: show print button only when JS is available --%>
 <script>
-  document.getElementById("print-button").style.display = "inline-flex";
+  if (new URLSearchParams(window.location.search).has("print")) {
+    window.addEventListener("load", function() { window.print(); });
+  }
 </script>

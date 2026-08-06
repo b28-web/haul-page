@@ -72,7 +72,7 @@ defmodule HaulWeb.Router do
       live "/content/services", App.ServicesLive
       live "/content/gallery", App.GalleryLive
       live "/content/endorsements", App.EndorsementsLive
-      live "/bookings", App.DashboardLive
+      live "/bookings", App.BookingsLive
       live "/settings", App.DashboardLive
       live "/settings/billing", App.BillingLive
       live "/settings/domain", App.DomainSettingsLive
@@ -131,6 +131,7 @@ defmodule HaulWeb.Router do
       live_dashboard "/dashboard", metrics: HaulWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
       get "/sentry-test", HaulWeb.DebugController, :error
+      get "/login", HaulWeb.DevSessionController, :login
     end
 
     pipeline :proxy_browser do
